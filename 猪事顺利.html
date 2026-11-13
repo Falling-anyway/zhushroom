@@ -6478,7 +6478,7 @@ function isStoreBuild() {
 
 function applyStoreBuildUI() {
   if (!isStoreBuild()) return;
-  ['zjuSyncBtn', 'zjuAssistBtn'].forEach(function(id) {
+  ['zjuSyncBtn', 'zjuAssistBtn', 'dingtalkMenuItem'].forEach(function(id) {
     var el = document.getElementById(id);
     if (el) el.style.display = 'none';
   });
