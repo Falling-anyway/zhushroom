@@ -1,4 +1,4 @@
-# 打包「学在浙大同步助手」安装包到 dist/（不进仓库，只作为 GitHub Release 附件）
+﻿# 打包「学在浙大同步助手」安装包到 dist/（不进仓库，只作为 GitHub Release 附件）
 # 用法：powershell -ExecutionPolicy Bypass -File tools\build-helper.ps1
 
 $ErrorActionPreference = 'Stop'
