@@ -1,0 +1,49 @@
+{
+  "exportDate": "2026-11-13T09:00:00.000Z",
+  "habits": ["跑步", "阅读", "早睡"],
+  "habitRecords": {
+    "跑步_2026-11-10": true,
+    "阅读_2026-11-11": true,
+    "早睡_2026-11-12": true
+  },
+  "moodRecords": {
+    "2026-11-11": "happy",
+    "2026-11-12": "tired"
+  },
+  "events": {
+    "2026-11-09": [
+      { "content": "计算机网络", "course": "计算机网络", "location": "玉泉教4-306", "category": "course", "time": "10:00", "endTime": "12:25", "ttGen": true, "done": false },
+      { "content": "计算机视觉", "course": "计算机视觉", "location": "玉泉教4-318", "category": "course", "time": "16:15", "endTime": "17:50", "ttGen": true, "done": false },
+      { "content": "跑步", "category": "exercise", "time": "18:30", "done": false }
+    ],
+    "2026-11-10": [
+      { "content": "操作系统", "course": "操作系统", "location": "玉泉教4-310", "category": "course", "time": "10:00", "endTime": "11:35", "ttGen": true, "done": false },
+      { "content": "小组讨论", "category": "work", "time": "14:00", "endTime": "15:00", "done": true }
+    ],
+    "2026-11-11": [
+      { "content": "计算机网络", "course": "计算机网络", "location": "玉泉教4-306", "category": "course", "time": "10:00", "endTime": "12:25", "ttGen": true, "done": false },
+      { "content": "读书", "category": "study", "time": "20:00", "done": false, "notes": "读完第三章" }
+    ],
+    "2026-11-12": [
+      { "content": "统计学习", "category": "study", "time": "09:00", "endTime": "11:00", "done": false }
+    ],
+    "2026-11-13": [
+      { "content": "轮滑（初级）", "course": "轮滑（初级）", "location": "紫金港碧峰南", "category": "course", "time": "08:00", "endTime": "09:35", "ttGen": true, "done": false },
+      { "content": "和朋友吃饭", "category": "social", "time": "18:00", "done": false }
+    ],
+    "2026-11-14": [
+      { "content": "整理房间", "category": "life", "time": "10:00", "done": false }
+    ],
+    "2026-11-15": [
+      { "content": "周复盘", "category": "study", "time": "21:00", "done": false }
+    ],
+    "2026-11-19": [
+      { "content": "交操作系统实验", "category": "study", "time": "23:59", "isDDL": true, "done": false }
+    ],
+    "2026-11-22": [
+      { "content": "提交实验报告", "category": "study", "time": "23:59", "isDDL": true, "done": false },
+      { "content": "计算机网络 lab 6", "category": "study", "time": "23:59", "isDDL": true, "done": false }
+    ]
+  },
+  "archivedProjects": []
+}

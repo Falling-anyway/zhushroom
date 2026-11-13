@@ -1,0 +1,23 @@
+# ===== 本机偏好 / 插件数据 =====
+data.json
+.obsidian/workspace*.json
+
+# ===== 个人数据（绝不应出现在仓库里）=====
+日程/
+zju-cookie*
+zju-cookies.json
+*.log
+
+# ===== 二进制 =====
+*.exe
+*.zip
+
+# ===== 系统与编辑器 =====
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.lnk
+.vscode/
+.idea/
+*.tmp
+*.bak

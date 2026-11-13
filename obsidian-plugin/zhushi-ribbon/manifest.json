@@ -1,0 +1,9 @@
+{
+  "id": "zhushi-ribbon",
+  "name": "猪事顺利侧边栏入口",
+  "version": "1.0.0",
+  "minAppVersion": "1.6.6",
+  "description": "在左侧边栏打开猪事顺利页面。",
+  "author": "Vault",
+  "isDesktopOnly": false
+}
