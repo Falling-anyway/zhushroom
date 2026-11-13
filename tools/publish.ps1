@@ -24,9 +24,9 @@ function Fail($msg) {
 
 # ---------- 1. 复制 ----------
 $srcApp = Join-Path $VaultRoot "猪事顺利.html"
-$srcPlug = Join-Path $VaultRoot ".obsidian\plugins\zhushi-ribbon"
+$srcPlug = Join-Path $VaultRoot ".obsidian\plugins\zhushroom-full"
 $dstApp = Join-Path $repo "猪事顺利.html"
-$dstPlug = Join-Path $repo "obsidian-plugin\zhushi-ribbon"
+$dstPlug = Join-Path $repo "obsidian-plugin\zhushroom-full"
 
 foreach ($p in @($srcApp, (Join-Path $srcPlug "main.js"), (Join-Path $srcPlug "manifest.json"))) {
   if (-not (Test-Path $p)) { Fail "找不到源文件：$p" }
@@ -67,7 +67,7 @@ $privacyPattern = '32176|access_token=[A-Za-z0-9]{12,}|CASTGC=[^"\s]{8,}|Falling
 $tracked = @(git -C $repo ls-files)
 $srcFiles = @($tracked | Where-Object { $_ -match '\.(html|js|json|md|ps1)$' } |
   ForEach-Object { Join-Path $repo $_ } | Where-Object { (Test-Path $_ -PathType Leaf) -and ($_ -notmatch 'publish\.ps1$') })
-$srcFiles += @((Join-Path $repo '猪事顺利.html'), (Join-Path $repo 'obsidian-plugin\zhushi-ribbon\main.js'))
+$srcFiles += @((Join-Path $repo '猪事顺利.html'), (Join-Path $repo 'obsidian-plugin\zhushroom-full\main.js'))
 $srcFiles = @($srcFiles | Where-Object { Test-Path $_ -PathType Leaf } | Select-Object -Unique)
 $privacyHits = Select-String -Path $srcFiles -Pattern $privacyPattern -Encoding UTF8
 if ($privacyHits) {
