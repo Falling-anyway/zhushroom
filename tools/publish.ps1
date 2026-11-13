@@ -53,6 +53,10 @@ $htmlRaw = [System.IO.File]::ReadAllText($dstApp, [System.Text.UTF8Encoding]::ne
 $m = [regex]::Matches($htmlRaw, '(?s)var TT_EMBEDDED = \{.*?\r?\n\};')
 if ($m.Count -ne 1) { Fail "内置兜底课表定位失败（匹配 $($m.Count) 处），已中止" }
 $htmlRaw = $htmlRaw.Replace($m[0].Value, $sampleTT.TrimEnd())
+if ($htmlRaw -match '北3-310') {
+  # 首次打开时的兜底示例日程里也带真实教室名，一起换掉
+  $htmlRaw = $htmlRaw.Replace('北3-310', '教1-101')
+}
 [System.IO.File]::WriteAllText($dstApp, $htmlRaw, [System.Text.UTF8Encoding]::new($false))
 
 # ---------- 2. 安全检查 ----------
