@@ -3262,6 +3262,17 @@
       <span id="fontScaleValue">100%</span>
     </div>
 
+          <label style="margin-top:16px">称呼</label>
+          <input type="text" id="optUserName" placeholder="你">
+          <div class="setting-hint">顶部连接栏右侧的问候语用它，留空显示「你」</div>
+
+          <label style="margin-top:16px">页面标题</label>
+          <input type="text" id="optPageTitle" placeholder="猪事顺利">
+          <div class="setting-hint">显示在页面左上角，同时作为浏览器标签页标题</div>
+
+          <label style="margin-top:16px">DDL 全部完成后的鼓励语</label>
+          <textarea id="optDdlDoneText" rows="3" placeholder="全部 DDL 已完成，强强！" style="line-height:1.5"></textarea>
+          <div class="setting-hint">所有 DDL 都勾完时，「DDL 倒计时」里显示这句话</div>
         </div>
 
         <div class="settings-pane" data-pane="display" style="display:none">
@@ -3349,22 +3360,25 @@
             <span id="bgBlurValue">0px</span>
           </div>
 
-          <label style="margin-top:16px">称呼</label>
-          <input type="text" id="optUserName" placeholder="你">
-          <div class="setting-hint">顶部连接栏右侧的问候语用它，留空显示「你」</div>
-
-          <label style="margin-top:16px">页面标题</label>
-          <input type="text" id="optPageTitle" placeholder="猪事顺利">
-          <div class="setting-hint">显示在页面左上角，同时作为浏览器标签页标题</div>
-
-          <label style="margin-top:16px">DDL 全部完成后的鼓励语</label>
-          <textarea id="optDdlDoneText" rows="3" placeholder="全部 DDL 已完成，强强！" style="line-height:1.5"></textarea>
-          <div class="setting-hint">所有 DDL 都勾完时，「DDL 倒计时」里显示这句话</div>
         </div>
 
         <div class="settings-pane" data-pane="data" style="display:none">
-          <label style="margin-top:0">数据备份</label>
-          <div class="setting-hint" style="margin-top:2px">数据保存在本浏览器；换设备或清缓存前请先导出</div>
+          <label style="margin-top:0">数据存放</label>
+          <div class="setting-hint" style="margin-top:2px">只存本地浏览器最简单、但不能跨设备；连一个 Obsidian 库文件夹，数据会写成该库里的 Markdown，换设备也有</div>
+          <div class="settings-btn-row">
+            <button class="btn-save" type="button" id="storeLocalBtn" onclick="setStoreMode('local')">本地浏览器</button>
+            <button class="btn-cancel" type="button" id="storeVaultBtn" onclick="setStoreMode('vault')">Obsidian 库</button>
+          </div>
+          <div class="settings-btn-row" style="margin-top:8px">
+            <button class="btn-cancel" type="button" onclick="pickVaultDir()">选择库文件夹</button>
+            <button class="btn-cancel" type="button" onclick="runSyncDiagnostics()">连接诊断</button>
+          </div>
+          <div class="setting-hint" id="vaultStatus" style="margin-top:8px"></div>
+          <div class="setting-hint">选包含 01-每日日程 的那一层（也就是库里「日程」文件夹）；Chrome 会问一次授权，勾「每次访问都允许」后下次自动连上</div>
+
+
+          <label style="margin-top:16px">数据备份</label>
+          <div class="setting-hint" style="margin-top:2px">换设备或清缓存前可以先导出一份</div>
           <div class="settings-btn-row">
             <button class="btn-save" type="button" onclick="exportDataFile()">导出数据</button>
             <button class="btn-cancel" type="button" onclick="importDataFile()">导入数据</button>
@@ -3372,11 +3386,6 @@
           </div>
           <div class="setting-hint" id="dataUsage" style="margin-top:10px"></div>
 
-          <details class="settings-adv">
-            <summary>高级：连接到本地 Obsidian 库</summary>
-            <div class="setting-hint">在浏览器里直接编辑 Obsidian 库文件（需要 Chromium 内核，每次会话授权一次）</div>
-            <button class="btn-cancel" type="button" onclick="chooseObsidianDir()">选择 Obsidian 库</button>
-          </details>
         </div>
 
         <div class="settings-pane" data-pane="sync" style="display:none">
@@ -3974,6 +3983,7 @@ function setLogo(kind) {
 function openSettings() {
   var s = loadSettings();
   applyLogoUI();
+  try { refreshStoreUI(); } catch (e) {}
   document.getElementById('settingsOverlay').classList.add('active');
   var input = document.getElementById('dingtalkWebhookInput');
   if (input) input.value = localStorage.getItem('dingtalkWebhook') || '';
@@ -6157,6 +6167,7 @@ function connectObsidianHandle(handle) {
   obsidianDirHandle = handle;
   pendingObsidianHandle = null;
   updateObsidianUI(true, handle.name);
+  try { applyStoreModeUI(); } catch (e) {}
   loadBentoData();
   mdSyncAfterConnect();
 }
@@ -6176,10 +6187,11 @@ async function restoreObsidianHandle() {
   var handle = await loadObsidianHandle();
   if (!handle) return;
   var p = await queryHandlePermission(handle);
-  if (p === 'granted') { connectObsidianHandle(handle); return; }
+  if (p === 'granted') { connectObsidianHandle(handle); try { applyStoreModeUI(); refreshStoreUI(); } catch (e) {} return; }
   /* file:// 下浏览器不会弹授权窗，点页面空白也拿不到权限：只引导点文件夹图标选回同一个库 */
   pendingObsidianHandle = handle;
   setObsidianHint('已记住「' + handle.name + '」，点右侧文件夹图标连接（每个浏览器会话一次）');
+  try { applyStoreModeUI(); refreshStoreUI(); } catch (e) {}
   var pickBtn = document.getElementById('pickObsidianBtn');
   if (pickBtn) pickBtn.classList.add('needs-attn');
 }
@@ -6406,7 +6418,10 @@ async function chooseObsidianDir() {
   obsidianDirHandle = picked;
   pendingObsidianHandle = null;
   try { await saveObsidianHandle(picked); } catch (e) { console.warn('[Obsidian] 记住目录失败', e); }
+  setStoreModeRaw('vault');
   updateObsidianUI(true, picked.name);
+  applyStoreModeUI();
+  refreshStoreUI();
   setSyncStatus('已连接「' + picked.name + '」，写入测试通过，可以保存', true, 6000);
   try { loadBentoData(); } catch (e) { console.warn('[Obsidian] 载入概览失败', e); }
   try { mdSyncAfterConnect(); } catch (e) { console.warn('[Obsidian] 连接后同步失败', e); }
@@ -6528,6 +6543,7 @@ function applyAppMode(mode) {
   updateDingtalkBtnVisibility();
   probeZjuService(true);
   showWelcomeIfNeeded();
+  try { applyStoreModeUI(); refreshStoreUI(); } catch (e2) {}
 }
 
 function setSettingsSyncLabel() {
@@ -6806,6 +6822,98 @@ function zsBridgeFolder(rel) {
   return dir;
 }
 
+/* ===== 数据存放：本地浏览器 / Obsidian 库 =====
+   网页版两种选择：只存本机浏览器，或者连一个 Obsidian 库目录把数据写成 Markdown。
+   目录句柄存在 IndexedDB 里，https 源（例如 GitHub Pages）下 Chrome 会记住授权，
+   下次打开不必重选；file:// 源每次都只能重选一次。 */
+var STORE_MODE_KEY = 'zhushiStoreMode';
+
+function storeMode() {
+  try { return localStorage.getItem(STORE_MODE_KEY) || 'local'; } catch (e) { return 'local'; }
+}
+function setStoreModeRaw(m) {
+  try { localStorage.setItem(STORE_MODE_KEY, m); } catch (e) {}
+}
+function vaultMode() { return storeMode() === 'vault'; }
+function vaultReady() { return vaultMode() && !!obsidianDirHandle; }
+
+function setVaultStatus(msg, ok) {
+  var el = document.getElementById('vaultStatus');
+  if (!el) return;
+  el.textContent = msg || '';
+  el.style.color = ok === true ? 'var(--cat-exercise)' : (ok === false ? 'var(--ddl-overdue)' : 'var(--sub)');
+}
+
+function refreshStoreUI() {
+  var localBtn = document.getElementById('storeLocalBtn');
+  var vaultBtn = document.getElementById('storeVaultBtn');
+  if (localBtn) {
+    localBtn.classList.toggle('btn-save', !vaultMode());
+    localBtn.classList.toggle('btn-cancel', vaultMode());
+  }
+  if (vaultBtn) {
+    vaultBtn.classList.toggle('btn-save', vaultMode());
+    vaultBtn.classList.toggle('btn-cancel', !vaultMode());
+  }
+  if (vaultReady()) setVaultStatus('已连接「' + obsidianDirHandle.name + '」，数据会写成该库里的 Markdown', true);
+  else if (vaultMode()) setVaultStatus(pendingObsidianHandle
+    ? '上次选的是「' + pendingObsidianHandle.name + '」，点「选择库文件夹」重新授权'
+    : '还没有选择库文件夹', false);
+  else setVaultStatus('数据只存在这台设备的浏览器里');
+}
+
+/* 切换数据位置：本地 / Obsidian 库 */
+async function setStoreMode(mode) {
+  if (mode === 'local') {
+    setStoreModeRaw('local');
+    applyStoreModeUI();
+    refreshStoreUI();
+    setSyncStatus('数据改存本地浏览器', true, 3000);
+    return;
+  }
+  setStoreModeRaw('vault');
+  refreshStoreUI();
+  applyStoreModeUI();
+  if (zsBridge) { setVaultStatus('在 Obsidian 里由插件直接读写库，不需要选择目录', true); return; }
+  await chooseObsidianDir();
+  refreshStoreUI();
+  applyStoreModeUI();
+}
+
+/* 选过库但权限被浏览器收回时，重新选一次 */
+async function pickVaultDir() {
+  setStoreModeRaw('vault');
+  await chooseObsidianDir();
+  refreshStoreUI();
+  applyStoreModeUI();
+}
+
+/* 顶栏与设置里的显示跟着数据位置变 */
+function applyStoreModeUI() {
+  if (!isWebMode()) return;
+  var on = vaultReady();
+  var all = document.getElementById('syncAllBtn');
+  var undo = document.getElementById('undoSyncBtn');
+  var pick = document.getElementById('pickObsidianBtn');
+  if (all) all.style.display = vaultMode() ? '' : 'none';
+  if (undo) undo.style.display = vaultMode() ? '' : 'none';
+  if (pick) pick.style.display = vaultMode() && !on ? '' : 'none';
+  if (all) all.classList.toggle('env-disabled', !on);
+  if (undo) undo.classList.toggle('env-disabled', !on);
+  var text = document.getElementById('obsidianText');
+  var dot = document.getElementById('obsidianDot');
+  if (on) {
+    if (text) text.textContent = 'Obsidian · ' + obsidianDirHandle.name;
+    if (dot) dot.classList.add('connected');
+  } else if (vaultMode()) {
+    if (text) text.textContent = 'Obsidian 库未授权';
+    if (dot) dot.classList.remove('connected');
+  } else {
+    if (text) text.textContent = '数据保存在本浏览器';
+    if (dot) dot.classList.remove('connected');
+  }
+  updateDingtalkBtnVisibility();
+}
 async function getObsidianFolder(subDir, create) {
   if (zsBridge) return zsBridgeFolder(subDir);
   var root = await ensureObsidianReady();
