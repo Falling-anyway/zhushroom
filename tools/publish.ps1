@@ -36,6 +36,25 @@ Copy-Item $srcApp $dstApp -Force
 Copy-Item (Join-Path $srcPlug "main.js") (Join-Path $dstPlug "main.js") -Force
 Copy-Item (Join-Path $srcPlug "manifest.json") (Join-Path $dstPlug "manifest.json") -Force
 
+# ---------- 1.5 脱敏：把内置兜底课表换成虚构示例 ----------
+# 库里那份 TT_EMBEDDED 是真实课表（课程、教师、教室），发布版必须替换
+$sampleTT = @'
+var TT_EMBEDDED = {
+  kbList: [
+    { kcb: '高等数学<br>秋冬{第1-8周|3节/周}<br>李老师<br>教1-101', xqj: '1', djj: '3', skcd: '3', xkkh: '(2026-2027-1)-MATH1001-0000001-1', xxq: '秋冬' },
+    { kcb: '大学物理<br>秋冬{第1-8周|2节/周}<br>王老师<br>教1-202', xqj: '2', djj: '3', skcd: '2', xkkh: '(2026-2027-1)-PHYS1002-0000002-1', xxq: '秋冬' },
+    { kcb: '程序设计基础<br>秋冬{第1-8周|2节/周}<br>赵老师<br>机房 A-301', xqj: '3', djj: '6', skcd: '2', xkkh: '(2026-2027-1)-CS1003-0000003-1', xxq: '秋冬' },
+    { kcb: '大学英语<br>秋冬{第1-8周|2节/周}<br>孙老师<br>教2-105', xqj: '4', djj: '9', skcd: '2', xkkh: '(2026-2027-1)-ENG1004-0000004-1', xxq: '秋冬' },
+    { kcb: '体育（羽毛球）<br>秋冬{第1-8周|2节/周}<br>周老师<br>体育馆 3 号场', xqj: '5', djj: '3', skcd: '2', xkkh: '(2026-2027-1)-PE1005-0000005-1', xxq: '秋冬' }
+  ]
+};
+'@
+$htmlRaw = [System.IO.File]::ReadAllText($dstApp, [System.Text.UTF8Encoding]::new($false))
+$m = [regex]::Matches($htmlRaw, '(?s)var TT_EMBEDDED = \{.*?\r?\n\};')
+if ($m.Count -ne 1) { Fail "内置兜底课表定位失败（匹配 $($m.Count) 处），已中止" }
+$htmlRaw = $htmlRaw.Replace($m[0].Value, $sampleTT.TrimEnd())
+[System.IO.File]::WriteAllText($dstApp, $htmlRaw, [System.Text.UTF8Encoding]::new($false))
+
 # ---------- 2. 安全检查 ----------
 Write-Host "检查私有串…"
 # 注意：页面输入框的 placeholder 是 "access_token=..." 这类示例串，不算泄露，所以只匹配真实长度的令牌
