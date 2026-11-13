@@ -6471,6 +6471,23 @@ var welcomeStep = 1;
 
 function isWebMode() { return APP_MODE === 'web'; }
 
+/* 商店版：内联页面里由插件注入 window.__ZS_STORE_BUILD__，不含学在浙大同步 */
+function isStoreBuild() {
+  try { return window.__ZS_STORE_BUILD__ === true; } catch (e) { return false; }
+}
+
+function applyStoreBuildUI() {
+  if (!isStoreBuild()) return;
+  ['zjuSyncBtn', 'zjuAssistBtn'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.querySelectorAll('#syncMenu .sync-menu-item').forEach(function(it) {
+    var oc = it.getAttribute('onclick') || '';
+    if (oc.toLowerCase().indexOf('zju') !== -1) it.style.display = 'none';
+  });
+}
+
 function applyAppMode(mode) {
   if (APP_MODE === mode) return;
   APP_MODE = mode;
@@ -6498,7 +6515,7 @@ function applyAppMode(mode) {
   document.querySelectorAll('.settings-adv').forEach(function(d) { d.style.display = 'none'; });
 
   var assist = document.getElementById('zjuAssistBtn');
-  if (assist) assist.style.display = '';
+  if (assist && !isStoreBuild()) assist.style.display = '';
   setSettingsSyncLabel();
   updateDingtalkBtnVisibility();
   probeZjuService(true);
@@ -7710,6 +7727,7 @@ function ttGoToday() {
   renderTimetable();
 }
 async function loadTimetable(force) {
+  if (isStoreBuild()) return;
   if (ttCourses && !force) return;
   var json = null;
   var src = '';
@@ -9826,6 +9844,7 @@ async function mdSyncAfterConnect() {
 /* 刷新后自动重连上次授权的 Obsidian 库；在 Obsidian 插件里打开时改用插件桥 */
 initObsidianBridge();
 applyLogoUI();
+applyStoreBuildUI();
 markZjuButtonEnv();
 ttMigrateCourseCategory();
 if (!isWebMode()) loadTimetable();
