@@ -15,14 +15,24 @@
 
 ## 快速开始
 
-### 方式一：直接当网页用
+### 方式一：打开网页直接用（零安装）
 
-1. 下载 `猪事顺利.html`
-2. 用 Edge / Chrome 打开
+打开 **https://falling-anyway.github.io/zhushroom/**，不用装任何东西。
 
-数据只存在这个浏览器里。可以点「导出文件」备份成 JSON，换设备时用「导入文件」恢复。
+- 数据存在你自己浏览器的 `localStorage` 里，不上传服务器；换设备或清缓存前请先「设置 → 数据 → 导出数据」
+- 想同步教务网课表、校历和学在浙大待办，再装下面的「同步助手」
+- 也可以把 `猪事顺利.html` 下载到本地双击打开，效果一样
 
-### 方式二：放进 Obsidian 库（推荐）
+### 方式二：装同步助手（可选，仅同步课表与 DDL 时需要）
+
+1. 下载 [最新 Release](https://github.com/Falling-anyway/zhushroom/releases/latest) 里的 `zju-sync-helper.zip`，解压到任意目录
+2. 双击 `登录一次.bat`，在弹出浏览器里登录浙大统一身份认证，再打开教务网课表页一次
+3. 双击 `start-hidden.vbs` 启动后台服务（监听 `http://127.0.0.1:8765`，只在本机）
+4. 回到网页，点右上角云朵图标 →「立即同步」
+
+助手只在本机跑，Cookie 与缓存都留在你的电脑上；想开机自启，把 `start-hidden.vbs` 的快捷方式放进 `shell:startup`。
+
+### 方式三：放进 Obsidian 库（适合已经在用 Obsidian 的人）
 
 1. 把 `猪事顺利.html` 放到库的**根目录**
 2. 把 `obsidian-plugin/zhushi-ribbon` 整个目录复制到库的 `.obsidian/plugins/` 下，得到 `.obsidian/plugins/zhushi-ribbon/{main.js, manifest.json}`
@@ -30,6 +40,8 @@
 4. 重启 Obsidian，页面会自动在标签页里打开；之后也可以从左侧边栏的小猪/蘑菇图标点开
 
 插件做的事：读 `猪事顺利.html` 原文塞进 iframe 渲染，并在页面与库之间搭一条消息桥，页面里所有读写的 md 都通过 Obsidian 的 API 落盘，所以不需要浏览器授权目录。
+
+> 同一份 html 会自动判断环境：在 Obsidian 里走插件模式（写 md），在浏览器里走网页模式（存 localStorage）。
 
 ### 库目录结构
 

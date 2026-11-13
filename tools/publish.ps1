@@ -62,26 +62,39 @@ if ($htmlRaw -match '北3-310') {
 # ---------- 2. 安全检查 ----------
 Write-Host "检查私有串…"
 # 注意：页面输入框的 placeholder 是 "access_token=..." 这类示例串，不算泄露，所以只匹配真实长度的令牌
-$privacyPattern = '32176|access_token=[A-Za-z0-9]{8,}|zju-cookie|Falling-anyway/Notes'
-$srcFiles = Get-ChildItem $repo -Recurse -File -Include *.html, *.js, *.json, *.md, *.ps1 |
-  Where-Object { $_.FullName -notmatch '\\docs\\截图\\' -and $_.Name -ne 'publish.ps1' }
-$privacyHits = $srcFiles | Select-String -Pattern $privacyPattern
+# 只扫「会进仓库的文件」（git 已跟踪的）；本地忽略文件如 zju-cookie.txt、_cache、.login-profile 不参与
+$privacyPattern = '32176|access_token=[A-Za-z0-9]{12,}|CASTGC=[^"\s]{8,}|Falling-anyway/Notes'
+$tracked = @(git -C $repo ls-files)
+$srcFiles = @($tracked | Where-Object { $_ -match '\.(html|js|json|md|ps1)$' } |
+  ForEach-Object { Join-Path $repo $_ } | Where-Object { (Test-Path $_ -PathType Leaf) -and ($_ -notmatch 'publish\.ps1$') })
+$srcFiles += @((Join-Path $repo '猪事顺利.html'), (Join-Path $repo 'obsidian-plugin\zhushi-ribbon\main.js'))
+$srcFiles = @($srcFiles | Where-Object { Test-Path $_ -PathType Leaf } | Select-Object -Unique)
+$privacyHits = Select-String -Path $srcFiles -Pattern $privacyPattern -Encoding UTF8
 if ($privacyHits) {
   $privacyHits | ForEach-Object { Write-Host "  $($_.Path):$($_.LineNumber) $($_.Line.Trim())" }
   Fail "发现疑似私有内容，已中止"
 }
 
 Write-Host "检查禁止入库的文件…"
-$forbidden = Get-ChildItem $repo -Recurse -File | Where-Object {
-  $_.Name -eq 'data.json' -or
-  $_.Extension -in @('.exe', '.zip') -or
-  $_.FullName -match '\\日程\\' -or
-  $_.Name -eq '猪事顺利工作协作.md'
-}
-if ($forbidden) {
-  $forbidden | ForEach-Object { Write-Host "  $($_.FullName)" }
+$badTracked = @($tracked | Where-Object {
+  $_ -match '(^|/)(data\.json|zju-sync\.config\.json)$' -or
+  $_ -match '\.(exe|zip)$' -or
+  $_ -match '^日程/' -or
+  $_ -match '猪事顺利工作协作\.md$' -or
+  $_ -match '^dist/'
+})
+if ($badTracked.Count -gt 0) {
+  $badTracked | ForEach-Object { Write-Host "  $_" }
   Fail "仓库里出现了不该发布的文件"
 }
+
+Write-Host "检查入口页…"
+$entry = Join-Path $repo "index.html"
+if (-not (Test-Path $entry)) { Fail "缺少 index.html（GitHub Pages 入口页）" }
+if (-not (Select-String -Path $entry -Pattern 'url=%E7%8C%AA%E4%BA%8B%E9%A1%BA%E5%88%A9\.html' -Quiet)) {
+  Fail "index.html 没有指向 猪事顺利.html"
+}
+# dist/ 只在本地生成并上传 Release；是否入库由上面的 git 跟踪检查保证
 
 Write-Host "检查脚本语法…"
 $node = (Get-Command node -ErrorAction SilentlyContinue).Source

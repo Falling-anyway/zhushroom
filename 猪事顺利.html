@@ -2042,6 +2042,7 @@
   /* 顶部连接栏（用 id 定位，避免被新增的 body 首个子元素顶掉选择器） */
   /* 三列网格：左右各 1fr、中间按内容 → 问候语恒在整条正中，与两侧文字长短无关 */
   #obsidianBar {
+    position: relative;
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
@@ -2693,6 +2694,124 @@
     .bar-left { max-width: 30vw; }
     .bar-left #obsidianText { max-width: 12vw; }
   }
+  /* ===== web 模式：本地同步助手入口与浮动面板 =====
+     面板绝对定位在顶栏下方，right 对齐；z-index 低于 .modal-overlay（200） */
+  .zju-assist {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 90;
+    width: 300px;
+    max-width: min(92vw, 340px);
+    padding: 12px 14px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    box-shadow: 0 8px 24px color-mix(in srgb, var(--text) 14%, transparent);
+    font-size: var(--fs-12);
+    color: var(--sub);
+  }
+  .zju-assist-head { display: flex; align-items: center; gap: 6px; color: var(--text); }
+  .zju-assist-head strong { font-size: var(--fs-13); font-weight: 600; }
+  .zju-assist .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--muted); flex: 0 0 auto;
+  }
+  .zju-assist .dot.ok { background: var(--primary); }
+  .zju-assist-hint { margin-top: 6px; line-height: 1.55; }
+  .zju-assist-row { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+  .zju-assist-row .btn-save {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font-size: var(--fs-12);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .zju-assist-row .btn-save:hover { background: var(--primary-dark); }
+  .zju-assist-link { color: var(--primary); text-decoration: none; }
+  .zju-assist-link:hover { text-decoration: underline; }
+  /* web 模式隐藏「选库 / 保存到 Obsidian / 撤销」，只留助手与更多菜单 */
+  body.app-web #pickObsidianBtn,
+  body.app-web #syncAllBtn,
+  body.app-web #undoSyncBtn { display: none; }
+
+  /* ===== 首次使用向导 ===== */
+  .modal.welcome { width: min(92vw, 430px); }
+  .welcome-step p {
+    margin: 0 0 8px;
+    font-size: var(--fs-13);
+    color: var(--sub);
+    line-height: 1.6;
+  }
+  .welcome-step input[type="text"] { margin-bottom: 4px; }
+  .modal .welcome-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 2px 0 0;
+    font-size: var(--fs-13);
+    color: var(--text);
+  }
+  .modal .welcome-check input { width: auto; }
+  .welcome-list {
+    margin: 4px 0 12px;
+    padding-left: 18px;
+    font-size: var(--fs-13);
+    color: var(--sub);
+    line-height: 1.9;
+  }
+  .welcome-hint {
+    margin: 0;
+    font-size: var(--fs-12);
+    color: var(--muted);
+  }
+  /* 步骤里的独立按钮（不在 .btn-row 里）补齐尺寸与去边框，颜色仍由 .modal .btn-cancel 给 */
+  .welcome-step button {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: var(--fs-13);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+
+  /* ===== 设置：数据页按钮组与折叠区 ===== */
+  .settings-btn-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .settings-btn-row button,
+  .settings-adv button {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 8px;
+    font-size: var(--fs-13);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .settings-btn-row .btn-save { background: var(--primary); color: #fff; }
+  .settings-btn-row .btn-save:hover { background: var(--primary-dark); }
+  .settings-btn-row .btn-cancel,
+  .settings-adv .btn-cancel { background: var(--neutral); color: var(--sub); }
+  .settings-btn-row .btn-cancel:hover,
+  .settings-adv .btn-cancel:hover { background: var(--neutral-strong); }
+  .settings-btn-row .btn-delete {
+    background: color-mix(in srgb, var(--ddl-overdue) 16%, var(--card));
+    color: color-mix(in srgb, var(--ddl-overdue) 45%, var(--text));
+  }
+  .settings-btn-row .btn-delete:hover { background: color-mix(in srgb, var(--ddl-overdue) 24%, var(--card)); }
+  .settings-adv { margin-top: 14px; }
+  .settings-adv summary {
+    color: var(--sub);
+    font-size: var(--fs-13);
+    cursor: pointer;
+  }
+  .settings-adv[open] summary { margin-bottom: 6px; }
+  .settings-adv .setting-hint { margin-bottom: 8px; }
 </style>
 </head>
 <body>
@@ -2774,6 +2893,17 @@
       <div class="sync-menu-item" onclick="runSyncMenu('chooseObsidianDir')">更换 Obsidian 库</div>
       <div class="sync-menu-item" onclick="runSyncMenu('reauthorizeObsidian')">重新授权</div>
       <div class="sync-menu-item" onclick="runSyncMenu('runSyncDiagnostics')">同步诊断</div>
+    </div>
+  </div>
+  <button class="sync-icon" id="zjuAssistBtn" type="button" title="学在浙大同步助手" style="display:none" onclick="toggleZjuAssist()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.2 18a4.2 4.2 0 0 1-.6-8.36A5.6 5.6 0 0 1 17.4 9.3 3.9 3.9 0 0 1 17 18"/><path d="M12 11.6v6"/><path d="m9.7 15.2 2.3 2.4 2.3-2.4"/></svg>
+  </button>
+  <div class="zju-assist" id="zjuAssistPanel">
+    <div class="zju-assist-head"><span class="dot" id="zjuAssistDot"></span><strong id="zjuAssistText">未检测到本地同步助手</strong></div>
+    <div class="zju-assist-hint" id="zjuAssistHint">需要它才能同步教务网课表、校历和学在浙大待办</div>
+    <div class="zju-assist-row">
+      <button class="btn-save" type="button" onclick="syncZjuNow()">立即同步</button>
+      <a class="zju-assist-link" id="zjuAssistDownload" href="https://github.com/Falling-anyway/zhushroom/releases/latest" target="_blank" rel="noopener">下载助手</a>
     </div>
   </div>
   </div><!-- /bar-right -->
@@ -3114,7 +3244,7 @@
         <button class="settings-tab active" type="button" data-tab="general" onclick="switchSettingsTab('general')">通用</button>
         <button class="settings-tab" type="button" data-tab="display" onclick="switchSettingsTab('display')">显示</button>
         <button class="settings-tab" type="button" data-tab="personal" onclick="switchSettingsTab('personal')">个性化</button>
-        <button class="settings-tab" type="button" data-tab="sync" onclick="switchSettingsTab('sync')">同步</button>
+        <button class="settings-tab" type="button" data-tab="sync" onclick="switchSettingsTab('sync')"><span id="settingsSyncTabLabel">同步</span></button>
       </div>
       <div class="settings-body">
         <div class="settings-pane" data-pane="general">
@@ -3232,6 +3362,23 @@
           <div class="setting-hint">所有 DDL 都勾完时，「DDL 倒计时」里显示这句话</div>
         </div>
 
+        <div class="settings-pane" data-pane="data" style="display:none">
+          <label style="margin-top:0">数据备份</label>
+          <div class="setting-hint" style="margin-top:2px">数据保存在本浏览器；换设备或清缓存前请先导出</div>
+          <div class="settings-btn-row">
+            <button class="btn-save" type="button" onclick="exportDataFile()">导出数据</button>
+            <button class="btn-cancel" type="button" onclick="importDataFile()">导入数据</button>
+            <button class="btn-delete" type="button" onclick="clearAllData()">清空数据</button>
+          </div>
+          <div class="setting-hint" id="dataUsage" style="margin-top:10px"></div>
+
+          <details class="settings-adv">
+            <summary>高级：连接到本地 Obsidian 库</summary>
+            <div class="setting-hint">在浏览器里直接编辑 Obsidian 库文件（需要 Chromium 内核，每次会话授权一次）</div>
+            <button class="btn-cancel" type="button" onclick="chooseObsidianDir()">选择 Obsidian 库</button>
+          </details>
+        </div>
+
         <div class="settings-pane" data-pane="sync" style="display:none">
     <label style="margin-top:0">钉钉 Webhook URL</label>
     <input type="text" id="dingtalkWebhookInput" placeholder="https://oapi.dingtalk.com/robot/send?access_token=..." style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:var(--fs-13);color:var(--text);outline:none;font-family:inherit">
@@ -3251,8 +3398,39 @@
   </div>
 </div>
 
+<!-- 首次使用向导 -->
+<div class="modal-overlay" id="welcomeModal" style="display:none">
+  <div class="modal welcome">
+    <h3>欢迎使用猪事顺利</h3>
+    <div class="welcome-step" data-step="1">
+      <p>先用一句话介绍一下：</p>
+      <input type="text" id="welcomeName" placeholder="怎么称呼你？例如：小陈" maxlength="12">
+      <p class="welcome-hint">之后可以在「设置 → 个性化」里改</p>
+    </div>
+    <div class="welcome-step" data-step="2" style="display:none">
+      <p>要不要先放几条示例日程？</p>
+      <label class="welcome-check"><input type="checkbox" id="welcomeSample" checked> 载入本周示例（可随时删除）</label>
+    </div>
+    <div class="welcome-step" data-step="3" style="display:none">
+      <p>数据只保存在这台电脑的浏览器里。</p>
+      <ul class="welcome-list">
+        <li>换电脑、清缓存都会丢，建议每周导出一次备份</li>
+        <li>想同步教务网课表与待办，需要额外下载「同步助手」</li>
+      </ul>
+      <button class="btn-cancel" type="button" onclick="importDataFile()">已有备份？导入</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn-cancel" type="button" id="welcomeSkip" onclick="closeWelcome()">跳过</button>
+      <button class="btn-save" type="button" id="welcomeNext" onclick="welcomeNext()">下一步</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+/* 首次打开（本地还没有任何日程）时记一笔，网页模式据此决定是否铺示例 */
+var zsFreshStore = false;
+try { zsFreshStore = localStorage.getItem('weeklyPlanEvents') === null; } catch (e0) {}
 const CATEGORY_NAMES = { work: '工作', exercise: '运动', life: '生活', study: '学习', course: '课程', social: '社交' };
 
 /* ===== 重大操作确认 =====
@@ -3545,11 +3723,14 @@ function restoreArchivedProject(name) {
 
 /* 设置的左侧选项卡：通用 / 显示 / 个性化 / 同步 */
 function switchSettingsTab(name) {
+  var target = (isWebMode() && name === 'sync') ? 'data' : name;
   document.querySelectorAll('.settings-tab').forEach(function(b) {
-    b.classList.toggle('active', b.dataset.tab === name);
+    var t = b.dataset.tab;
+    var on = (t === name) || (isWebMode() && name === 'data' && t === 'sync');
+    b.classList.toggle('active', on);
   });
   document.querySelectorAll('.settings-pane').forEach(function(p) {
-    p.style.display = (p.dataset.pane === name) ? '' : 'none';
+    p.style.display = (p.dataset.pane === target) ? '' : 'none';
   });
 }
 
@@ -3825,7 +4006,8 @@ function openSettings() {
   applyBackgroundBlurFromSettings();
   var bgName = document.getElementById('bgFileName');
   if (bgName) bgName.textContent = document.documentElement.classList.contains('has-bg') ? '已设置背景' : '未设置背景';
-  switchSettingsTab('general');
+  applySettingsMode();
+  switchSettingsTab(isWebMode() ? 'data' : 'general');
   renderArchivedProjects();
 }
 function closeSettings() {
@@ -3855,6 +4037,7 @@ function closeSettings() {
 function updateDingtalkBtnVisibility() {
   /* 钉钉推送现在放在「更多」菜单里，只有连上库且配了 Webhook 才出现 */
   var item = document.getElementById('dingtalkMenuItem');
+  if (isWebMode()) { if (item) item.style.display = 'none'; return; }
   if (item) item.style.display = (obsidianDirHandle && localStorage.getItem('dingtalkWebhook')) ? '' : 'none';
 }
 async function pushTodayToDingtalk() {
@@ -4011,6 +4194,8 @@ function loadEvents() {
     const stored = localStorage.getItem('weeklyPlanEvents');
     if (stored) {
       const userEvents = JSON.parse(stored);
+      /* 网页模式只认用户自己的数据，不叠加内置示例 */
+      if (isWebMode()) return userEvents;
       const allContent = Object.values(userEvents).flat().map(e => e.content);
       const hasOldSample = OLD_SAMPLE_CONTENTS.some(s => allContent.includes(s));
       if (!hasOldSample) {
@@ -6268,14 +6453,259 @@ window.addEventListener('message', function(e) {
   }
 });
 
-/* 向父窗口（Obsidian 插件视图）打招呼；不是插件打开的页面就退回选目录那套 */
+/* 向父窗口（Obsidian 插件视图）打招呼；不是插件打开的页面就切成网页模式 */
 function initObsidianBridge() {
   if (window.parent && window.parent !== window) {
     try { window.parent.postMessage({ zsPing: true }, '*'); } catch (e) {}
-    setTimeout(function() { if (!zsBridge) restoreObsidianHandle(); }, 1200);
+    setTimeout(function() { if (!zsBridge) applyAppMode('web'); }, 1200);
   } else {
-    restoreObsidianHandle();
+    applyAppMode('web');
   }
+}
+
+/* ===== 运行模式：Obsidian 插件（写 md）/ 纯浏览器（存 localStorage） ===== */
+var APP_MODE = null;          /* 'obsidian' | 'web'，确定后不再变 */
+var zjuSvcState = 'unknown';  /* ok / no-cookie / off */
+var zjuSyncBusy = false;
+var welcomeStep = 1;
+
+function isWebMode() { return APP_MODE === 'web'; }
+
+function applyAppMode(mode) {
+  if (APP_MODE === mode) return;
+  APP_MODE = mode;
+  if (mode !== 'web') { document.body.classList.remove('app-web'); return; }
+  document.body.classList.add('app-web');
+
+  /* 网页模式首次打开：不要用内置示例覆盖当前周，留空由向导铺示例 */
+  if (zsFreshStore) {
+    try { localStorage.setItem('weeklyPlanEvents', '{}'); } catch (e0) {}
+    try { render(); } catch (e1) {}
+  }
+
+  var text = document.getElementById('obsidianText');
+  if (text) text.textContent = '数据保存在本浏览器';
+  var dot = document.getElementById('obsidianDot');
+  if (dot) dot.classList.remove('connected');
+
+  ['pickObsidianBtn', 'syncAllBtn', 'undoSyncBtn', 'syncMoreBtn', 'zjuSyncBtn'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  document.querySelectorAll('#syncMenu .sync-menu-item').forEach(function(it) {
+    if (it.id !== 'dingtalkMenuItem') it.style.display = 'none';
+  });
+  document.querySelectorAll('.settings-adv').forEach(function(d) { d.style.display = 'none'; });
+
+  var assist = document.getElementById('zjuAssistBtn');
+  if (assist) assist.style.display = '';
+  setSettingsSyncLabel();
+  updateDingtalkBtnVisibility();
+  probeZjuService(true);
+  showWelcomeIfNeeded();
+}
+
+function setSettingsSyncLabel() {
+  var l = document.getElementById('settingsSyncTabLabel');
+  if (l) l.textContent = isWebMode() ? '数据' : '同步';
+}
+
+function applySettingsMode() {
+  setSettingsSyncLabel();
+  renderDataUsage();
+}
+
+function renderDataUsage() {
+  var el = document.getElementById('dataUsage');
+  if (!el) return;
+  var bytes = 0;
+  try {
+    Object.keys(localStorage).forEach(function(k) {
+      bytes += (k.length + String(localStorage.getItem(k) || '').length) * 2;
+    });
+  } catch (e) {}
+  var n = 0;
+  try {
+    var evs = loadEvents() || {};
+    Object.keys(evs).forEach(function(d) { n += (evs[d] || []).length; });
+  } catch (e2) {}
+  el.textContent = '已用 ' + Math.max(1, Math.round(bytes / 1024)) + ' KB · 共 ' + n + ' 条事项';
+}
+
+/* ===== 学在浙大同步助手（网页模式的课表 / 校历 / 待办入口） ===== */
+function zjuServiceOrigin() {
+  return (typeof ZJU_SERVICE === 'string' && ZJU_SERVICE) ? ZJU_SERVICE : 'http://127.0.0.1:8765';
+}
+
+function probeZjuService(quiet) {
+  if (!isWebMode()) return Promise.resolve('off');
+  if (!quiet) paintZjuAssist('checking');
+  var ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+  var timer = ctrl ? setTimeout(function() { try { ctrl.abort(); } catch (e) {} }, 2500) : null;
+  return fetch(zjuServiceOrigin() + '/health', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+    .then(function(res) { return res.ok ? res.json() : Promise.reject(new Error('HTTP ' + res.status)); })
+    .then(function(d) { zjuSvcState = (d && d.cookie) ? 'ok' : 'no-cookie'; })
+    .catch(function() { zjuSvcState = 'off'; })
+    .then(function() {
+      if (timer) clearTimeout(timer);
+      paintZjuAssist();
+      return zjuSvcState;
+    });
+}
+
+function paintZjuAssist(state) {
+  var dot = document.getElementById('zjuAssistDot');
+  var txt = document.getElementById('zjuAssistText');
+  var hint = document.getElementById('zjuAssistHint');
+  var dl = document.getElementById('zjuAssistDownload');
+  var s = state || zjuSvcState;
+  if (dot) dot.classList.toggle('ok', s === 'ok');
+  var texts = {
+    checking: ['正在检查同步助手…', '首次检查大约 1 秒'],
+    ok: ['同步助手已就绪', '可以拉取教务网课表、校历和学在浙大待办'],
+    'no-cookie': ['助手在运行，但还没登录', '双击助手目录里的「登录一次.bat」，登录完再点同步'],
+    off: ['未检测到同步助手', '下载解压后，双击「登录一次.bat」，再双击「start-hidden.vbs」']
+  };
+  var t = texts[s] || texts.off;
+  if (txt) txt.textContent = t[0];
+  if (hint) hint.textContent = t[1];
+  if (dl) dl.style.display = (s === 'off') ? '' : 'none';
+}
+
+function toggleZjuAssist() {
+  var p = document.getElementById('zjuAssistPanel');
+  if (!p) return;
+  var willOpen = (p.style.display !== 'block');
+  p.style.display = willOpen ? 'block' : 'none';
+  if (willOpen) probeZjuService(false);
+}
+
+async function syncZjuNow() {
+  if (zjuSyncBusy) return;
+  zjuSyncBusy = true;
+  paintZjuAssist('checking');
+  var tips = [];
+  try {
+    var st = await probeZjuService(true);
+    if (st === 'off') { setSyncStatus('没连上同步助手：先把助手启动起来', false, 5000); return; }
+    if (st === 'no-cookie') { setSyncStatus('助手没登录：双击「登录一次.bat」', false, 5000); return; }
+    await loadTimetable(true);
+    tips.push('课表与校历');
+    var res = await zjuFetchFromService();
+    if (res.ok) {
+      zjuMergeTodos(res.list);
+      tips.push('待办');
+    }
+    refreshAllUI();
+    setSyncStatus('已同步：' + tips.join(' · '), true, 4000);
+  } catch (e) {
+    setSyncStatus('同步失败：' + (e && e.message ? e.message : e), false, 5000);
+  } finally {
+    zjuSyncBusy = false;
+    probeZjuService(true);
+  }
+}
+
+/* ===== 首次使用向导 ===== */
+function showWelcomeIfNeeded() {
+  if (!isWebMode()) return;
+  if (localStorage.getItem('zhushiWelcomeDone') === '1') return;
+  var m = document.getElementById('welcomeModal');
+  if (!m) return;
+  welcomeStep = 1;
+  paintWelcome();
+  m.classList.add('active');
+  m.style.display = 'flex';
+}
+
+function hideWelcome() {
+  var m = document.getElementById('welcomeModal');
+  if (!m) return;
+  m.classList.remove('active');
+  m.style.display = 'none';
+}
+
+function paintWelcome() {
+  document.querySelectorAll('#welcomeModal .welcome-step').forEach(function(el) {
+    el.style.display = (String(el.dataset.step) === String(welcomeStep)) ? '' : 'none';
+  });
+  var next = document.getElementById('welcomeNext');
+  if (next) next.textContent = (welcomeStep >= 3) ? '开始使用' : '下一步';
+}
+
+async function welcomeNext() {
+  if (welcomeStep === 1) {
+    var input = document.getElementById('welcomeName');
+    var nm = input ? input.value.trim() : '';
+    if (nm) {
+      var s = loadSettings();
+      s.userName = nm;
+      saveSettings(s);
+    }
+    welcomeStep = 2;
+    paintWelcome();
+    return;
+  }
+  if (welcomeStep === 2) {
+    var chk = document.getElementById('welcomeSample');
+    if (!chk || chk.checked) seedSampleEvents();
+    welcomeStep = 3;
+    paintWelcome();
+    return;
+  }
+  finishWelcome();
+}
+
+function finishWelcome() {
+  localStorage.setItem('zhushiWelcomeDone', '1');
+  hideWelcome();
+  try { render(); } catch (e) {}
+  try { refreshAllUI(); } catch (e2) {}
+  setSyncStatus('数据保存在本浏览器，可随时在「设置 → 数据」导出备份', true, 6000);
+}
+
+function closeWelcome() {
+  localStorage.setItem('zhushiWelcomeDone', '1');
+  hideWelcome();
+}
+
+/* 示例日程：只在完全没有日程时写入，按当周铺 6 条 */
+function seedSampleEvents() {
+  var events = loadEvents() || {};
+  var hasAny = Object.keys(events).some(function(d) { return (events[d] || []).length > 0; });
+  if (hasAny) return;
+  var base = new Date();
+  base.setDate(base.getDate() - ((base.getDay() + 6) % 7));
+  function dayOf(n) { return formatDate(new Date(base.getTime() + n * 86400000)); }
+  var samples = [
+    [0, '09:00', '09:40', '晨跑 3 公里', 'exercise', false, '示例事项，双击可编辑或删除'],
+    [1, '10:00', '11:30', '复习高等数学', 'study', false, ''],
+    [2, '14:00', '15:00', '小组讨论', 'social', false, ''],
+    [3, '19:00', '20:00', '整理房间', 'life', false, ''],
+    [4, '16:00', '17:00', '英语听力', 'study', false, ''],
+    [5, '13:30', '18:00', '补交实验报告', 'study', true, '示例 DDL']
+  ];
+  samples.forEach(function(it) {
+    var date = dayOf(it[0]);
+    if (!events[date]) events[date] = [];
+    events[date].push({
+      content: it[3], category: it[4], time: it[1], endTime: it[2],
+      done: false, notes: it[6], isDDL: it[5]
+    });
+  });
+  saveEvents(events);
+}
+
+async function clearAllData() {
+  var ok = await confirmBox('清空全部数据？', '日程、打卡、心情和设置都会被删除，且无法恢复。建议先导出备份。');
+  if (!ok) return;
+  ['weeklyPlanEvents', 'weeklyPlanHabits', 'weeklyPlanHabitRecords', 'weeklyPlanMoodRecords',
+   'archivedProjects', 'weeklyPlanSettings', 'dingtalkWebhook', 'zhushiSyncBackup',
+   'zhushiWelcomeDone', 'zhushiLogo'].forEach(function(k) {
+    try { localStorage.removeItem(k); } catch (e) {}
+  });
+  try { sessionStorage.clear(); } catch (e2) {}
+  location.reload();
 }
 
 function connectObsidianBridge() {
@@ -7305,7 +7735,11 @@ async function loadTimetable(force) {
     } catch (e2) { /* 没有缓存 */ }
   }
 
-  if (!json) { json = TT_EMBEDDED; src = '内置'; }
+  if (!json) {
+    /* 网页模式没有内置课表可用：宁可空着，也不要塞示例课程进日程 */
+    if (isWebMode()) { json = { kbList: [] }; src = '未同步'; }
+    else { json = TT_EMBEDDED; src = '内置'; }
+  }
 
   await loadCalendar(force);
   ttCourses = ttMergeBlocks(ttParseKb(json));
@@ -9394,7 +9828,7 @@ initObsidianBridge();
 applyLogoUI();
 markZjuButtonEnv();
 ttMigrateCourseCategory();
-loadTimetable();
+if (!isWebMode()) loadTimetable();
 initBackground();
 applyRailState(loadSettings().railCollapsed);
 applyStatsVisible(loadSettings().showStats !== false);

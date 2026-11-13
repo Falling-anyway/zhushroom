@@ -17,6 +17,7 @@ zju-sync/zju-sync.config.json
 # ===== 二进制 =====
 *.exe
 *.zip
+dist/
 
 # ===== 系统与编辑器 =====
 .DS_Store
