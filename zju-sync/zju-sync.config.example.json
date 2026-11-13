@@ -1,0 +1,5 @@
+{
+  "port": 8765,
+  "vaultScheduleDir": "C:\\path\\to\\zju-sync\\_cache",
+  "refreshMinutes": 10
+}

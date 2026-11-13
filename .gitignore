@@ -8,6 +8,11 @@ zju-cookie*
 zju-cookies.json
 *.log
 
+# ===== 学在浙大同步服务的运行时文件 =====
+zju-sync/.login-profile/
+zju-sync/_cache/
+zju-sync/猪事顺利.html
+
 # ===== 二进制 =====
 *.exe
 *.zip

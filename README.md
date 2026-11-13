@@ -58,11 +58,27 @@
 - 钉钉 Webhook 只存在本地，不会出现在仓库或 md 里
 - 本仓库不含任何个人日程数据、登录凭证或同步服务的二进制文件
 
+## 学在浙大同步（可选）
+
+`zju-sync/` 是把教务网课表、DDL 拉进本页面的本地服务，默认监听 `127.0.0.1:8765`。
+
+| 文件 | 说明 |
+| :--- | :--- |
+| `登录一次.bat` | 用浏览器登录一次教务网与学在浙大，抓取 Cookie |
+| `zju-sync-service.exe` | 同步服务本体（二进制，未入库，需自备） |
+| `start-hidden.vbs` | 后台静默启动服务 |
+| `zju-sync.config.example.json` | 配置样例，复制为 `zju-sync.config.json` 后填自己的缓存目录 |
+| `_归档/` | 早期版本的服务源码与油猴脚本，仅供参考 |
+
+- Cookie 存在 `zju-cookie.txt`、`zju-cookies.json`，只留在本机，已在 `.gitignore` 里排除
+- 服务缓存写在 `_cache/`，同样不入库
+- 不需要同步时，页面里的「课程表」也能手动编辑
+
 ## 已知限制
 
 - 用 `file://` 直接打开时，浏览器不保留目录授权，每个浏览器会话要手动选一次库目录；在 Obsidian 里用插件打开没有这个问题
 - 页面依赖 Chromium 内核（Edge / Chrome / Obsidian 自带内核），Firefox 的 File System Access API 支持不完整
-- 学在浙大 DDL 同步依赖另外的本地服务，不属于本仓库
+- 学在浙大 DDL 同步依赖 `zju-sync/` 里的本地服务，二进制未入库，需自行构建或从发布页获取
 
 ## 截图
 
