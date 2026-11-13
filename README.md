@@ -1,56 +1,65 @@
 # 猪事顺利 · Zhushroom
 
-单文件日历应用。周 / 月 / 年视图、课程表、DDL 倒计时、习惯打卡、心情与复盘，数据和 Obsidian 库里的 md 双向同步。
+单文件日历应用，提供周 / 月 / 年视图、课程表、DDL 倒计时、习惯打卡、每日心情与复盘，数据可与 Obsidian 库中的 Markdown 文件双向同步。
 
 ![周视图](docs/截图/周视图.png)
 
-## 用法
+## 安装与使用
 
-### 网站版
+### 网页版
 
-打开 **https://falling-anyway.github.io/zhushroom/** 就能用，不用装东西。
+访问 **https://falling-anyway.github.io/zhushroom/** 即可使用，无需安装。
 
-数据放在浏览器的 `localStorage` 里，不联网。换设备或清缓存之前，先去「设置 → 数据」导出。把 `猪事顺利.html` 下载到本地双击，效果一样。
+数据保存在浏览器的 `localStorage` 中，不上传服务器。更换设备或清除缓存前，请先在「设置 → 数据」中导出。也可将 `猪事顺利.html` 下载到本地直接打开，功能相同。
 
-### 满血版（Obsidian 插件）
+### Obsidian 插件（满血版）
 
-1. `猪事顺利.html` 放到库的根目录
-2. `obsidian-plugin/zhushroom-full` 复制到库的 `.obsidian/plugins/` 下
-3. Obsidian 设置 → 第三方插件，关掉安全模式，启用 Zhushroom Full
-4. 重启 Obsidian，页面会在标签页里打开；之后也能点左边的侧边栏图标
+1. 将 `猪事顺利.html` 放入库的根目录
+2. 将 `obsidian-plugin/zhushroom-full` 复制到库的 `.obsidian/plugins/` 目录
+3. 在 Obsidian 的「设置 → 第三方插件」中关闭安全模式，启用 Zhushroom Full
+4. 重启 Obsidian，页面会在标签页中打开，之后也可通过左侧边栏图标打开
 
-插件把页面放进 iframe，页面读写的 md 都走 Obsidian 的接口落盘，不用授权文件夹。数据写在库里的 `日程/` 下（名字可以改）：`01-每日日程/` 放日程和心情，`07-习惯打卡/` 放打卡，`08-文艺审美/` 放书评影评游记，`_同步备份/` 是保存前的快照，用来撤销。
+插件读取 `猪事顺利.html` 并渲染在 iframe 中，页面产生的读写请求经 Obsidian 接口写入库内文件，因此不需要授权文件夹。
 
-不想一步步来的话，Release 里的 `zhushroom-full.zip` 已经打包好了页面、插件、同步助手和说明。
+数据写入库中的 `日程/` 目录（名称可在设置中修改）：
+
+| 目录 | 内容 |
+| :--- | :--- |
+| `日程/01-每日日程/` | `日程-YYYY-MM.md`、`心情-YYYY-MM.md` |
+| `日程/07-习惯打卡/` | `习惯打卡.md` |
+| `日程/08-文艺审美/` | `书评/`、`影评/`、`游记/` |
+| `日程/_同步备份/` | 保存前的快照，用于撤销上一次保存 |
+
+Release 中也提供 `zhushroom-full.zip`，内含页面、插件、同步助手与使用说明，解压后按 `使用说明.txt` 放置即可。
 
 ### 同步助手（可选）
 
-不装也能用，只是课表得手填、学在浙大的待办得手抄。要用的话：
+用于同步教务网课表与学在浙大待办。不安装也可正常使用本应用，仅需手动填写课程表。上述两种用法均可配合使用。
 
-1. 下载 Release 里的 `zju-sync-helper.zip`，解压到任意目录
-2. 双击 `登录一次.bat`，在跳出的浏览器里登录浙大身份认证，打开一次教务网课表页
-3. 双击 `start-hidden.vbs` 起后台服务，监听 `127.0.0.1:8765`
-4. 回到页面，点右上角云朵图标，选「立即同步」
+1. 下载 Release 中的 `zju-sync-helper.zip`，解压到任意目录
+2. 双击 `登录一次.bat`，在打开的浏览器中完成浙大统一身份认证，并打开一次教务网课表页
+3. 双击 `start-hidden.vbs` 启动后台服务，监听 `127.0.0.1:8765`
+4. 回到页面，点击右上角云朵图标，选择「立即同步」
 
-别用仓库首页的 Code → Download ZIP，那里面的包没有 `zju-sync-service.exe`，`.bat` 的行尾也会坏掉。助手只在本机跑，Cookie 和缓存都在你自己的电脑上；想开机自启，把 `start-hidden.vbs` 的快捷方式放进 `shell:startup`。
+请勿使用仓库首页的 Code → Download ZIP 获取同步助手，该方式下载的压缩包不含 `zju-sync-service.exe`，`.bat` 的行尾换行也会被改写。同步助手仅在本机运行，Cookie 与缓存均保存在本地；如需开机自启，可将 `start-hidden.vbs` 的快捷方式放入 `shell:startup`。
 
-## 用的时候
+## 使用
 
-- 顶栏右边依次是「选择 Obsidian 库」「撤销上一次保存」「保存到 Obsidian」「拉取学在浙大 DDL」，最后一格是更多菜单
-- 点列顶的「周X」，可以给那天加事项
-- 添加弹窗分「事项 / DDL」两页，DDL 只填截止时间
-- 课程表生成的课程事件没有勾选框，分类固定是「课程」，也不计入完成率
-- 设置里有字号、配色、背景图、称呼、钉钉 Webhook、侧边栏图标
+- 顶部右侧依次为「选择 Obsidian 库」「撤销上一次保存」「保存到 Obsidian」「拉取学在浙大 DDL」，最右为更多菜单
+- 点击列标题「周X」可直接为该日添加事项
+- 添加事项弹窗分为「事项」与「DDL」两个标签，DDL 只需填写截止时间
+- 课程表生成的课程事件不带勾选框，分类固定为「课程」，不计入完成率
+- 设置中可调整字号、配色、背景图、称呼、钉钉 Webhook 与侧边栏图标
 
-## 数据和隐私
+## 数据与隐私
 
-日程、心情、习惯、复盘平时都在 localStorage，连了库就同时写 md。钉钉 Webhook 只存在本地。仓库里没有个人日程、登录凭证，也没有同步服务的二进制。
+日程、心情、习惯与复盘保存在浏览器 `localStorage` 中；连接库后同时写入 Markdown 文件。钉钉 Webhook 仅保存在本地。仓库中不包含个人日程数据、登录凭证或同步服务的二进制文件。
 
 ## 已知限制
 
-- 用 `file://` 打开时浏览器不肯记住目录授权，每个会话要重选一次；在 Obsidian 里用插件没这个问题
-- 需要 Chromium 内核（Edge、Chrome、Obsidian 自带的内核都行），Firefox 对 File System Access API 支持不全
-- 学在浙大同步依赖 `zju-sync/` 里的本地服务，二进制没入库，得自己构建或者从 Release 拿
+- 以 `file://` 方式打开时，浏览器不会保留目录授权，每个会话需重新选择一次库目录；在 Obsidian 中通过插件打开无此问题
+- 应用依赖 Chromium 内核（Edge、Chrome 及 Obsidian 内置内核均可），Firefox 对 File System Access API 的支持不完整
+- 学在浙大同步依赖 `zju-sync/` 中的本地服务，其二进制文件未纳入仓库，需自行构建或从 Release 获取
 
 ## 截图
 
@@ -62,14 +71,14 @@
 
 ## 开发
 
-应用平时在 Obsidian 库里改，这个仓库是发布副本：
+应用日常在 Obsidian 库中编辑，本仓库为发布副本。
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tools\publish.ps1          # 同步、检查、提交、推送
-powershell -ExecutionPolicy Bypass -File tools\publish.ps1 -DryRun  # 只看检查结果
+powershell -ExecutionPolicy Bypass -File tools\publish.ps1          # 同步、检查、提交并推送
+powershell -ExecutionPolicy Bypass -File tools\publish.ps1 -DryRun  # 仅执行检查
 ```
 
-脚本会先查私有路径、凭证、二进制和脚本语法，过了才提交。
+脚本会先检查私有路径、登录凭证、二进制文件与脚本语法，通过后再提交。
 
 ## 许可
 
