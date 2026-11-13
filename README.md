@@ -15,41 +15,21 @@
 
 ## 快速开始
 
-### 方式零：下载全量包（一个 zip 全都有）
-
-[最新 Release](https://github.com/Falling-anyway/zhushroom/releases/latest) 里的 `zhushroom-full.zip` 解压后包含：
-
-| 内容 | 用途 |
-| :--- | :--- |
-| `猪事顺利.html` | 页面本体，浏览器双击可用，也可放库根给插件读 |
-| `.obsidian/plugins/zhushroom-full/` | 满血版 Obsidian 插件（含学在浙大同步按钮） |
-| `zju-sync/` | 同步助手（`zju-sync-service.exe` + 两个脚本） |
-| `使用说明.txt` | 上面三样怎么放、怎么跑 |
-
-浏览器直用只需双击 html；想在 Obsidian 里用，把 `猪事顺利.html` 和 `.obsidian\plugins\zhushroom-full` 按包内说明复制进库即可。
-
-### 方式一：打开网页直接用（零安装）
+### 方式一：网站版（零安装）
 
 打开 **https://falling-anyway.github.io/zhushroom/**，不用装任何东西。
 
-- 数据存在你自己浏览器的 `localStorage` 里，不上传服务器；换设备或清缓存前请先「设置 → 数据 → 导出数据」
-- 想同步教务网课表、校历和学在浙大待办，见下文「可选：同步助手」
+- 数据存在你自己浏览器的 `localStorage` 里，不上传服务器；换设备或清缓存前先「设置 → 数据 → 导出数据」
 - 也可以把 `猪事顺利.html` 下载到本地双击打开，效果一样
 
-### 方式二：放进 Obsidian 库（适合已经在用 Obsidian 的人）
+### 方式二：满血版（放进 Obsidian 库）
 
 1. 把 `猪事顺利.html` 放到库的**根目录**
-2. 把 `obsidian-plugin/zhushroom-full` 整个目录复制到库的 `.obsidian/plugins/` 下，得到 `.obsidian/plugins/zhushroom-full/{main.js, manifest.json}`
+2. 把 `obsidian-plugin/zhushroom-full` 整个目录复制到库的 `.obsidian/plugins/` 下
 3. Obsidian 设置 → 第三方插件 → 关闭安全模式 → 启用「Zhushroom Full」
-4. 重启 Obsidian，页面会自动在标签页里打开；之后也可以从左侧边栏的小猪/蘑菇图标点开
+4. 重启 Obsidian，页面会自动在标签页里打开；之后也能从左侧边栏的小猪/蘑菇图标点开
 
-插件做的事：读 `猪事顺利.html` 原文塞进 iframe 渲染，并在页面与库之间搭一条消息桥，页面里所有读写的 md 都通过 Obsidian 的 API 落盘，所以不需要浏览器授权目录。
-
-> 同一份 html 会自动判断环境：在 Obsidian 里走插件模式（写 md），在浏览器里走网页模式（存 localStorage）。
-
-### 库目录结构
-
-页面会把内容写进库里的 `日程/` 目录（目录名可在设置里改，连接时会校验）：
+插件读 `猪事顺利.html` 原文塞进 iframe 渲染，页面读写的 md 全部经由 Obsidian API 落盘，不需要浏览器授权目录。数据写进库里的 `日程/`（目录名可在设置里改）：
 
 | 目录 | 内容 |
 | :--- | :--- |
@@ -58,15 +38,15 @@
 | `日程/08-文艺审美/` | `书评/`、`影评/`、`游记/` |
 | `日程/_同步备份/` | 保存前的快照，用于「撤销上一次保存」 |
 
-子目录缺失时页面会在首次连接后自动创建。
+嫌麻烦也可以直接下 Release 里的 `zhushroom-full.zip`：页面、插件、同步助手、说明都配好了，按包内 `使用说明.txt` 放就行。
 
-### 可选：装同步助手（只有想同步课表与 DDL 时才需要）
+### 同步助手（可选）
 
-它不是一个独立的用法，而是一个附加组件：不装也能正常用页面，只是课表要手填、学在浙大待办要手动抄。上面三种用法都能配上它，方式零的包里已经带了，不用再下一次。
+不是第三种用法，是附加组件：不装也能用，只是课表要手填、学在浙大待办要手动抄。方式一、方式二都能配上它。
 
-1. 下载 [最新 Release](https://github.com/Falling-anyway/zhushroom/releases/latest) 里的 `zju-sync-helper.zip`，解压到任意目录
+1. 下载 Release 里的 `zju-sync-helper.zip`，解压到任意目录
    - **不要用仓库首页的 Code → Download ZIP**：那里没有打包好的 `zju-sync-service.exe`，`.bat` 的行尾也会被改坏，双击一定报「不是内部或外部命令」
-2. 双击 `登录一次.bat`，在弹出浏览器里登录浙大统一身份认证，再打开教务网课表页一次
+2. 双击 `登录一次.bat`，在浏览器里登录浙大统一身份认证，再打开教务网课表页一次
 3. 双击 `start-hidden.vbs` 启动后台服务（监听 `http://127.0.0.1:8765`，只在本机）
 4. 回到页面，点右上角云朵图标 →「立即同步」
 
