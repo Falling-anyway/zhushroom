@@ -22,6 +22,14 @@ echo.
 start "" "%BROWSER%" --remote-debugging-port=9333 --user-data-dir="%TEMP%\zhushi-zju-profile" --no-first-run --no-default-browser-check --new-window "https://courses.zju.edu.cn/user/index" "https://zdbk.zju.edu.cn/jwglxt/kbcx/xskbcx_cxXskbcxIndex.html?gnmkdm=N253508&layout=default"
 timeout /t 3 >nul
 
+if not exist "%~dp0zju-sync-service.exe" (
+  echo [!] zju-sync-service.exe is missing from this folder.
+  echo     Do not use the green Code button. Download zju-sync-helper.zip
+  echo     from https://github.com/Falling-anyway/zhushroom/releases and unzip it.
+  pause
+  exit /b 1
+)
+
 zju-sync-service.exe --login
 
 echo.
