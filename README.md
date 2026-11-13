@@ -15,6 +15,19 @@
 
 ## 快速开始
 
+### 方式零：下载全量包（一个 zip 全都有）
+
+[最新 Release](https://github.com/Falling-anyway/zhushroom/releases/latest) 里的 `zhushroom-full.zip` 解压后包含：
+
+| 内容 | 用途 |
+| :--- | :--- |
+| `猪事顺利.html` | 页面本体，浏览器双击可用，也可放库根给插件读 |
+| `.obsidian/plugins/zhushi-ribbon/` | 满血版 Obsidian 插件（含学在浙大同步按钮） |
+| `zju-sync/` | 同步助手（`zju-sync-service.exe` + 两个脚本） |
+| `使用说明.txt` | 上面三样怎么放、怎么跑 |
+
+浏览器直用只需双击 html；想在 Obsidian 里用，把 `猪事顺利.html` 和 `.obsidian\plugins\zhushi-ribbon` 按包内说明复制进库即可。
+
 ### 方式一：打开网页直接用（零安装）
 
 打开 **https://falling-anyway.github.io/zhushroom/**，不用装任何东西。
