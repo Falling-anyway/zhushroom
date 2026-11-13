@@ -22,11 +22,11 @@
 | 内容 | 用途 |
 | :--- | :--- |
 | `猪事顺利.html` | 页面本体，浏览器双击可用，也可放库根给插件读 |
-| `.obsidian/plugins/zhushi-ribbon/` | 满血版 Obsidian 插件（含学在浙大同步按钮） |
+| `.obsidian/plugins/zhushroom-full/` | 满血版 Obsidian 插件（含学在浙大同步按钮） |
 | `zju-sync/` | 同步助手（`zju-sync-service.exe` + 两个脚本） |
 | `使用说明.txt` | 上面三样怎么放、怎么跑 |
 
-浏览器直用只需双击 html；想在 Obsidian 里用，把 `猪事顺利.html` 和 `.obsidian\plugins\zhushi-ribbon` 按包内说明复制进库即可。
+浏览器直用只需双击 html；想在 Obsidian 里用，把 `猪事顺利.html` 和 `.obsidian\plugins\zhushroom-full` 按包内说明复制进库即可。
 
 ### 方式一：打开网页直接用（零安装）
 
@@ -49,8 +49,8 @@
 ### 方式三：放进 Obsidian 库（适合已经在用 Obsidian 的人）
 
 1. 把 `猪事顺利.html` 放到库的**根目录**
-2. 把 `obsidian-plugin/zhushi-ribbon` 整个目录复制到库的 `.obsidian/plugins/` 下，得到 `.obsidian/plugins/zhushi-ribbon/{main.js, manifest.json}`
-3. Obsidian 设置 → 第三方插件 → 关闭安全模式 → 启用「猪事顺利侧边栏入口」
+2. 把 `obsidian-plugin/zhushroom-full` 整个目录复制到库的 `.obsidian/plugins/` 下，得到 `.obsidian/plugins/zhushroom-full/{main.js, manifest.json}`
+3. Obsidian 设置 → 第三方插件 → 关闭安全模式 → 启用「Zhushroom Full」
 4. 重启 Obsidian，页面会自动在标签页里打开；之后也可以从左侧边栏的小猪/蘑菇图标点开
 
 插件做的事：读 `猪事顺利.html` 原文塞进 iframe 渲染，并在页面与库之间搭一条消息桥，页面里所有读写的 md 都通过 Obsidian 的 API 落盘，所以不需要浏览器授权目录。

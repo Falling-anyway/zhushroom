@@ -8,7 +8,7 @@ $dist = Join-Path $repo 'dist'
 $stage = Join-Path $env:TEMP ('zhushroom-full-' + [guid]::NewGuid().ToString('N'))
 
 $page = Join-Path $repo '猪事顺利.html'
-$plugin = Join-Path $repo 'obsidian-plugin\zhushi-ribbon'
+$plugin = Join-Path $repo 'obsidian-plugin\zhushroom-full'
 $helper = Join-Path $repo 'zju-sync'
 
 foreach ($p in @($page, $plugin, $helper)) {
@@ -16,12 +16,12 @@ foreach ($p in @($page, $plugin, $helper)) {
 }
 
 New-Item -ItemType Directory -Force -Path $stage | Out-Null
-New-Item -ItemType Directory -Force -Path (Join-Path $stage '.obsidian\plugins\zhushi-ribbon') | Out-Null
+New-Item -ItemType Directory -Force -Path (Join-Path $stage '.obsidian\plugins\zhushroom-full') | Out-Null
 New-Item -ItemType Directory -Force -Path (Join-Path $stage 'zju-sync') | Out-Null
 
 Copy-Item $page (Join-Path $stage '猪事顺利.html') -Force
-Copy-Item (Join-Path $plugin 'main.js') (Join-Path $stage '.obsidian\plugins\zhushi-ribbon\main.js') -Force
-Copy-Item (Join-Path $plugin 'manifest.json') (Join-Path $stage '.obsidian\plugins\zhushi-ribbon\manifest.json') -Force
+Copy-Item (Join-Path $plugin 'main.js') (Join-Path $stage '.obsidian\plugins\zhushroom-full\main.js') -Force
+Copy-Item (Join-Path $plugin 'manifest.json') (Join-Path $stage '.obsidian\plugins\zhushroom-full\manifest.json') -Force
 
 $helperFiles = @('zju-sync-service.exe', '登录一次.bat', 'start-hidden.vbs', 'zju-sync.config.example.json')
 foreach ($f in $helperFiles) {
@@ -46,7 +46,7 @@ $readme = @'
 用法二：在 Obsidian 里用（满血版，推荐）
 ---------------------------------------
 1. 把 猪事顺利.html 复制到库的最外层目录（和 .obsidian 同一层）。
-2. 把本包里的 .obsidian\plugins\zhushi-ribbon 整个文件夹，复制到你的库的
+2. 把本包里的 .obsidian\plugins\zhushroom-full 整个文件夹，复制到你的库的
    <库>\.obsidian\plugins\ 下面（已有同名文件夹就覆盖）。
 3. 重启 Obsidian → 设置 → 第三方插件 → 找到「猪事顺利侧边栏入口」并启用。
 4. 点左侧边栏的小猪图标（或命令面板搜「打开猪事顺利」）。

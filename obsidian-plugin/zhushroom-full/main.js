@@ -3,7 +3,7 @@
 const { addIcon, ItemView, Notice, Plugin, setIcon, TFile } = require("obsidian");
 
 const PAGE_PATH = "猪事顺利.html";
-const VIEW_TYPE = "zhushi-page-view";
+const VIEW_TYPE = "zhushroom-page-view";
 const ICON_ID = "zhushi-pig";
 /* 页面里的「选择 Obsidian 库」选的就是这一层；插件直写时也以它为根 */
 const SYNC_ROOT = "日程";

@@ -1,0 +1,9 @@
+{
+  "id": "zhushroom-full",
+  "name": "Zhushroom Full",
+  "version": "1.0.1",
+  "minAppVersion": "1.6.6",
+  "description": "在左侧边栏打开猪事顺利页面（满血版，含学在浙大同步）。",
+  "author": "Vault",
+  "isDesktopOnly": false
+}
