@@ -1,4 +1,4 @@
-﻿# 打包「学在浙大同步助手」安装包到 dist/（不进仓库，只作为 GitHub Release 附件）
+# 打包「学在浙大同步助手」安装包到 dist/（不进仓库，只作为 GitHub Release 附件）
 # 用法：powershell -ExecutionPolicy Bypass -File tools\build-helper.ps1
 
 $ErrorActionPreference = 'Stop'
@@ -12,8 +12,7 @@ $files = @(
   'zju-sync-service.exe',
   '登录一次.bat',
   'start-hidden.vbs',
-  'zju-sync.config.example.json',
-  '说明.txt'
+  'zju-sync.config.example.json'
 )
 
 $stage = Join-Path $env:TEMP ('zju-helper-' + [guid]::NewGuid().ToString('N'))

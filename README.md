@@ -26,6 +26,7 @@
 ### 方式二：装同步助手（可选，仅同步课表与 DDL 时需要）
 
 1. 下载 [最新 Release](https://github.com/Falling-anyway/zhushroom/releases/latest) 里的 `zju-sync-helper.zip`，解压到任意目录
+   - **不要用仓库首页的 Code → Download ZIP**：那里没有打包好的 `zju-sync-service.exe`，`.bat` 的行尾也会被改坏，双击一定报「不是内部或外部命令」
 2. 双击 `登录一次.bat`，在弹出浏览器里登录浙大统一身份认证，再打开教务网课表页一次
 3. 双击 `start-hidden.vbs` 启动后台服务（监听 `http://127.0.0.1:8765`，只在本机）
 4. 回到网页，点右上角云朵图标 →「立即同步」

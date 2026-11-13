@@ -1,0 +1,4 @@
+# Windows 批处理与 VBS 必须保留 CRLF，否则 cmd 会把命令行拆坏
+*.bat -text
+*.cmd -text
+*.vbs -text

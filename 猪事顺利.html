@@ -6362,6 +6362,12 @@ function updateObsidianUI(connected, name) {
 }
 
 async function chooseObsidianDir() {
+  /* 在 Obsidian 里页面是插件开的 iframe：来源是 null，showDirectoryPicker 一定抛 AbortError，
+     而且这时读写走的本来就是插件桥，不需要（也不应该）选目录 */
+  if ((typeof zsBridge !== 'undefined' && zsBridge) || (window.parent && window.parent !== window)) {
+    setSyncStatus('当前由 Obsidian 插件直接读写库，不需要选择目录', false, 6000);
+    return;
+  }
   if (!window.showDirectoryPicker) { setSyncStatus('这个浏览器不支持目录选择，请用 Chrome 或 Edge', false, 8000); return; }
   if (obsidianDirHandle && !(await confirmDanger('更换 Obsidian 库？',
     '当前连接的是「' + obsidianDirHandle.name + '」。\n换库之后同步目标改为新库，旧库里的文件不会被删除。'))) return;
@@ -6456,6 +6462,8 @@ window.addEventListener('message', function(e) {
 /* 向父窗口（Obsidian 插件视图）打招呼；不是插件打开的页面就切成网页模式 */
 function initObsidianBridge() {
   if (window.parent && window.parent !== window) {
+    /* 插件桥握手是异步的，先给个「正在连接」，避免用户以为没连上而去点文件夹图标 */
+    try { setObsidianHint('正在连接 Obsidian…'); } catch (e) {}
     try { window.parent.postMessage({ zsPing: true }, '*'); } catch (e) {}
     setTimeout(function() { if (!zsBridge) applyAppMode('web'); }, 1200);
   } else {
