@@ -12,6 +12,7 @@ zju-cookies.json
 zju-sync/.login-profile/
 zju-sync/_cache/
 zju-sync/猪事顺利.html
+zju-sync/zju-sync.config.json
 
 # ===== 二进制 =====
 *.exe
