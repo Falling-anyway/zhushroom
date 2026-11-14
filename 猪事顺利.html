@@ -79,6 +79,8 @@
     --ddl-done: var(--muted);
     --done-bg: var(--neutral);
     --done-fg: var(--sub);
+    /* 连接状态点：已连接用这个绿，四套主题共用 */
+    --dot-on: #34a853;
   }
   /* ===== 配色主题：界面骨架色、事项类目基色与状态色按主题覆盖 ===== */
   html[data-theme="mist"] {
@@ -198,7 +200,7 @@
   .header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    justify-content: flex-end;
     margin-bottom: 20px;
   }
   .header h1 {
@@ -345,18 +347,27 @@
   .legend-dot.social { background: var(--cat-social); }
   .legend-dot.course { background: var(--cat-course); }
 
+  /* 周视图：左一列是时间刻度，右侧七列按时段摆放日程 */
   .calendar {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 1px;
-    background: var(--line);
+    grid-template-columns: 56px repeat(7, minmax(0, 1fr));
+    gap: 0;
+    background: var(--card);
+    border: 1px solid var(--line-soft);
     border-radius: 12px;
     overflow: hidden;
     box-shadow: 0 2px 12px color-mix(in srgb, var(--text) 8%, transparent);
+    --hour-h: 46px;
+  }
+  .cal-corner {
+    background: var(--card);
+    border-bottom: 1px solid var(--line-soft);
   }
   .day-header {
     background: var(--card);
-    padding: 14px 12px;
+    border-left: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+    padding: 10px 12px 9px;
     text-align: center;
     font-weight: 600;
     font-size: var(--fs-14);
@@ -365,6 +376,13 @@
     cursor: pointer;
     transition: background 0.15s;
   }
+  .day-header .dh-date {
+    display: block;
+    margin-top: 2px;
+    font-size: var(--fs-11);
+    font-weight: 500;
+    color: var(--muted);
+  }
   .day-header:hover {
     background: color-mix(in srgb, var(--primary) 10%, var(--card));
   }
@@ -372,25 +390,238 @@
     background: var(--primary);
     color: #fff;
   }
+  .day-header.today .dh-date {
+    color: rgba(255, 255, 255, 0.82);
+  }
   .day-header.today:hover {
     background: color-mix(in srgb, var(--text) 12%, var(--primary));
   }
-  .day-cell {
+  /* 全天行：没有时间与跨天的事项放这里 */
+  .allday-label {
+    display: flex;
+    justify-content: flex-end;
+    padding: 8px 8px 0 0;
+    font-size: var(--fs-11);
+    color: var(--muted);
     background: var(--card);
-    min-height: 220px;
-    padding: 8px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .allday-cell {
+    background: var(--card);
+    border-left: 1px solid var(--line-soft);
+    border-bottom: 1px solid var(--line-soft);
+    padding: 4px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 4px;
+    min-height: 34px;
   }
-  .day-cell .date-num {
-    font-size: var(--fs-13);
+  .allday-cell.today {
+    background: color-mix(in srgb, var(--primary) 3.5%, var(--card));
+  }
+  .time-axis {
+    position: relative;
+    background: var(--card);
+  }
+  .time-axis .tick {
+    position: absolute;
+    right: 7px;
+    transform: translateY(-50%);
+    font-size: var(--fs-11);
     color: var(--muted);
-    margin-bottom: 2px;
+    font-variant-numeric: tabular-nums;
   }
-  .day-cell.today .date-num {
-    color: var(--primary);
-    font-weight: 700;
+  .day-cell {
+    position: relative;
+    background-color: var(--card);
+    border-left: 1px solid var(--line-soft);
+    /* 每小时一条浅横线，只作视觉参考 */
+    background-image: linear-gradient(to bottom, color-mix(in srgb, var(--line) 42%, transparent) 1px, transparent 1px);
+    background-size: 100% var(--hour-h);
+  }
+  /* 关掉时间轴时的周视图：7 列、事件按先后顺序纵向排列 */
+  .calendar.no-axis { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+  .calendar.no-axis .day-cell {
+    height: auto;
+    min-height: 140px;
+    padding: 5px 5px 7px;
+    background-image: none;
+  }
+  .calendar.no-axis .day-cell.today { background-color: color-mix(in srgb, var(--primary) 3.5%, var(--card)); }
+  .event.flow {
+    position: relative;
+    left: auto;
+    right: auto;
+    height: auto;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin: 0 0 4px;
+    padding: 4px 8px 4px 24px;
+    overflow: hidden;
+  }
+  .event.flow .event-body {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .event.flow .event-content {
+    flex: 1 1 auto;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event.flow .event-time { flex: 0 0 auto; font-size: var(--fs-10); color: var(--sub); }
+  .event.flow .tag { display: none; }
+  .event.flow .complete-btn { left: 6px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; border-width: 1.5px; }
+  .event.flow .event-loc { display: none; }
+  .day-cell.today {
+    background-color: color-mix(in srgb, var(--primary) 3.5%, var(--card));
+  }
+  /* 有时间的日程：绝对定位到开始时间，高度按时长 */
+  .event.timed {
+    position: absolute;
+    left: 3px;
+    right: 3px;
+    padding: 3px 6px 3px 21px;
+    font-size: var(--fs-12);
+    line-height: 1.35;
+    overflow: hidden;
+  }
+  /* 时间块内不再重复分类标签：左侧色条与圆点已经区分分类，横向空间留给名称 */
+  .event.timed .tag { display: none; }
+  .event.timed .event-loc { display: none; }
+  .event.timed .event-content { overflow-wrap: anywhere; }
+  .event.timed.tall .event-loc { display: block; margin-top: 2px; }
+  .event.timed .complete-btn {
+    left: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 13px;
+    height: 13px;
+    border-width: 1.5px;
+  }
+  .event.timed.mini { padding: 2px 6px 2px 18px; }
+  /* 全天行：一行式排版，勾选框独占左侧槽位，文字靠省略号收尾 */
+  .allday-cell .event {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px 3px 24px;
+    overflow: hidden;
+  }
+  .allday-cell .event .tag { display: none; }
+  .allday-cell .event .event-body {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+  .allday-cell .event .event-content { flex: 1 1 auto; min-width: 0; }
+  .allday-cell .event .event-content {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .allday-cell .event .event-time {
+    margin: 0;
+    flex: 0 0 auto;
+    font-size: var(--fs-10);
+    color: var(--sub);
+  }
+  .allday-cell .event .complete-btn {
+    left: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 13px;
+    height: 13px;
+    border-width: 1.5px;
+  }
+  /* 短日程：时间与名称挤一行，隐藏分类标签，名称截断也不丢信息（悬停有浮层） */
+  .event.timed.mini {
+    padding: 2px 6px 2px 18px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .event.timed.mini .event-time {
+    margin: 0;
+    flex: 0 0 auto;
+    font-size: var(--fs-10);
+  }
+  .event.timed.mini .event-content {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .event.timed.mini .tag,
+  .event.timed.mini .event-loc,
+  .event.timed.mini .notes-indicator {
+    display: none;
+  }
+  .event.timed.mini .complete-btn {
+    width: 12px;
+    height: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  /* 屏幕矮、格子被压低时整体收紧一档，保证一周仍能完整显示 */
+  .calendar.dense .event.timed {
+    font-size: var(--fs-11);
+    line-height: 1.25;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+  .calendar.dense .event.timed .event-time { font-size: var(--fs-10); }
+  .calendar.dense .event.timed .event-loc { display: none; }
+  .calendar.dense .event.timed .complete-btn { width: 11px; height: 11px; border-width: 1.5px; }
+  .calendar.dense .time-axis .tick { font-size: var(--fs-10); }
+  /* 悬停时高亮「这一小时」的整格，提示可以点它新增 */
+  .slot-hint {
+    position: absolute;
+    left: 0; right: 0;
+    background: color-mix(in srgb, var(--primary) 7%, transparent);
+    border-top: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+    pointer-events: none;
+  }
+  .allday-cell { cursor: pointer; }
+  /* 当前时间横条 */
+  .now-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 0;
+    border-top: 2px solid var(--ddl-today);
+    z-index: 6;
+    pointer-events: none;
+  }
+  .now-line::before {
+    content: '';
+    position: absolute;
+    left: -4px;
+    top: -5px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ddl-today);
+  }
+  .now-line .now-label {
+    position: absolute;
+    left: 3px;
+    top: -9px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background: var(--ddl-today);
+    color: #fff;
+    font-size: var(--fs-10);
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
   }
 
   .event {
@@ -426,9 +657,25 @@
   .event.course { padding-left: 10px; }
 
   .event.spanning-event {
-    /* 只用虚线边框区分续接卡：整卡 opacity 会让文字对比再降一档（换主题后更明显） */
+    /* 跨天卡：起点日保持实线，只有续接日改虚线（整卡 opacity 会让文字对比再降一档） */
+    border-left-width: 3px;
+  }
+  .event.spanning-cont {
     border-left-style: dashed;
   }
+  .event-time.span-flag {
+    /* 「跨天 / 续」小标：做成小药丸，压在正文前面也不抢位置 */
+    flex: 0 0 auto;
+    opacity: 1;
+    padding: 1px 4px;
+    border-radius: 3px;
+    background: color-mix(in srgb, var(--text) 8%, transparent);
+    color: var(--sub);
+    font-size: var(--fs-9);
+    font-weight: 500;
+    line-height: 1.3;
+  }
+  .event.spanning-cont .event-content { color: var(--sub); }
 
   .event .tag {
     display: inline-block;
@@ -1626,7 +1873,8 @@
   }
   .event.draggable { cursor: grab; }
   /* 跨日拖拽 / 右侧拉伸 */
-  .day-cell.drop-target {
+  .day-cell.drop-target,
+  .allday-cell.drop-target {
     background: var(--tint);
     outline: 2px dashed var(--primary);
     outline-offset: -2px;
@@ -1660,9 +1908,12 @@
   body.resizing { cursor: col-resize; user-select: none; }
   .event.draggable:active { cursor: grabbing; }
   .event.dragging { opacity: 0.4; transform: scale(0.95); }
-  .day-cell.drag-over { background: var(--tint); }
-  .day-cell.drag-over .drag-zone { outline: 2px dashed var(--primary); outline-offset: -2px; border-radius: 4px; }
-  .day-cell .drag-zone { display: flex; flex-direction: column; gap: 6px; }
+  .day-cell.drag-over,
+  .allday-cell.drag-over { background: var(--tint); }
+  .day-cell.drag-over .drag-zone,
+  .allday-cell.drag-over .drag-zone { outline: 2px dashed var(--primary); outline-offset: -2px; border-radius: 4px; }
+  .day-cell .drag-zone,
+  .allday-cell .drag-zone { display: flex; flex-direction: column; gap: 6px; }
 
   .event .postpone-btn {
     display: none;
@@ -2048,15 +2299,30 @@
     align-items: center;
     column-gap: 10px;
     margin-top: 4px;
-    margin-bottom: 46px;
+    margin-bottom: 24px;
   }
   .bar-left {
     grid-column: 1;
     min-width: 0; display: flex; align-items: center; gap: 8px; overflow: hidden;
   }
   .bar-left .sync-status { min-width: 0; }
+  /* 状态文字只留给读屏与悬停提示，横条左边固定显示页面标题 */
   .bar-left #obsidianText {
-    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    position: absolute;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    overflow: hidden; clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+  .bar-left .bar-title {
+    min-width: 0;
+    font-size: var(--fs-17);
+    font-weight: 700;
+    letter-spacing: .2px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .bar-right {
     grid-column: 3;
@@ -2071,9 +2337,12 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--muted);
+    /* 未连接：跟随当前主题的中性灰 */
+    background: color-mix(in srgb, var(--text) 32%, var(--card));
+    transition: background .2s ease;
   }
-  .sync-dot.connected { background: var(--primary); }
+  /* 已连接：干净的绿点，不加光晕（光晕会溢出横条边界） */
+  .sync-dot.connected { background: var(--dot-on); }
   .sync-bar button {
     padding: 5px 14px;
     border: 1px solid var(--line);
@@ -2691,8 +2960,7 @@
   @media (max-width: 1100px) {
     #obsidianBar { column-gap: 6px; }
     .top-greet { max-width: min(38vw, 320px); }
-    .bar-left { max-width: 30vw; }
-    .bar-left #obsidianText { max-width: 12vw; }
+    .bar-left { max-width: 42vw; }
   }
   /* ===== web 模式：本地同步助手入口与浮动面板 =====
      面板绝对定位在顶栏下方，right 对齐；z-index 低于 .modal-overlay（200） */
@@ -2864,8 +3132,9 @@
 <div class="sync-bar" id="obsidianBar">
   <div class="bar-left">
     <div class="sync-status">
-      <span class="sync-dot" id="obsidianDot"></span>
-      <span id="obsidianText">未连接 Obsidian 库</span>
+      <span class="sync-dot" id="obsidianDot" title="数据保存在本浏览器"></span>
+      <span id="obsidianText" class="bar-status-text">未连接 Obsidian 库</span>
+      <span class="bar-title" id="topTitle">猪事顺利</span>
     </div>
     <span class="note-status sync-msg" id="syncStatus"></span>
   </div>
@@ -2910,7 +3179,6 @@
 </div>
 
 <div class="header">
-  <h1 id="title">猪事顺利</h1>
   <div class="week-nav" id="weekNav">
     <button onclick="changeWeek(-1)"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>上一周</button>
     <span class="week-label" id="weekLabel"></span>
@@ -3268,7 +3536,7 @@
 
           <label style="margin-top:16px">页面标题</label>
           <input type="text" id="optPageTitle" placeholder="猪事顺利">
-          <div class="setting-hint">显示在页面左上角，同时作为浏览器标签页标题</div>
+          <div class="setting-hint">显示在顶部横条左侧，同时作为浏览器标签页标题</div>
 
           <label style="margin-top:16px">DDL 全部完成后的鼓励语</label>
           <textarea id="optDdlDoneText" rows="3" placeholder="全部 DDL 已完成，强强！" style="line-height:1.5"></textarea>
@@ -3284,6 +3552,13 @@
     <label class="setting-check">
       <input type="checkbox" id="optShowCompletedDDL" onchange="setShowCompletedDDL(this.checked)">
       <span>DDL 倒计时显示已完成</span>
+    </label>
+    <label class="setting-check">
+      <input type="checkbox" id="optWeekTimeline" onchange="setWeekTimeline(this.checked)">
+      <span>周视图显示时间轴</span>
+    </label>    <label class="setting-check">
+      <input type="checkbox" id="optWeekAutoRange" onchange="setWeekAutoRange(this.checked)">
+      <span>周视图时间轴按日程自动收缩</span>
     </label>
     <div class="setting-row">
       <span>DDL 日期轴最长</span>
@@ -3512,7 +3787,8 @@ function loadSettings() {
   var defaults = {
     fontScale: 1, theme: 'monet', showCompleted: true, showCompletedDDL: false, ddlAxisDays: 0,
     pageTitle: '猪事顺利', ddlDoneText: '全部 DDL 已完成，强强！', bgBlur: 0,
-    railCollapsed: false, showStats: true, statsCollapsed: false, userName: '你'
+    railCollapsed: false, showStats: true, statsCollapsed: false, userName: '你',
+    weekAutoRange: false, weekTimeline: true
   };
   try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
   catch(e) { return defaults; }
@@ -3675,6 +3951,18 @@ function setShowCompleted(on) {
 function setShowCompletedDDL(on) {
   var s = loadSettings(); s.showCompletedDDL = !!on; saveSettings(s);
   renderDDLCountdown();
+}
+
+/* 周视图时间轴是否按本周日程自动收缩范围 */
+function setWeekTimeline(on) {
+  var s = loadSettings(); s.weekTimeline = !!on; saveSettings(s);
+  var auto = document.getElementById('optWeekAutoRange');
+  if (auto) auto.disabled = !on;
+  if (typeof render === 'function') render();
+}
+function setWeekAutoRange(on) {
+  var s = loadSettings(); s.weekAutoRange = !!on; saveSettings(s);
+  render();
 }
 
 function setDdlAxisDays(days) {
@@ -3959,6 +4247,8 @@ function applyPageTitle(t) {
   t = String(t || '').trim() || '猪事顺利';
   var h = document.getElementById('title');
   if (h) h.textContent = t;
+  var bt = document.getElementById('topTitle');
+  if (bt) bt.textContent = t;
   var rt = document.getElementById('railTitle');
   if (rt) rt.textContent = t;
   document.title = t;
@@ -3992,6 +4282,12 @@ function openSettings() {
   if (c1) c1.checked = s.showCompleted !== false;
   var c2 = document.getElementById('optShowCompletedDDL');
   if (c2) c2.checked = !!s.showCompletedDDL;
+  var c2b = document.getElementById('optWeekTimeline');
+if (c2b) c2b.checked = s.weekTimeline !== false;
+        var autoR = document.getElementById('optWeekAutoRange');
+        if (autoR) autoR.disabled = s.weekTimeline === false;
+        var c3 = document.getElementById('optWeekAutoRange');
+  if (c3) c3.checked = s.weekAutoRange === true;
   if (typeof renderBackupList === 'function') renderBackupList();
   var sel = document.getElementById('optDdlAxisDays');
   if (sel) sel.value = String(s.ddlAxisDays || 0);
@@ -4294,6 +4590,9 @@ function createEventEl(ev, dateStr, dayEvents) {
     e.stopPropagation();
     openEditModal(dateStr, idx);
   });
+  /* 时间块窄，名称可能被截断；悬停用原生提示补全时间、名称、备注 */
+  el.title = (ev.time ? ev.time + (ev.endTime ? '–' + ev.endTime : '') + ' · ' : '') +
+    (chunks.name || '') + (ev.notes ? ' · ' + ev.notes : '');
   return el;
 }
 
@@ -4342,8 +4641,7 @@ function moveEventToDate(fromDate, fromIndex, toDate) {
   if (!list.length) delete events[fromDate];
 
   const moved = Object.assign({}, ev);
-  moved.time = '';
-  delete moved.endTime;
+  /* 周视图有时间轴后，跨日移动保留原来的开始/结束时刻，只清掉跨天范围 */
   delete moved.endDate;
 
   if (!events[toDate]) events[toDate] = [];
@@ -4422,11 +4720,184 @@ function applyResize(dateStr, idx, endDate) {
     ? '已改为跨日日程：' + dateStr + ' → ' + endDate + '（时间已清空）'
     : '已收回为单日日程：' + dateStr + '（时间已清空）', true, 4000);
 }
+/* ===== 周视图：时间轴 ===== */
+var WEEK_HOUR_H = 46;           /* 1 小时对应的高度，渲染时按可用空间重新计算 */
+const WEEK_HOUR_H_MAX = 56;     /* 屏幕很高时也不无限拉长 */
+const WEEK_HOUR_H_MIN = 14;     /* 屏幕很矮时保底，再小就看不清了 */
+const WEEK_MIN_BLOCK_H = 26;    /* 短日程的保底高度，保证一行字放得下 */
+var weekRangeCache = { start: 360, end: 1440 };
+var nowLineTimer = null;
+
+function hmToMinutes(t) {
+  if (!t || typeof t !== 'string') return null;
+  var m = t.match(/^(\d{1,2}):(\d{2})/);
+  if (!m) return null;
+  var v = parseInt(m[1], 10) * 60 + parseInt(m[2], 10);
+  if (!isFinite(v)) return null;
+  return Math.max(0, Math.min(1439, v));
+}
+
+/* 时间轴范围：默认 6:00–24:00；打开「自动收缩」后按本周有时间的日程收窄 */
+function weekTimeRange(events) {
+  var s = loadSettings();
+  if (s.weekAutoRange !== true) return { start: 6 * 60, end: 24 * 60 };
+  var min = null, max = null;
+  Object.keys(events).forEach(function (d) {
+    (events[d] || []).forEach(function (ev) {
+      if (ev.isDDL || !ev.time) return;
+      var a = hmToMinutes(ev.time);
+      if (a === null) return;
+      var b = hmToMinutes(ev.endTime);
+      if (b === null || b <= a) b = a + 60;
+      if (min === null || a < min) min = a;
+      if (max === null || b > max) max = b;
+    });
+  });
+  if (min === null) return { start: 8 * 60, end: 22 * 60 };
+  var start = Math.max(0, Math.floor((min - 60) / 60) * 60);
+  var end = Math.min(24 * 60, Math.ceil((max + 60) / 60) * 60);
+  if (end - start < 6 * 60) end = Math.min(24 * 60, start + 6 * 60);
+  if (end - start < 6 * 60) start = Math.max(0, end - 6 * 60);
+  return { start: start, end: end };
+}
+
+/* 当前时间横条：每分钟更新一次位置，不用重绘整周 */
+function paintNowLine() {
+  var line = document.getElementById('weekNowLine');
+  if (!line) return;
+  var now = new Date();
+  var min = now.getHours() * 60 + now.getMinutes();
+  var r = weekRangeCache;
+  if (min < r.start || min > r.end) { line.style.display = 'none'; return; }
+  line.style.display = '';
+  line.style.top = ((min - r.start) / 60 * WEEK_HOUR_H) + 'px';
+  var label = line.querySelector('.now-label');
+  if (label) {
+    label.textContent = String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+  }
+}
+
+function startNowLineTimer() {
+  if (nowLineTimer) return;
+  nowLineTimer = setInterval(paintNowLine, 30000);
+}
+
+/* 让整周刚好装进屏幕：按可用高度反推每小时高度，必要时压缩到最小可读值 */
+/* 保底块高随时段密度微调：格子被压得很矮时，块也不必留那么高 */
+function weekMinBlockH() {
+  return Math.max(16, Math.min(WEEK_MIN_BLOCK_H, Math.round(WEEK_HOUR_H * 0.9)));
+}
+
+function fitWeekHourHeight(cal, hours) {
+  var top = 0;
+  try { top = cal.getBoundingClientRect().top; } catch (e) { top = 0; }
+  // 92px ≈ 表头 + 全天行 + 底部留白
+  var avail = window.innerHeight - Math.max(0, top) - 92;
+  if (!isFinite(avail) || avail <= 0) avail = 700;
+  var h = Math.floor(avail / Math.max(1, hours));
+  h = Math.max(WEEK_HOUR_H_MIN, Math.min(WEEK_HOUR_H_MAX, h));
+  WEEK_HOUR_H = h;
+  try { cal.style.setProperty('--hour-h', h + 'px'); } catch (e) {}
+  try { cal.classList.toggle('dense', h < 30); } catch (e) {}
+}
+
+/* 关掉时间轴时的周视图：7 列，事项按开始时间先后从上往下排 */
+function renderWeekFlow(monday, events, cal) {
+  cal.classList.add('no-axis');
+  const showDone = loadSettings().showCompleted !== false;
+  const minOf = (t) => { const v = hmToMinutes(t); return v === null ? 1440 : v; };
+
+  DAYS.forEach((d, i) => {
+    const headDate = new Date(monday.getTime() + i * 86400000);
+    const head = document.createElement('div');
+    head.className = 'day-header' + (isToday(headDate) ? ' today' : '');
+    head.style.gridRow = '1';
+    head.style.gridColumn = String(i + 1);
+    head.innerHTML = d + '<span class="dh-date">' + (headDate.getMonth() + 1) + '/' + headDate.getDate() + '</span>';
+    head.title = '点击为这一天添加日程';
+    head.addEventListener('click', () => openAddModal(formatDate(headDate)));
+    cal.appendChild(head);
+  });
+
+  for (let i = 0; i < 7; i++) {
+    const date = new Date(monday.getTime() + i * 86400000);
+    const dateStr = formatDate(date);
+    const cell = document.createElement('div');
+    cell.className = 'day-cell' + (isToday(date) ? ' today' : '');
+    cell.dataset.date = dateStr;
+    cell.style.gridRow = '2';
+    cell.style.gridColumn = String(i + 1);
+    cell.addEventListener('click', (e) => { if (e.target === cell) openAddModal(dateStr); });
+
+    /* 跨日拖放：拖到别的日期就挪过去 */
+    cell.addEventListener('dragover', (e) => {
+      if (!dragCtx || dragCtx.date === dateStr) return;
+      e.preventDefault();
+      cell.classList.add('drop-target');
+    });
+    cell.addEventListener('dragleave', (e) => {
+      if (e.target === cell) cell.classList.remove('drop-target');
+    });
+    cell.addEventListener('drop', (e) => {
+      cell.classList.remove('drop-target');
+      if (!dragCtx || dragCtx.date === dateStr) return;
+      e.preventDefault();
+      const from = dragCtx;
+      dragCtx = null;
+      moveEventToDate(from.date, from.index, dateStr);
+    });
+
+    const dayEvents = events[dateStr] || [];
+    const spanning = [];
+    Object.keys(events).forEach((evDate) => {
+      (events[evDate] || []).forEach((ev) => {
+        if (!ev.isDDL && ev.endDate && evDate <= dateStr && ev.endDate >= dateStr && evDate !== dateStr) {
+          spanning.push({ ev: ev, startDate: evDate });
+        }
+      });
+    });
+
+    const items = [];
+    spanning.forEach((it) => items.push({ ev: it.ev, startDate: it.startDate, span: true, first: false }));
+    dayEvents
+      .filter((ev) => !ev.isDDL && (showDone || !ev.done))
+      .forEach((ev) => items.push({ ev: ev, startDate: dateStr, span: !!(ev.endDate && ev.endDate > dateStr), first: true }));
+    items.sort((a, b) => minOf(a.ev.time) - minOf(b.ev.time));
+
+    items.forEach((it) => {
+      const el = createEventEl(it.ev, it.startDate, events[it.startDate] || []);
+      el.classList.add('flow');
+      if (it.ev.time) {
+        const timeLabel = document.createElement('span');
+        timeLabel.className = 'event-time';
+        /* 流式排布里列很窄，只显示开始时刻，完整时段在悬停标题里 */
+        timeLabel.textContent = it.ev.time;
+        const body0 = el.querySelector('.event-body') || el;
+        body0.appendChild(timeLabel);
+      }
+      if (it.span) {
+        el.classList.add('spanning-event');
+        if (!it.first) el.classList.add('spanning-cont');
+        const flag = document.createElement('span');
+        flag.className = 'event-time span-flag';
+        flag.textContent = it.first ? '跨天' : '续';
+        flag.title = it.first ? ('跨天日程：' + it.startDate + ' → ' + it.ev.endDate) : ('接 ' + it.startDate);
+        const body = el.querySelector('.event-body') || el;
+        body.insertBefore(flag, body.firstChild);
+      }
+      makeDraggable(el, it.startDate, (events[it.startDate] || []).indexOf(it.ev));
+      cell.appendChild(el);
+    });
+
+    cal.appendChild(cell);
+  }
+}
 function render() {
   const monday = getMonday(weekOffset);
   const events = loadEvents();
   const cal = document.getElementById('calendar');
   cal.innerHTML = '';
+  cal.classList.remove('no-axis');
 
   // 更新标题
   const sunday = new Date(monday);
@@ -4434,17 +4905,59 @@ function render() {
   document.getElementById('weekLabel').textContent =
     formatDate(monday).replace(/-/g, '/') + '-' + formatDate(sunday).replace(/-/g, '/');
 
-  // 表头
+  /* 设置里关掉时间轴：走 7 列的紧凑排布 */
+  if (loadSettings().weekTimeline === false) {
+    renderWeekFlow(monday, events, cal);
+    return;
+  }
+  // 表头：第一格留给时间刻度
+  const corner = document.createElement('div');
+  corner.className = 'cal-corner';
+  corner.style.gridRow = '1';
+  corner.style.gridColumn = '1';
+  cal.appendChild(corner);
+
+  /* 时间轴范围：默认 6:00–24:00；设置里打开「自动收缩」后按本周日程收窄 */
+  const range = weekTimeRange(events);
+  const hours = (range.end - range.start) / 60;
+  weekRangeCache = range;
+  fitWeekHourHeight(cal, hours);
+
   DAYS.forEach((d, i) => {
     const cell = document.createElement('div');
     const headDate = new Date(monday.getTime() + i * 86400000);
     cell.className = 'day-header' + (isToday(headDate) ? ' today' : '');
-    cell.textContent = d;
+    cell.style.gridRow = '1';
+    cell.style.gridColumn = String(i + 2);
+    cell.innerHTML = d + '<span class="dh-date">' + (headDate.getMonth() + 1) + '/' + headDate.getDate() + '</span>';
     cell.title = '点击为这一天添加日程';
     // 表头点击新增：日程排满时格子内空白处被卡片占住，仍有一个稳定的落点
     cell.addEventListener('click', () => openAddModal(formatDate(headDate)));
     cal.appendChild(cell);
   });
+
+  // 全天行：没有时间与跨天的事项放这里，避免压在时间轴上
+  const alldayLabel = document.createElement('div');
+  alldayLabel.className = 'allday-label';
+  alldayLabel.textContent = '全天';
+  alldayLabel.style.gridRow = '2';
+  alldayLabel.style.gridColumn = '1';
+  cal.appendChild(alldayLabel);
+
+  // 时间刻度：每 2 小时一格，只用于大致对照
+  const axis = document.createElement('div');
+  axis.className = 'time-axis';
+  axis.style.gridRow = '3';
+  axis.style.gridColumn = '1';
+  axis.style.height = (hours * WEEK_HOUR_H) + 'px';
+  for (let m = range.start; m < range.end; m += 120) {
+    const tick = document.createElement('div');
+    tick.className = 'tick';
+    tick.style.top = ((m - range.start) / 60 * WEEK_HOUR_H) + 'px';
+    tick.textContent = String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+    axis.appendChild(tick);
+  }
+  cal.appendChild(axis);
 
   // 日期格子
   for (let i = 0; i < 7; i++) {
@@ -4453,18 +4966,32 @@ function render() {
     const cell = document.createElement('div');
     cell.className = 'day-cell' + (isToday(date) ? ' today' : '');
     cell.dataset.date = dateStr;
+    cell.style.gridRow = '3';
+    cell.style.gridColumn = String(i + 2);
+    cell.style.height = (hours * WEEK_HOUR_H) + 'px';
 
-    const dateNum = document.createElement('div');
-    dateNum.className = 'date-num';
-    dateNum.textContent = `${date.getMonth()+1}/${date.getDate()}`;
-    cell.appendChild(dateNum);
-
-    // 点击日期添加
+    // 点击空白格子新增：按点击的纵向位置算出是哪个小时，预填起止时间
     cell.style.cursor = 'pointer';
+    const slotHint = document.createElement('div');
+    slotHint.className = 'slot-hint';
+    slotHint.style.display = 'none';
+    slotHint.style.height = WEEK_HOUR_H + 'px';
+    cell.appendChild(slotHint);
+    cell.addEventListener('mousemove', (e) => {
+      if (e.target !== cell) { slotHint.style.display = 'none'; return; }
+      const rect = cell.getBoundingClientRect();
+      const slot = Math.floor((e.clientY - rect.top) / WEEK_HOUR_H);
+      if (slot < 0 || slot * WEEK_HOUR_H > rect.height) { slotHint.style.display = 'none'; return; }
+      slotHint.style.top = (slot * WEEK_HOUR_H) + 'px';
+      slotHint.style.display = '';
+    });
+    cell.addEventListener('mouseleave', () => { slotHint.style.display = 'none'; });
     cell.addEventListener('click', (e) => {
-      if (e.target === cell || e.target === dateNum) {
-        openAddModal(dateStr);
-      }
+      if (e.target !== cell) return;
+      const rect = cell.getBoundingClientRect();
+      const slot = Math.floor((e.clientY - rect.top) / WEEK_HOUR_H);
+      const mins = Math.max(0, Math.min(23 * 60, range.start + slot * 60));
+      openAddModalAt(dateStr, mins);
     });
 
     // 渲染事项：按时间排序，有时间的在前，无时间的可拖拽
@@ -4483,21 +5010,79 @@ function render() {
     const showDone = loadSettings().showCompleted !== false;
     /* DDL 只在「DDL 倒计时」里出现，周/月/年视图都不显示 */
     const shownEvents = dayEvents.filter(ev => !ev.isDDL);
-    const timed = shownEvents.filter(ev => ev.time && (showDone || !ev.done)).sort((a, b) => a.time.localeCompare(b.time));
+    const timed = shownEvents.filter(ev => ev.time && (showDone || !ev.done))
+      .sort((a, b) => (hmToMinutes(a.time) - hmToMinutes(b.time)) || a.time.localeCompare(b.time));
     const untimed = shownEvents.filter(ev => !ev.time && (showDone || !ev.done));
 
-    // 渲染有时间的事件
+    /* 有时间的事件：按开始时间定位，高度按时长；短块保底一行，依次下推避免挤压 */
+    let prevBottom = 0;
     timed.forEach(ev => {
       const el = createEventEl(ev, dateStr, dayEvents);
       const timeLabel = document.createElement('span');
       timeLabel.className = 'event-time';
-      timeLabel.textContent = ev.endTime ? ev.time + ' – ' + ev.endTime : ev.time;
+      timeLabel.textContent = ev.endTime ? ev.time + '–' + ev.endTime : ev.time;
       el.insertBefore(timeLabel, el.firstChild);
+      el.classList.add('timed');
+
+      const startMin = hmToMinutes(ev.time);
+      let endMin = hmToMinutes(ev.endTime);
+      if (startMin === null) return;
+      if (endMin === null || endMin <= startMin) endMin = startMin + 60;
+      const wantTop = Math.max(0, (startMin - range.start) / 60 * WEEK_HOUR_H);
+      const height = Math.max(weekMinBlockH(),
+        (Math.min(endMin, range.end) - Math.max(startMin, range.start)) / 60 * WEEK_HOUR_H - 2);
+      const top = Math.max(wantTop, prevBottom + 3);
+      if (top > wantTop + 0.5) el.title = '按时间大致排列，实际开始 ' + ev.time;
+      el.style.top = top + 'px';
+      el.style.height = height + 'px';
+      if (height < 34) el.classList.add('mini');
+      if (height >= 70) el.classList.add('tall');
+      prevBottom = top + height;
+
       makeDraggable(el, dateStr, dayEvents.indexOf(ev));
       cell.appendChild(el);
     });
 
-    // 创建拖拽区域，包含普通无时间事件和跨天事件
+    /* 今日列：一条随当前时间下移的横条 */
+    if (isToday(date)) {
+      const nowLine = document.createElement('div');
+      nowLine.className = 'now-line';
+      nowLine.id = 'weekNowLine';
+      nowLine.innerHTML = '<span class="now-label"></span>';
+      cell.appendChild(nowLine);
+    }
+
+    // 全天行：无时间与跨天的事项放在这里，不占用时间轴
+    const alldayCell = document.createElement('div');
+    alldayCell.className = 'allday-cell' + (isToday(date) ? ' today' : '');
+    alldayCell.dataset.date = dateStr;
+    alldayCell.style.gridRow = '2';
+    alldayCell.style.gridColumn = String(i + 2);
+    cal.appendChild(alldayCell);
+
+    /* 全天行也接受跨日拖放，否则无时间的事项只能留在原来的日子 */
+    alldayCell.addEventListener('dragover', (e) => {
+      if (!dragCtx || dragCtx.date === dateStr) return;
+      e.preventDefault();
+      alldayCell.classList.add('drop-target');
+    });
+    alldayCell.addEventListener('dragleave', (e) => {
+      if (e.target === alldayCell) alldayCell.classList.remove('drop-target');
+    });
+    alldayCell.addEventListener('drop', (e) => {
+      alldayCell.classList.remove('drop-target');
+      if (!dragCtx || dragCtx.date === dateStr) return;
+      e.preventDefault();
+      const from = dragCtx;
+      dragCtx = null;
+      moveEventToDate(from.date, from.index, dateStr);
+    });
+
+    /* 点全天行的空白处新增无时间的日程 */
+    alldayCell.addEventListener('click', (e) => {
+      if (e.target === alldayCell) openAddModal(dateStr);
+    });
+
     const dragZone = document.createElement('div');
     dragZone.className = 'drag-zone';
     dragZone.dataset.date = dateStr;
@@ -4506,16 +5091,29 @@ function render() {
     spanningEvents.forEach(({ ev, startDate }) => {
       const el = createEventEl(ev, startDate, events[startDate] || []);
       el.classList.add('spanning-event');
+      const isFirst = dateStr === startDate;
+      if (!isFirst) el.classList.add('spanning-cont');
       const dayLabel = document.createElement('span');
-      dayLabel.className = 'event-time';
-      dayLabel.textContent = '（跨天）';
-      el.insertBefore(dayLabel, el.firstChild);
+      dayLabel.className = 'event-time span-flag';
+      dayLabel.textContent = isFirst ? '跨天' : '续';
+      dayLabel.title = isFirst ? ('跨天日程：' + startDate + ' → ' + ev.endDate) : ('接 ' + startDate);
+      const body = el.querySelector('.event-body') || el;
+      body.insertBefore(dayLabel, body.firstChild);
       makeDraggable(el, startDate, (events[startDate] || []).indexOf(ev));
       dragZone.appendChild(el);
     });
 
     untimed.forEach(ev => {
       const el = createEventEl(ev, dateStr, dayEvents);
+      /* 跨天日程的开始日：也挂一个「跨天」标，和后续日子的「续」对上 */
+      if (ev.endDate && ev.endDate > dateStr) {
+        const flag = document.createElement('span');
+        flag.className = 'event-time span-flag';
+        flag.textContent = '跨天';
+        flag.title = '跨天日程：' + dateStr + ' → ' + ev.endDate;
+        const body = el.querySelector('.event-body') || el;
+        body.insertBefore(flag, body.firstChild);
+      }
       makeDraggable(el, dateStr, dayEvents.indexOf(ev));
       dragZone.appendChild(el);
     });
@@ -4553,7 +5151,7 @@ function render() {
         syncToFile();
         render();
       });
-      cell.appendChild(dragZone);
+      alldayCell.appendChild(dragZone);
     }
 
     /* 跨日拖放：把事项挪到这一格（跨日后清掉时间） */
@@ -4581,6 +5179,8 @@ function render() {
   renderProjectFlow();
   renderDDLCountdown();
   renderSideStats();
+  paintNowLine();
+  startNowLineTimer();
 }
 
 function renderYearView() {
@@ -5196,6 +5796,21 @@ function openAddModal(dateStr) {
   document.getElementById('modalOverlay').classList.add('active');
 }
 
+/* 点空白格子新增：起止时间预填为点中的那个小时 */
+function openAddModalAt(dateStr, minutes) {
+  openAddModal(dateStr);
+  var m = Math.max(0, Math.min(23 * 60, minutes | 0));
+  var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+  var endM = Math.min(23 * 60 + 59, m + 60);
+  var tEl = document.getElementById('eventTime');
+  var eEl = document.getElementById('eventEndTime');
+  if (tEl) tEl.value = pad(Math.floor(m / 60)) + ':00';
+  if (eEl) eEl.value = pad(Math.floor(endM / 60)) + ':' + pad(endM % 60);
+  /* 从某一小时点进来时默认当天结束：结束日期填同一天，用户改跨天再改日期 */
+  var dEl = document.getElementById('eventEndDate');
+  if (dEl && !dEl.value) dEl.value = dateStr;
+}
+
 function openEditModal(dateStr, idx) {
   const ev = (loadEvents()[dateStr] || [])[idx];
   if (!ev) return;
@@ -5335,7 +5950,9 @@ function saveEvent() {
 
   const events = loadEvents();
   if (!events[date]) events[date] = [];
-  const payload = { content, category, time, done: false, isProject, projectName, isDDL, notes, course: courseName, endDate: endDate || undefined };
+  /* 结束日期与开始同一天：算当天结束，不把冗余的 endDate 写进数据 */
+  const endDateNorm = (endDate && date && endDate === date) ? '' : endDate;
+  const payload = { content, category, time, done: false, isProject, projectName, isDDL, notes, course: courseName, endDate: endDateNorm || undefined };
   if (endTime) payload.endTime = endTime;
 
   if (editingId) {
@@ -6301,7 +6918,7 @@ async function runSyncDiagnostics() {
 /* 手动保存：本地日程 + 心情 + 习惯写入 Obsidian */
 async function syncAllToObsidian() {
   if (!(await ensureObsidianConnected())) return;
-  if (mdActiveSync || mdUndoBusy || zjuPullBusy) { setSyncStatus('请等待当前拉取、保存或撤销完成', false); return; }
+  if (mdActiveSync || mdUndoBusy || zjuPullBusy) { setSyncStatus('当前有同步或撤销正在进行，请稍候', false); return; }
   var stage = '检查库权限';
   try {
     if (zjuPullBusy) { setSyncStatus('请等待学在浙大 DDL 拉取完成', false); return; }
@@ -6374,6 +6991,7 @@ function updateObsidianUI(connected, name) {
 }
 
 async function chooseObsidianDir() {
+  resetObsidianAnnounce();
   /* 在 Obsidian 里页面是插件开的 iframe：来源是 null，showDirectoryPicker 一定抛 AbortError，
      而且这时读写走的本来就是插件桥，不需要（也不应该）选目录 */
   if ((typeof zsBridge !== 'undefined' && zsBridge) || (window.parent && window.parent !== window)) {
@@ -6755,7 +7373,7 @@ function connectObsidianBridge() {
   pendingObsidianHandle = null;
   updateObsidianUI(true, zsBridge.rootName || '日程');
   try { zsBridgeCall('setLogo', { kind: zsLogoKind() }); } catch (e) {}
-  setSyncStatus('已连接「' + (zsBridge.rootName || '日程') + '」', true, 3000);
+  announceObsidianConnected(zsBridge.rootName || '日程');
   if (zsFreshStorage) {
     zsFreshStorage = false;
     /* 新源里是空的（首页会写进示例数据）：先清掉示例，再用库里的 md 覆盖本地 */
@@ -7080,6 +7698,15 @@ function setSyncStatus(msg, ok, ms) {
   el.className = 'note-status sync-msg' + (ok ? ' ok' : ' err');
   if (msg) showToast(msg, ok === false ? false : true, ms || 2600);
   setTimeout(function() { el.textContent = ''; }, ms || 5000);
+}
+
+/* 启动时插件桥与目录句柄会各报一次「已连接」：每次载入只留一条，手动重新选择目录时才再提示 */
+var zsConnAnnounced = false;
+function resetObsidianAnnounce() { zsConnAnnounced = false; }
+function announceObsidianConnected(name) {
+  if (zsConnAnnounced) return;
+  zsConnAnnounced = true;
+  setSyncStatus('已连接「' + (name || '日程') + '」', true, 3000);
 }
 
 /* ===== 学在浙大待办：只拉取 DDL 到本地，保存按钮再写 Obsidian ===== */
@@ -8181,7 +8808,7 @@ function ttSyncToSchedule(silent) {
 }
 var zjuPullBusy = false;
 async function syncZjuThenObsidian() {
-  if (zjuPullBusy || mdActiveSync || mdUndoBusy) { setSyncStatus('请等待当前拉取、保存或撤销完成', false); return; }
+  if (zjuPullBusy || mdActiveSync || mdUndoBusy) { setSyncStatus('当前有同步或撤销正在进行，请稍候', false); return; }
   zjuPullBusy = true;
   var btn = document.getElementById('zjuSyncBtn');
   if (btn) { btn.disabled = true; btn.classList.add('busy'); btn.title = '拉取中…'; }
@@ -8193,6 +8820,7 @@ async function syncZjuThenObsidian() {
   let failMsg = '';
   let okFlag = true;
   let changed = false;
+  let obsState = null;      /* true=库里已一致，false=还没写进去，null=没连库或读不到 */
 
   try {
     /* 服务优先；服务不可用时只读库里旧缓存，不写库 */
@@ -8210,16 +8838,18 @@ async function syncZjuThenObsidian() {
         changed = merged2.changed;
         if (sum2.indexOf('无变化') !== 0) tips.push('学在浙大：' + sum2);
       } else if (svc.code === 'AUTH') {
-        failMsg = '学在浙大登录态失效：服务会自动弹出浏览器让你重新登录，登录完再点一次';
+        failMsg = '学在浙大登录已失效：同步助手会唤起浏览器重新登录，完成后请重试';
       } else if (svc.code === 'NO_COOKIE') {
-        failMsg = '本地服务在跑，但还没登录学在浙大：稍等它弹出登录窗口，登录一次即可';
+        failMsg = '本地服务已运行，但尚未登录学在浙大：请在弹出的窗口中完成登录';
       } else {
-        failMsg = '没有可用的拉取通道：先双击「启动学在浙大同步.bat」，再点本按钮';
+        failMsg = '无可用的拉取通道：请先启动「学在浙大同步」助手，再重试';
       }
     }
 
     if (failMsg) { okFlag = false; return; }
     if (changed) refreshAllUI();
+    /* 别猜：真去读库里的月文件比对一次 */
+    obsState = await mdScheduleInSync();
   } catch (e) {
     okFlag = false;
     failMsg = '学在浙大 DDL 拉取失败：' + (e && e.message ? e.message : e);
@@ -8228,8 +8858,13 @@ async function syncZjuThenObsidian() {
     syncStatusSilent = prevSilent;
     if (btn) { btn.disabled = false; btn.classList.remove('busy'); btn.title = '拉取学在浙大 DDL（仅更新本地）'; }
     if (failMsg) setSyncStatus(failMsg, false, 10000);
-    else if (changed) setSyncStatus((tips.length ? tips.join('；') : '学在浙大 DDL 已更新') + '；点击保存后写入 Obsidian', okFlag, 8000);
-    else setSyncStatus('学在浙大 DDL 已是最新（未写入 Obsidian）', okFlag, 3000);
+    else if (changed) {
+      const tail = obsState === true ? '；Obsidian 已同步' : obsState === false ? '；Obsidian 未同步，需手动保存' : '';
+      setSyncStatus((tips.length ? tips.join('；') : '学在浙大 DDL 已更新') + tail, okFlag, 8000);
+    } else {
+      const tail = obsState === true ? '；Obsidian 已同步' : obsState === false ? '；Obsidian 未同步，需手动保存' : '';
+      setSyncStatus('学在浙大 DDL 无变化' + tail, okFlag, 3000);
+    }
   }
 }
 
@@ -9224,6 +9859,25 @@ async function mdReconcileSchedule(allowPrompt, forcePull) {
   return stat;
 }
 
+/* 真的去比一次：本地日程与库里对应月份文件的内容是否一致（没连库返回 null） */
+async function mdScheduleInSync() {
+  try {
+    if (!obsidianDirHandle) return null;
+    if (!(await mdVaultReady(false))) return null;
+    const folder = await mdFolder(MDS.scheduleDir, false);
+    if (!folder) return false;
+    const months = mdScheduleKnownMonths();
+    for (let i = 0; i < months.length; i++) {
+      const mk = months[i];
+      const text = mdBuildScheduleMarkdown(mk, mdScheduleLocalMonth(mk));
+      const old = await mdRead(folder, '日程-' + mk + '.md');
+      if (old !== text) return false;
+    }
+    return true;
+  } catch (e) {
+    return null;
+  }
+}
 async function mdPushSchedule(force) {
   if (!obsidianDirHandle) return 0;
   if (!(await mdVaultReady(false))) return 0;
@@ -9683,7 +10337,7 @@ function mdBuildUndoLocalState(record) {
 
 async function mdUndoLastSync() {
   if (!(await ensureObsidianConnected())) return;
-  if (mdActiveSync || mdUndoBusy || zjuPullBusy) { setSyncStatus('请等待当前拉取、保存或撤销完成', false); return; }
+  if (mdActiveSync || mdUndoBusy || zjuPullBusy) { setSyncStatus('当前有同步或撤销正在进行，请稍候', false); return; }
   mdUndoBusy = true;
   try {
     const record = await mdReadLastSync();
@@ -9954,13 +10608,39 @@ function mdBackupOnce() {
 }
 
 async function mdSyncAfterConnect() {
-  if (obsidianDirHandle) setSyncStatus('已连接 Obsidian 库，可手动同步', true, 3000);
+  if (obsidianDirHandle) announceObsidianConnected(obsidianDirHandle.name || 'Obsidian 库');
 }
 
 /* 刷新后自动重连上次授权的 Obsidian 库；在 Obsidian 插件里打开时改用插件桥 */
 initObsidianBridge();
 applyLogoUI();
 applyStoreBuildUI();
+
+/* 状态文字收进圆点的悬停提示：横条左边固定显示页面标题 */
+(function syncBarDotTitle() {
+  var text = document.getElementById('obsidianText');
+  var dot = document.getElementById('obsidianDot');
+  if (!text || !dot) return;
+  var sync = function () {
+    var t = (text.textContent || '').trim();
+    if (t) dot.title = t;
+  };
+  sync();
+  try {
+    new MutationObserver(sync).observe(text, { childList: true, characterData: true, subtree: true });
+  } catch (e) {}
+})();
+
+/* 窗口尺寸变化时重新按可用高度适配周视图，避免又要上下滑动 */
+var weekResizeTimer = null;
+window.addEventListener('resize', function () {
+  if (typeof currentViewName !== 'undefined' && currentViewName !== 'week') return;
+  clearTimeout(weekResizeTimer);
+  weekResizeTimer = setTimeout(function () {
+    try { render(); } catch (e) {}
+  }, 120);
+});
+
 markZjuButtonEnv();
 ttMigrateCourseCategory();
 if (!isWebMode()) loadTimetable();
