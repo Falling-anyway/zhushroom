@@ -101,12 +101,12 @@
     /* 类目基色 + 逾期色（派生色不重复写，见 :root）
        study 取青绿而非蓝：原先 #4C7F9C 与 work #3F6F8A 太近（45% 混卡底 ΔE 仅 2.56） */
     --cat-work: #3F6F8A;
-    --cat-exercise: #5B93A8;
+    --cat-exercise: #46A0A6;
     --cat-life: #B08A4A;
     --cat-study: #4F7F62;
     --cat-social: #8F6A8E;
     /* course 比约定的 #4E6A85 提亮一档：那支与 work #3F6F8A 45% 混卡底 ΔE 只有 3.09，会分不清 */
-    --cat-course: #6B7B8A;
+    --cat-course: #5B5A99;
     --ddl-today: #C08574;
     --ddl-overdue: #a2606b;
   }
@@ -200,8 +200,9 @@
   .header {
     display: flex;
     align-items: center;
-    justify-content: flex-end;
-    margin-bottom: 20px;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 14px;
   }
   .header h1 {
     font-size: var(--fs-22);
@@ -229,7 +230,7 @@
   .header .week-nav button:hover { background: var(--tint-warm-strong); }
   /* 跳转到指定日期：和旁边按钮同一套外观 */
   .header .week-nav .nav-date {
-    width: 138px;
+    width: auto;
     padding: 6px 10px;
     border: 1px solid var(--line);
     border-radius: 8px;
@@ -324,8 +325,8 @@
   .legend {
     display: flex;
     gap: 16px;
-    margin-bottom: 16px;
     flex-wrap: wrap;
+    min-width: 0;
   }
   .legend-item {
     display: flex;
@@ -498,7 +499,13 @@
   .event.timed .tag { display: none; }
   .event.timed .event-loc { display: none; }
   .event.timed .event-content { overflow-wrap: anywhere; }
-  .event.timed.tall .event-loc { display: block; margin-top: 2px; }
+  .event.timed.tall .event-loc {
+    display: block;
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .event.timed .complete-btn {
     left: 4px;
     top: 50%;
@@ -580,7 +587,6 @@
     padding-bottom: 2px;
   }
   .calendar.dense .event.timed .event-time { font-size: var(--fs-10); }
-  .calendar.dense .event.timed .event-loc { display: none; }
   .calendar.dense .event.timed .complete-btn { width: 11px; height: 11px; border-width: 1.5px; }
   .calendar.dense .time-axis .tick { font-size: var(--fs-10); }
   /* 悬停时高亮「这一小时」的整格，提示可以点它新增 */
@@ -757,6 +763,8 @@
     display: flex;
     flex-direction: column;
     gap: 3px;
+    /* 点格子空白处即可为这天新增事项 */
+    cursor: pointer;
   }
   .month-cell.other-month {
     background: var(--bg);
@@ -2207,7 +2215,11 @@
     min-height: 32px;
     position: relative;
   }
-  .mood-cell:hover { transform: scale(1.15); }
+  .mood-cell:hover {
+    transform: none;
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text) 26%, transparent);
+    background: color-mix(in srgb, var(--text) 6%, var(--tint-soft));
+  }
 
   /* Mood picker popup */
   .mood-picker {
@@ -2230,7 +2242,10 @@
     transition: transform 0.15s, border-color 0.15s;
     font-size: var(--fs-16);
   }
-  .mood-picker button:hover { transform: scale(1.2); border-color: var(--text); }
+  .mood-picker button:hover {
+    transform: none;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--text) 45%, transparent);
+  }
   /* picker 里四个色块与图例同源，改用 class 取色（原来写死 hex） */
   .mood-picker .mood-opt.happy { background: var(--primary); }
   .mood-picker .mood-opt.sad { background: var(--cat-exercise); }
@@ -3093,12 +3108,39 @@
   }
   .settings-adv[open] summary { margin-bottom: 6px; }
   .settings-adv .setting-hint { margin-bottom: 8px; }
-  .project-node-empty {
+  /* 顶部压扁：类目图例与周导航同一行 */
+  .header { flex-wrap: wrap; row-gap: 8px; }
+  .header .legend { gap: 12px; flex: 0 1 auto; }
+  .header .legend-item { gap: 5px; font-size: var(--fs-12); white-space: nowrap; }
+  .header .week-nav { margin-left: auto; }
+  .week-label { white-space: nowrap; }
+  /* 视图切换与日历之间的空隙再收一点 */
+  .view-toggle { margin-bottom: 10px; margin-top: 2px; }
+  /* 上一周/下一周只用箭头，按钮收成方形 */
+  .header .week-nav button.nav-icon { padding: 6px 9px; display: inline-flex; align-items: center; justify-content: center; }
+  /* 「跳到日期」按钮收窄，与纯箭头按钮同一高度 */
+  .header .week-nav .nav-date { padding: 6px 10px; font-size: var(--fs-13); }
+  /* 悬停反馈只用内描边，不做位移和外扩阴影：相邻色块不会挤在一起 */
+  .event:hover,
+  .ddl-name-bar:hover,
+  .ddl-bar:hover,
+  .tt-course:hover {
+    transform: none;
+    box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--text) 24%, transparent);
+  }  /* 右栏「最近笔记」：单行省略 + 可点击 */
+  .stat-recent-row { cursor: pointer; border-radius: 6px; }
+  .stat-recent-row:hover { background: color-mix(in srgb, var(--text) 6%, var(--tint-soft)); }
+  .stat-recent-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }  /* 右栏新增卡片：下一节课标题 / 心情七天点 */
+  .stat-next-name { font-size: var(--fs-13); font-weight: 600; margin: 2px 0 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .stat-mood-dots { display: flex; gap: 6px; margin: 8px 0 6px; }
+  .stat-mood-dots i { width: 15px; height: 15px; border-radius: 50%; background: color-mix(in srgb, var(--text) 10%, var(--card)); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text) 8%, transparent); }  /* 右栏卡片可拖动排序 */
+  .stat-card { cursor: grab; transition: opacity .15s, box-shadow .15s; }
+  .stat-card.dragging { opacity: .45; cursor: grabbing; }
+  .stat-card:hover { box-shadow: 0 1px 2px color-mix(in srgb, var(--text) 6%, transparent); }  .project-node-empty {
     font-size: var(--fs-12);
     color: var(--muted);
     padding: 6px 2px;
-  }
-</style>
+  }</style>
 </head>
 <body>
 
@@ -3136,8 +3178,12 @@
     <span class="side-head-title">今日概览</span>
   </div>
   <div class="stat-card" id="statToday"></div>
+  <div class="stat-card" id="statNext"></div>
   <div class="stat-card" id="statDdl"></div>
   <div class="stat-card" id="statHabit"></div>
+  <div class="stat-card" id="statWeek"></div>
+  <div class="stat-card" id="statMood"></div>
+  <div class="stat-card" id="statRecent" hidden></div>
   <div class="stat-mini">
     <button class="stat-mini-btn" id="statMiniToday" type="button" onclick="statsMiniGo('secChart')" title="今日完成"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 12l2.5 2.5L16 9"/></svg></button>
     <button class="stat-mini-btn" id="statMiniDdl" type="button" onclick="statsMiniGo('ddlSection')" title="最近 DDL"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M12 8v4.5l3 1.8"/></svg></button>
@@ -3197,10 +3243,18 @@
 </div>
 
 <div class="header">
+  <div class="legend">
+    <div class="legend-item"><span class="legend-dot work"></span> 工作</div>
+    <div class="legend-item"><span class="legend-dot exercise"></span> 运动</div>
+    <div class="legend-item"><span class="legend-dot life"></span> 生活</div>
+    <div class="legend-item"><span class="legend-dot study"></span> 学习</div>
+    <div class="legend-item"><span class="legend-dot social"></span> 社交</div>
+    <div class="legend-item"><span class="legend-dot course"></span> 课程</div>
+  </div>
   <div class="week-nav" id="weekNav">
-    <button onclick="changeWeek(-1)"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>上一周</button>
+    <button class="nav-icon" onclick="changeWeek(-1)" title="上一周" aria-label="上一周"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
     <span class="week-label" id="weekLabel"></span>
-    <button onclick="changeWeek(1)">下一周<svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
+    <button class="nav-icon" onclick="changeWeek(1)" title="下一周" aria-label="下一周"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
     <span class="datepick-wrap" id="datepickWrap">
       <button type="button" class="nav-date" id="navDateBtn" onclick="toggleDatePicker(event)" title="跳转到指定日期所在的周">跳到日期</button>
       <div class="datepick" id="datePicker">
@@ -3221,22 +3275,14 @@
     <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
   </div>
   <div class="week-nav" id="monthNav" style="display:none;">
-    <button onclick="changeMonth(-1)"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>上个月</button>
+    <button class="nav-icon" onclick="changeMonth(-1)" title="上个月" aria-label="上个月"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
     <span class="week-label" id="monthLabel"></span>
-    <button onclick="changeMonth(1)">下个月<svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
+    <button class="nav-icon" onclick="changeMonth(1)" title="下个月" aria-label="下个月"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
     <button onclick="goTodayMonth()" style="margin-left:8px;">本月</button>
     <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
   </div>
 </div>
 
-<div class="legend">
-  <div class="legend-item"><span class="legend-dot work"></span> 工作</div>
-  <div class="legend-item"><span class="legend-dot exercise"></span> 运动</div>
-  <div class="legend-item"><span class="legend-dot life"></span> 生活</div>
-  <div class="legend-item"><span class="legend-dot study"></span> 学习</div>
-  <div class="legend-item"><span class="legend-dot social"></span> 社交</div>
-  <div class="legend-item"><span class="legend-dot course"></span> 课程</div>
-</div>
 
 <!-- 视图切换按钮 -->
 <div class="view-toggle">
@@ -3726,7 +3772,7 @@ try { zsFreshStore = localStorage.getItem('weeklyPlanEvents') === null; } catch 
 const CATEGORY_NAMES = { work: '工作', exercise: '运动', life: '生活', study: '学习', course: '课程', social: '社交' };
 
 /* ===== 重大操作确认 =====
-   删除、覆盖、切换数据源这类不可撤销的操作统一走这里，默认按钮是「取消」 */
+   删除、覆盖、切换数据源这类需要二次确认的操作统一走这里，默认按钮是「取消」 */
 /* 页面内确认框：Obsidian / Electron 里 window.confirm 常被屏蔽，统一改用 DOM 弹窗 */
 function confirmBox(title, detail) {
   return new Promise(function(resolve) {
@@ -4227,6 +4273,45 @@ function renderGreeting() {
 }
 
 /* 右侧统计栏：今日完成 / 最近 DDL / 今日待打卡 */
+/* 右栏「最近笔记」：只有连接了 Obsidian（插件桥）才有数据，点一条就在新标签页打开 */
+async function refreshRecentNotes() {
+  var box = document.getElementById('statRecent');
+  if (!box) return;
+  if (typeof zsBridge === 'undefined' || !zsBridge) {
+    box.hidden = true;
+    return;
+  }
+  var list = [];
+  try {
+    list = await zsBridgeCall('recent', { limit: 5 });
+  } catch (e) {
+    list = [];
+  }
+  if (!Array.isArray(list) || !list.length) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  box.innerHTML = '<div class="stat-title">最近笔记</div>' + list.map(function (it) {
+    var path = String((it && it.path) || '');
+    var name = String((it && it.name) || path).replace(/\.md$/i, '');
+    return '<div class="stat-ddl-row stat-recent-row" data-path="' + escapeHtml(path) + '" title="' + escapeHtml(path) + '">'
+      + '<span>' + escapeHtml(name) + '</span></div>';
+  }).join('');
+  if (!box.dataset.bound) {
+    box.dataset.bound = '1';
+    box.addEventListener('click', function (e) {
+      var row = e.target.closest ? e.target.closest('.stat-recent-row') : null;
+      if (!row) return;
+      var path = row.getAttribute('data-path');
+      if (!path) return;
+      try {
+        var p = zsBridgeCall('openFile', { path: path });
+        if (p && p.catch) p.catch(function () {});
+      } catch (err) {}
+    });
+  }
+}
 function renderSideStats() {
   var boxToday = document.getElementById('statToday');
   var boxDdl = document.getElementById('statDdl');
@@ -4288,6 +4373,90 @@ function renderSideStats() {
           : '<div class="stat-empty">还没有添加习惯</div>');
   }
 
+  /* 下一节课：本周与下周的课程里，还没结束的最近一节 */
+  var boxNext = document.getElementById('statNext');
+  if (boxNext) {
+    var nowMs = Date.now();
+    var upcoming = [];
+    for (var dayAhead = 0; dayAhead < 8; dayAhead++) {
+      var dayDate = new Date();
+      dayDate.setHours(0, 0, 0, 0);
+      dayDate = new Date(dayDate.getTime() + dayAhead * 86400000);
+      var dsAhead = formatDate(dayDate);
+      (events[dsAhead] || []).forEach(function (ev) {
+        if (!ev || !ev.time) return;
+        if (!(ev.ttGen === true || ev.category === 'course')) return;
+        var startMs = new Date(dsAhead + 'T' + ev.time + ':00').getTime();
+        if (isNaN(startMs)) return;
+        var endMs = new Date(dsAhead + 'T' + (ev.endTime || ev.time) + ':00').getTime();
+        if (isNaN(endMs) || endMs <= startMs) endMs = startMs + 60000;
+        if (endMs < nowMs) return;
+        upcoming.push({ ev: ev, date: dsAhead, startMs: startMs, endMs: endMs });
+      });
+    }
+    upcoming.sort(function (a, b) { return a.startMs - b.startMs; });
+    var nx = upcoming[0];
+    if (nx) {
+      var nxChunks = splitEventContent(nx.ev);
+      var nxDay = nx.date === todayStr ? '今天' : nx.date.slice(5).replace('-', '/');
+      var nxLeft = Math.max(0, Math.round((nx.startMs - nowMs) / 60000));
+      var nxWhen = nxLeft <= 0 ? '进行中' : (nxLeft < 60 ? nxLeft + ' 分钟后' : Math.floor(nxLeft / 60) + ' 小时 ' + (nxLeft % 60) + ' 分后');
+      boxNext.innerHTML = '<div class="stat-title">下一节课</div>'
+        + '<div class="stat-next-name" title="' + escapeHtml(nxChunks.name) + '">' + escapeHtml(nxChunks.name) + '</div>'
+        + '<div class="stat-empty">' + nxDay + ' ' + escapeHtml(nx.ev.time + (nx.ev.endTime ? '–' + nx.ev.endTime : '')) + ' · ' + nxWhen + '</div>'
+        + (nxChunks.loc ? '<div class="stat-empty" title="' + escapeHtml(nxChunks.loc) + '">' + escapeHtml(nxChunks.loc) + '</div>' : '');
+    } else {
+      boxNext.innerHTML = '<div class="stat-title">下一节课</div><div class="stat-empty">近一周没有课程</div>';
+    }
+  }
+
+  /* 本周概览：完成率 / 未完成 DDL / 课程节数 */
+  var boxWeek = document.getElementById('statWeek');
+  if (boxWeek) {
+    var mondayMs = getMonday(0).getTime();
+    var wDone = 0, wTotal = 0, wDdl = 0, wClass = 0;
+    for (var wi = 0; wi < 7; wi++) {
+      var wds = formatDate(new Date(mondayMs + wi * 86400000));
+      (events[wds] || []).forEach(function (ev) {
+        if (!ev) return;
+        if (ev.ttGen === true || ev.category === 'course') { wClass++; return; }
+        if (ev.isDDL) { if (!ev.done) wDdl++; return; }
+        wTotal++;
+        if (ev.done) wDone++;
+      });
+    }
+    var wPct = wTotal ? Math.round(wDone / wTotal * 100) : 0;
+    boxWeek.innerHTML = '<div class="stat-title">本周概览</div>'
+      + '<div class="stat-ddl-row"><span>完成事项</span><span>' + wDone + ' / ' + wTotal + '（' + wPct + '%）</span></div>'
+      + '<div class="stat-ddl-row"><span>未完成 DDL</span><span>' + wDdl + ' 条</span></div>'
+      + '<div class="stat-ddl-row"><span>课程</span><span>' + wClass + ' 节</span></div>';
+  }
+
+  /* 心情色/名：这里自带一份，避免用到文件后段才初始化的 MOOD_COLORS（早期渲染会 TDZ 报错） */
+  function moodColorOf(mv) {
+    return { happy: 'var(--primary)', sad: 'var(--cat-exercise)', tired: 'var(--muted)', angry: 'var(--ddl-overdue)' }[mv] || '';
+  }
+  function moodNameOf(mv) {
+    return { happy: '高兴', sad: '难过', tired: '劳累', angry: '生气' }[mv] || '';
+  }
+  /* 心情趋势：最近 7 天的四色点，今天在最右 */
+  var boxMood = document.getElementById('statMood');
+  if (boxMood) {
+    var moodRecs = loadMoodRecords();
+    var moodDots = '';
+    var moodHit = 0;
+    var moodBase = new Date(); moodBase.setHours(0, 0, 0, 0);
+    for (var mi = 6; mi >= 0; mi--) {
+      var mds = formatDate(new Date(moodBase.getTime() - mi * 86400000));
+      var mv = moodRecs[mds];
+      if (mv) moodHit++;
+      var mstyle = mv && moodColorOf(mv) ? ' style="background:' + moodColorOf(mv) + '"' : '';
+      moodDots += '<i' + mstyle + ' title="' + mds + (mv ? ' · ' + (moodNameOf(mv) || mv) : ' · 未记录') + '"></i>';
+    }
+    boxMood.innerHTML = '<div class="stat-title">心情趋势</div>'
+      + (moodHit ? '<div class="stat-mood-dots">' + moodDots + '</div><div class="stat-empty">近 7 天记录 ' + moodHit + ' 天</div>'
+                 : '<div class="stat-empty">近 7 天还没有记录心情</div>');
+  }
   /* 折叠态三个迷你入口的 tooltip 数值 */
   var miniToday = document.getElementById('statMiniToday');
   if (miniToday) miniToday.title = '今日完成 ' + doneN + '/' + totalN;
@@ -4642,10 +4811,10 @@ function createEventEl(ev, dateStr, dayEvents) {
     e.stopPropagation();
     openEditModal(dateStr, idx);
   });
-  /* 时间块窄，名称可能被截断；悬停用原生提示补全时间、名称、备注 */
-  /* 有备注时不设原生 title：备注交给气泡，避免系统提示框和气泡叠在一起 */
+  /* 有备注时不设原生 title：备注交给气泡，避免系统提示框和气泡叠在一起；省略的地点靠气泡里的完整信息 */
   if (!ev.notes) {
-    el.title = (ev.time ? ev.time + (ev.endTime ? '–' + ev.endTime : '') + ' · ' : '') + (chunks.name || '');
+    el.title = (ev.time ? ev.time + (ev.endTime ? '–' + ev.endTime : '') + ' · ' : '') +
+      (chunks.name || '') + (chunks.loc ? ' · ' + chunks.loc : '');
   }
   return el;
 }
@@ -5090,7 +5259,7 @@ function render() {
       el.style.top = top + 'px';
       el.style.height = height + 'px';
       if (height < 34) el.classList.add('mini');
-      if (height >= 70) el.classList.add('tall');
+      if (height >= 54) el.classList.add('tall');
       prevBottom = top + height;
 
       makeDraggable(el, dateStr, dayEvents.indexOf(ev));
@@ -5584,6 +5753,14 @@ function switchView(view) {
   setRailActive(view);
 }
 
+/* 当前视图是哪一种就重绘哪一种：删改事项后月/年/课程表都要跟着更新 */
+function refreshCurrentView() {
+  if (currentViewName === 'month') { renderMonthCalendar(); return; }
+  if (currentViewName === 'year') { renderYearView(); loadBentoData(); return; }
+  if (currentViewName === 'tt') { renderTimetable(); return; }
+  render();
+}
+
 // 渲染月视图
 function renderMonthCalendar() {
   const events = loadEvents();
@@ -5671,6 +5848,11 @@ function renderMonthCalendar() {
     dateDiv.textContent = dayInfo.date || '';
     cell.appendChild(dateDiv);
 
+    /* 点格子空白处：为这天新增事项，时间留空 */
+    cell.addEventListener('click', (e) => {
+      if (e.target === cell || e.target === dateDiv) openAddModal(dayInfo.dateStr);
+    });
+
     // 渲染单日事件（没有endDate的）
     if (events[dayInfo.dateStr]) {
       events[dayInfo.dateStr].forEach(ev => {
@@ -5752,11 +5934,12 @@ function renderMonthCalendar() {
         bar.style.borderRadius = '0';
       }
 
-      bar.addEventListener('click', () => {
-        const evs = loadEvents();
-        const dayEvs = evs[startDate] || [];
-        const idx = dayEvs.indexOf(ev);
+      bar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const dayEvs = loadEvents()[startDate] || [];
+        const idx = locateEventIndex(dayEvs, ev);
         if (idx >= 0) openEditModal(startDate, idx);
+        else setSyncStatus('这条日程已被改动，刷新后再试', false, 4000);
       });
 
       cell.appendChild(bar);
@@ -5783,19 +5966,27 @@ function renderMonthCalendar() {
   });
 }
 
+// 月视图点击定位：loadEvents() 每次重新解析，对象身份会变，只能按内容指纹找
+function locateEventIndex(list, ev) {
+  const key = [ev.content, ev.time || '', ev.endTime || '', ev.endDate || '', ev.category || ''].join('|');
+  for (let i = 0; i < list.length; i++) {
+    const c = list[i];
+    if ([c.content, c.time || '', c.endTime || '', c.endDate || '', c.category || ''].join('|') === key) return i;
+  }
+  return -1;
+}
 // 创建月视图事件元素
 function createMonthEventEl(ev, dateStr) {
   const eventEl = document.createElement('div');
   const isCourseEv = !!(ev.ttGen === true || ev.category === 'course');
   eventEl.className = `month-event ${isCourseEv ? 'course' : (ev.category || 'work')}`;
   eventEl.textContent = ev.content;
-  eventEl.addEventListener('click', () => {
-    const events = loadEvents();
-    const dayEvents = events[dateStr] || [];
-    const idx = dayEvents.indexOf(ev);
-    if (idx >= 0) {
-      openEditModal(dateStr, idx);
-    }
+  eventEl.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const dayEvents = loadEvents()[dateStr] || [];
+    const idx = locateEventIndex(dayEvents, ev);
+    if (idx >= 0) openEditModal(dateStr, idx);
+    else setSyncStatus('这条日程已被改动，刷新后再试', false, 4000);
   });
   return eventEl;
 }
@@ -6026,7 +6217,7 @@ function saveEvent() {
   const wasEditing = !!editingId;
   saveEvents(events);
   closeModal();
-  render();
+  refreshCurrentView();
   showToast(wasEditing ? '已保存修改' : '已添加事项', true);
   if (isProject === 'yes' && projectName) autoSaveProjectEvent(date, content, projectName);
 }
@@ -6041,7 +6232,7 @@ function copyEventToToday() {
   events[todayStr].push({ content: oldEv.content, category: oldEv.category, time: oldEv.time, endTime: oldEv.endTime, done: false });
   saveEvents(events);
   closeModal();
-  render();
+  refreshCurrentView();
   showToast('已复制到今天', true);
 }
 
@@ -6055,7 +6246,6 @@ async function deleteEvent() {
      指纹含 category：同内容同时刻但分类不同的两条按不同条目处理 */
   const evFp = e => [e.content || '', e.time || '', e.endTime || '', e.endDate || '', !!e.isDDL, e.category || ''].join('\u0001');
   const want = evFp(before);
-  const when = target.date + (before.time ? ' ' + before.time : '');
 
   const events = loadEvents();
   const list = events[target.date] || [];
@@ -6073,15 +6263,15 @@ async function deleteEvent() {
   if (!list.length) delete events[target.date];
   saveEvents(events);
   closeModal();
-  render();
+  refreshCurrentView();
+  /* 不弹确认框：底部给一条可撤销的胶囊，比二次确认更快 */
   showUndoToast('该事项已删除', function () {
-    /* 放回原来的位置；期间若同一天有别的改动，把位置夹到当前长度内 */
     const ev2 = loadEvents();
     const l2 = ev2[target.date] || [];
     l2.splice(Math.min(idx, l2.length), 0, removed);
     ev2[target.date] = l2;
     saveEvents(ev2);
-    render();
+    refreshCurrentView();
     syncToFile();
     showToast('已恢复', true, 2200);
   });
@@ -6691,8 +6881,13 @@ function renderPieChart() {
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
   const size = 200;
-  canvas.width = size;
-  canvas.height = size;
+  /* 按设备像素比放大画布再缩放绘制：否则高分屏上文字会被放大采样，看着发虚 */
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  canvas.width = Math.round(size * dpr);
+  canvas.height = Math.round(size * dpr);
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, size, size);
 
   /* 现读 CSS 变量：cssColor() 会把 hex / color-mix() 解析成 rgb() 供 canvas 使用。
@@ -6709,8 +6904,8 @@ function renderPieChart() {
   const total = Object.values(counts).reduce((s, v) => s + v, 0);
 
   if (total === 0) {
-    ctx.fillStyle = cssColor('--muted');
-    ctx.font = '14px sans-serif';
+    ctx.fillStyle = cssColor('--sub');
+    ctx.font = '500 14px system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText('暂无数据', size / 2, size / 2);
@@ -7264,7 +7459,6 @@ function probeZjuService(quiet) {
       return zjuSvcState;
     });
 }
-
 function paintZjuAssist(state) {
   var dot = document.getElementById('zjuAssistDot');
   var txt = document.getElementById('zjuAssistText');
@@ -7499,6 +7693,18 @@ function connectObsidianBridge() {
   }
   try { loadBentoData(); } catch (e) {}
   try { mdSyncAfterConnect(); } catch (e) {}
+
+  try { refreshRecentNotes(); } catch (e) {}
+  /* 切回窗口时刷新一次（Obsidian 里刚打开过的笔记会变），限流 10 秒 */
+  if (!window.__zsRecentBound) {
+    window.__zsRecentBound = true;
+    window.addEventListener('focus', function () {
+      var now = Date.now();
+      if (now - (window.__zsRecentAt || 0) < 10000) return;
+      window.__zsRecentAt = now;
+      setTimeout(function () { try { refreshRecentNotes(); } catch (e) {} }, 400);
+    });
+  }
 }
 
 /* 用插件桥伪造出与 FileSystemDirectoryHandle 同形的对象，下游 mdRead/mdWrite/mdListFiles 不用改 */
@@ -10836,10 +11042,80 @@ async function mdSyncAfterConnect() {
   if (obsidianDirHandle) announceObsidianConnected(obsidianDirHandle.name || 'Obsidian 库');
 }
 
+/* ===== 右栏卡片：自由拖动排序（顺序存 localStorage） ===== */
+var SIDE_ORDER_KEY = 'zhushiSideOrder';
+function sideCards() {
+  var box = document.getElementById('sideStats');
+  if (!box) return [];
+  return Array.prototype.slice.call(box.querySelectorAll('.stat-card'));
+}
+function saveSideOrder() {
+  var ids = sideCards().map(function (el) { return el.id; }).filter(Boolean);
+  try { localStorage.setItem(SIDE_ORDER_KEY, JSON.stringify(ids)); } catch (e) {}
+}
+function applySideOrder() {
+  var box = document.getElementById('sideStats');
+  if (!box) return;
+  var order = [];
+  try { order = JSON.parse(localStorage.getItem(SIDE_ORDER_KEY) || '[]'); } catch (e) {}
+  if (!Array.isArray(order) || !order.length) return;
+  var mini = box.querySelector('.stat-mini');
+  order.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el || el.parentNode !== box) return;
+    box.insertBefore(el, mini || null);
+  });
+}
+function initSideDrag() {
+  var box = document.getElementById('sideStats');
+  if (!box || box.dataset.dragBound) return;
+  box.dataset.dragBound = '1';
+  var dragging = null;
+  sideCards().forEach(function (el) { el.setAttribute('draggable', 'true'); });
+  box.addEventListener('dragstart', function (e) {
+    var card = e.target.closest ? e.target.closest('.stat-card') : null;
+    if (!card) return;
+    /* 卡片内部的按钮、链接、笔记行保持原行为，不从这些地方发起拖动 */
+    if (e.target.closest('button, a, input, textarea, select, .stat-recent-row')) {
+      e.preventDefault();
+      return;
+    }
+    dragging = card;
+    card.classList.add('dragging');
+    try {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', card.id || 'card');
+    } catch (err) {}
+  });
+  box.addEventListener('dragover', function (e) {
+    if (!dragging) return;
+    e.preventDefault();
+    var over = e.target.closest ? e.target.closest('.stat-card') : null;
+    if (!over || over === dragging) return;
+    var rect = over.getBoundingClientRect();
+    var after = (e.clientY - rect.top) > rect.height / 2;
+    var mini = box.querySelector('.stat-mini');
+    if (over.nextSibling === mini && after) return;
+    box.insertBefore(dragging, after ? over.nextSibling : over);
+  });
+  box.addEventListener('drop', function (e) { if (dragging) e.preventDefault(); });
+  box.addEventListener('dragend', function () {
+    if (!dragging) return;
+    dragging.classList.remove('dragging');
+    dragging = null;
+    saveSideOrder();
+  });
+}
+function resetSideOrder() {
+  try { localStorage.removeItem(SIDE_ORDER_KEY); } catch (e) {}
+  renderSideStats();
+  try { refreshRecentNotes(); } catch (e) {}
+}
 /* 刷新后自动重连上次授权的 Obsidian 库；在 Obsidian 插件里打开时改用插件桥 */
 initObsidianBridge();
 applyLogoUI();
 applyStoreBuildUI();
+try { applySideOrder(); initSideDrag(); } catch (e) {}
 
 /* 状态文字收进圆点的悬停提示：横条左边固定显示页面标题 */
 (function syncBarDotTitle() {
