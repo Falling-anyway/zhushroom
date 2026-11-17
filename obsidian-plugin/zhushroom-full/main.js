@@ -1,12 +1,11 @@
 "use strict";
 
-const { addIcon, ItemView, Notice, Plugin, setIcon, TFile, WorkspaceLeaf } = require("obsidian");
+const { addIcon, ItemView, Notice, Plugin, setIcon, TFile } = require("obsidian");
 
 const PAGE_PATH = "猪事顺利.html";
 const VIEW_TYPE = "zhushroom-page-view";
 const ICON_ID = "zhushi-pig";
 /* openFile 补丁的标记，避免与其它插件互相覆盖 */
-const PATCH_MARK = Symbol.for("zhushroom-full.openFile");
 /* 页面里的「选择 Obsidian 库」选的就是这一层；插件直写时也以它为根 */
 const SYNC_ROOT = "日程";
 const PIG_ICON = `
@@ -18,31 +17,7 @@ const PIG_ICON = `
     <path d="M11 15.4h.01M13 15.4h.01" />
   </g>`;
 
-/* 学在浙大网页标签页的自定义图标：Obsidian 1.9 的核心 Web viewer 用站点 favicon，
-   站点给的是另一枚青色标记，这里按用户要求换成「学在浙大」logo（内联 PNG，避免外链） */
-const ZJU_TAB_HOST = /(^|\.)zju\.edu\.cn$/i;
-const ZJU_TAB_LOGO = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCIgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0Ij4KICA8cmVjdCB4PSIzIiB5PSIzIiB3aWR0aD0iNTgiIGhlaWdodD0iNTgiIHJ4PSIxMyIgZmlsbD0iI2ZmZmZmZiIgc3Ryb2tlPSIjQzlEQ0MyIiBzdHJva2Utd2lkdGg9IjIuNSIvPgogIDxnIGZpbGw9IiNDNkRDQTYiPgogICAgPHJlY3QgeD0iMjYuNSIgeT0iMTIiIHdpZHRoPSIxMSIgaGVpZ2h0PSI1IiByeD0iMi41Ii8+CiAgPC9nPgogIDxyZWN0IHg9IjE1IiB5PSIxOS41IiB3aWR0aD0iMzQiIGhlaWdodD0iNS41IiByeD0iMi43NSIgZmlsbD0iIzRGOEU5QyIvPgogIDxyZWN0IHg9IjIxIiB5PSIyNyIgd2lkdGg9IjIyIiBoZWlnaHQ9IjUuNSIgcng9IjIuNzUiIGZpbGw9IiM5ODUxNkYiLz4KICA8cmVjdCB4PSIyMS41IiB5PSIzNC41IiB3aWR0aD0iMjEiIGhlaWdodD0iNS41IiByeD0iMi43NSIgZmlsbD0iI0E4QUFBQyIvPgogIDxyZWN0IHg9IjI2LjUiIHk9IjQyIiB3aWR0aD0iMTEiIGhlaWdodD0iNSIgcng9IjIuNSIgZmlsbD0iI0VCRDBCRiIvPgogIDxyZWN0IHg9IjI3LjUiIHk9IjQ5IiB3aWR0aD0iOSIgaGVpZ2h0PSI0LjUiIHJ4PSIyLjI1IiBmaWxsPSIjRDNFNUMwIi8+Cjwvc3ZnPg==";
-const ZJU_TAB_CSS = [
-  '.workspace-tab-header.zs-zju-tab .workspace-tab-header-inner-icon {',
-  '  background-image: url("' + ZJU_TAB_LOGO + '");',
-  '  background-size: contain;',
-  '  background-repeat: no-repeat;',
-  '  background-position: center;',
-  '}',
-  '.workspace-tab-header.zs-zju-tab .workspace-tab-header-inner-icon > * { opacity: 0; }'
-].join("\n");
-
-/* 侧边栏「学在浙大」图标：彩色胶囊 logo，缩放 100/64 以适配 Obsidian 的 addIcon 视口 */
-const ICON_ID_ZJU = "zhushi-zju";
-const ZJU_ICON = `
-  <g transform="translate(-10.8 -12.2) scale(1.9)">
-    <rect x="26.5" y="12" width="11" height="5" rx="2.5" fill="#C6DCA6" />
-    <rect x="15" y="19.5" width="34" height="5.5" rx="2.75" fill="#4F8E9C" />
-    <rect x="21" y="27" width="22" height="5.5" rx="2.75" fill="#98516F" />
-    <rect x="21.5" y="34.5" width="21" height="5.5" rx="2.75" fill="#A8AAAC" />
-    <rect x="26.5" y="42" width="11" height="5" rx="2.5" fill="#EBD0BF" />
-    <rect x="27.5" y="49" width="9" height="4.5" rx="2.25" fill="#D3E5C0" />
-  </g>`;const ICON_ID_MUSHROOM = "zhushi-mushroom";
+const ICON_ID_MUSHROOM = "zhushi-mushroom";
 /* 线条风蘑菇：半圆菌盖 + 短菌柄 + 三个菌盖斑点 */
 const MUSHROOM_ICON = `
   <g transform="scale(4.1667)" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -94,20 +69,8 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
   async onload() {
     addIcon(ICON_ID, PIG_ICON);
     addIcon(ICON_ID_MUSHROOM, MUSHROOM_ICON);
-    addIcon(ICON_ID_ZJU, ZJU_ICON);
-
-
-    this.addCommand({ id: "open-zju", name: "打开学在浙大", callback: () => this.openZjuSite() });
     this.registerView(VIEW_TYPE, (leaf) => new ZhushiView(leaf));
 
-    /* 学在浙大网页标签页改用「学在浙大」logo：核心 Web viewer 的图标来自站点 favicon */
-    const tabStyle = document.createElement("style");
-    tabStyle.id = "zhushroom-zju-tab-icon";
-    tabStyle.textContent = ZJU_TAB_CSS;
-    document.head.appendChild(tabStyle);
-    this.register(() => tabStyle.remove());
-    this.registerEvent(this.app.workspace.on("layout-change", () => this.markZjuTabs()));
-    this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.markZjuTabs()));
     /* 记录「打开时间」，最近笔记才能真的按打开先后排序 */
     this.registerEvent(this.app.workspace.on("file-open", (file) => {
       if (!file || !file.path) return;
@@ -125,8 +88,6 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
     const iconId = logo === "mushroom" ? ICON_ID_MUSHROOM : ICON_ID;
     this.logo = logo;
     this.ribbonEl = this.addRibbonIcon(iconId, "打开猪事顺利", () => this.openPage());
-    /* 侧边栏「学在浙大」入口：只负责在系统浏览器里打开学在浙大网站 */
-    this.addRibbonIcon(ICON_ID_ZJU, "打开学在浙大", () => this.openZjuSite());
     this.addCommand({ id: "open-zhushi", name: "打开猪事顺利", callback: () => this.openPage() });
 
     this.registerDomEvent(window, "message", (ev) => this.onFrameMessage(ev));
@@ -136,16 +97,11 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
     this.app.workspace.onLayoutReady(() => {
       window.setTimeout(async () => {
         await this.restoreSidebarsOnce();
-        try {
-          this.ensureOutlinePanel();
-        } catch (e) {}
         this.closeOtherLeaves();
         await this.openPage(true);
-        this.markZjuTabs();
       }, 300);
     });
 
-    this.patchOpenFile();
   }
 
   onunload() {
@@ -153,66 +109,9 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
       clearTimeout(this._saveOpenTimesTimer);
       this._saveOpenTimesTimer = null;
     }
-    this.unpatchOpenFile();
-    try {
-      this.app.workspace.iterateAllLeaves((leaf) => {
-        if (leaf.tabHeaderEl) leaf.tabHeaderEl.classList.remove("zs-zju-tab");
-      });
-    } catch (e) {}
     this.app.workspace.detachLeavesOfType(VIEW_TYPE);
   }
 
-  /* 用系统浏览器打开学在浙大：优先 Electron 的 shell.openExternal，退回 window.open */
-  openZjuSite() {
-    const url = "https://courses.zju.edu.cn/";
-    try {
-      const { shell } = require("electron");
-      if (shell && shell.openExternal) {
-        shell.openExternal(url);
-        return;
-      }
-    } catch (e) {}
-    window.open(url, "_blank", "noopener");
-  }
-  /* 给「学在浙大」网页标签页打标记：按 leaf 的 url 判断，命中就换图标 */
-  markZjuTabs() {
-    const ws = this.app.workspace;
-    if (!ws || !ws.iterateAllLeaves) return;
-    ws.iterateAllLeaves((leaf) => {
-      let url = "";
-      try {
-        const st = leaf.view && leaf.view.getState ? leaf.view.getState() : null;
-        url = (st && (st.url || st.state && st.state.url)) || (leaf.view && leaf.view.url) || "";
-      } catch (e) {
-        url = "";
-      }
-      let header = leaf.tabHeaderEl || null;
-      if (!header) {
-        /* 旧版本没有 tabHeaderEl：按标签标题文字找回对应表头 */
-        let title = "";
-        try {
-          title = leaf.view && leaf.view.getDisplayText ? leaf.view.getDisplayText() : "";
-        } catch (e) {
-          title = "";
-        }
-        if (!title) return;
-        const all = Array.prototype.slice.call(document.querySelectorAll(".workspace-tab-header"));
-        header = all.find((h) => {
-          const label = h.getAttribute("aria-label") || "";
-          const text = (h.textContent || "").trim();
-          return label === title || text === title;
-        }) || null;
-        if (!header) return;
-      }
-      let hit = false;
-      try {
-        hit = ZJU_TAB_HOST.test(new URL(String(url)).hostname);
-      } catch (e) {
-        hit = false;
-      }
-      header.classList.toggle("zs-zju-tab", hit);
-    });
-  }
   /* 关掉除本插件视图之外的所有标签页（启动时用，不保留上次会话） */
   /* 只清理主编辑区：左右侧边栏（文件浏览器、搜索、反向链接…）绝对不能动 */
   closeOtherLeaves() {
@@ -256,58 +155,6 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
     } catch (e) { /* 视图类型不可用时跳过 */ }
     data.sidebarsRestored = true;
     await this.saveData(data);
-  }
-
-  /* 让「打开文件」落到新标签页：否则点击笔记会把猪事顺利这一页顶掉 */
-  patchOpenFile() {
-    const proto = WorkspaceLeaf.prototype;
-    const original = proto.openFile;
-    if (!original) return;
-    if (original[PATCH_MARK]) return;
-    const self = this;
-
-    /* 规则：打开任何文件都进新标签页，不覆盖当前这一页。
-       例外只有两种 —— 目标就是当前页里的文件、当前页还是空标签（那就地打开，不浪费一个新页） */
-    const patched = function (file, openState) {
-      try {
-        if (!(file instanceof TFile)) return original.call(this, file, openState);
-        const state = this.getViewState ? this.getViewState() : null;
-        const currentPath = state && state.state && state.state.file;
-        if (currentPath === file.path) return original.call(this, file, openState);
-        if (state && state.type === "empty") return original.call(this, file, openState);
-
-        const existing = self.findLeafByPath(file.path);
-        if (existing && existing !== this) {
-          self.app.workspace.setActiveLeaf(existing, { focus: true });
-          return Promise.resolve();
-        }
-
-        const leaf = self.app.workspace.getLeaf("tab");
-        return original.call(leaf, file, Object.assign({}, openState, { active: true }));
-      } catch (e) { /* 退回默认行为 */ }
-      return original.call(this, file, openState);
-    };
-    patched[PATCH_MARK] = { previous: original };
-    this._patchedOpenFile = patched;
-    proto.openFile = patched;
-  }
-
-
-  /* 这个文件是不是已经在某个标签页里开着 */
-  findLeafByPath(path) {
-    let found = null;
-    this.app.workspace.iterateAllLeaves((leaf) => {
-      if (found) return;
-      const state = leaf.getViewState ? leaf.getViewState() : null;
-      if (state && state.state && state.state.file === path) found = leaf;
-    });
-    return found;
-  }
-  unpatchOpenFile() {
-    const proto = WorkspaceLeaf.prototype;
-    if (this._patchedOpenFile && proto.openFile === this._patchedOpenFile) {
-      proto.openFile = this._patchedOpenFile[PATCH_MARK].previous;
-    }
   }
 
   /* silent = true 时不弹「未找到」提示（启动自动打开用） */
@@ -372,25 +219,6 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
         await this.saveData(data);
       } catch (e) {}
     }, 1500);
-  }
-  /* 左栏加一个「大纲」面板：核心插件 outline 若被关掉就先打开，再在最左侧栏新建一个分栏放它 */
-  ensureOutlinePanel() {
-    try {
-      const ip = this.app.internalPlugins;
-      const outlinePlugin = ip && ip.plugins && ip.plugins.outline;
-      if (outlinePlugin && outlinePlugin.enabled === false) {
-        outlinePlugin.enable(true);
-      }
-    } catch (e) {}
-    const ws = this.app.workspace;
-    if (!ws) return;
-    try {
-      /* 已经有大纲面板（左栏右栏都算）就不再重复创建 */
-      if (ws.getLeavesOfType("outline").length) return;
-      const leaf = ws.getLeftLeaf(true);
-      if (!leaf) return;
-      leaf.setViewState({ type: "outline", active: false });
-    } catch (e) {}
   }
 
   /* 切换左侧边栏图标：kind = "pig" | "mushroom" */
