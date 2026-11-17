@@ -1286,11 +1286,12 @@
 
   /* 名称色条：勾选框 → 分类 → 名称 → 截止日，颜色与右侧天数条一致 */
   .ddl-name-bar {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 6px;
     height: 38px;
-    padding: 0 10px 0 8px;
+    padding: 0 22px 0 8px;
     border-radius: 8px;
     border-left: 3px solid var(--cat-work);
     background: var(--cat-work-strong);
@@ -1327,6 +1328,103 @@
     text-align: center;
     line-height: 11px;
   }
+  /* DDL 折叠设置：勾选框 + 单一圆角步进器 */
+  .ddl-collapse-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: var(--fs-13);
+    color: var(--text);
+    transition: color .15s, opacity .15s;
+  }
+  /* 未选中：整行变灰，数字框也不可用 */
+  .ddl-collapse-row.is-dim { color: var(--muted); }
+  .ddl-collapse-row.is-dim .ddl-stepper { opacity: .5; pointer-events: none; }
+  .ddl-collapse-check {
+    flex: 0 0 auto;
+    width: 15px;
+    height: 15px;
+    padding: 0;
+    border: 2px solid currentColor;
+    border-radius: 3px;
+    background: transparent;
+    color: var(--sub);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .ddl-collapse-check:hover { opacity: .85; }
+  .ddl-collapse-check.checked {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #fff;
+  }
+  .ddl-collapse-check.checked::after {
+    content: '✓';
+    font-size: 11px;
+    line-height: 11px;
+  }
+  .ddl-stepper {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: var(--card);
+    overflow: hidden;
+  }
+  .ddl-stepper button {
+    width: 24px;
+    height: 28px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--sub);
+    font-size: 15px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .ddl-stepper button:hover { background: var(--tint); color: var(--text); }
+  .ddl-stepper input {
+    width: 46px;
+    padding: 5px 0;
+    border: 0;
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+    background: var(--card);
+    color: var(--text);
+    font-family: inherit;
+    font-size: var(--fs-13);
+    text-align: center;
+    -moz-appearance: textfield;
+  }
+  .ddl-stepper input::-webkit-outer-spin-button,
+  .ddl-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+  /* DDL 行里的删除键：平时淡，悬停整行才显眼 */
+  .ddl-del-btn {
+    position: absolute;
+    top: 1px;
+    right: 3px;
+    width: 16px;
+    height: 16px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: currentColor;
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity .15s, background .15s;
+  }
+  .ddl-row:hover .ddl-del-btn { opacity: .55; }
+  .ddl-del-btn:hover { opacity: 1 !important; background: color-mix(in srgb, var(--text) 12%, transparent); }
+
   .ddl-name-bar .ddl-tag {
     flex: 0 0 auto;
     font-size: var(--fs-10);
@@ -3891,6 +3989,29 @@
             <span id="bgBlurValue">0px</span>
           </div>
 
+          <label style="margin-top:16px">DDL 折叠时显示</label>
+          <div class="ddl-collapse-row" id="ddlCollapseRowCount">
+            <button type="button" class="ddl-collapse-check" id="optDdlCollapseCountCheck" onclick="toggleDdlCollapseMode('count')" aria-label="按条数折叠"></button>
+            <span>折叠状态下最多显示</span>
+            <div class="ddl-stepper">
+              <button type="button" onclick="stepDdlCollapse('count',-1)" aria-label="减少">‹</button>
+              <input type="number" id="optDdlCollapseCount" min="1" max="50" step="1" value="5" onchange="setDdlCollapseCount(this.value)">
+              <button type="button" onclick="stepDdlCollapse('count',1)" aria-label="增加">›</button>
+            </div>
+            <span>条</span>
+          </div>
+          <div class="ddl-collapse-row" id="ddlCollapseRowWeeks">
+            <button type="button" class="ddl-collapse-check" id="optDdlCollapseWeeksCheck" onclick="toggleDdlCollapseMode('weeks')" aria-label="按周数折叠"></button>
+            <span>折叠状态下最多显示</span>
+            <div class="ddl-stepper">
+              <button type="button" onclick="stepDdlCollapse('weeks',-1)" aria-label="减少">‹</button>
+              <input type="number" id="optDdlCollapseWeeks" min="1" max="52" step="1" value="1" onchange="setDdlCollapseWeeks(this.value)">
+              <button type="button" onclick="stepDdlCollapse('weeks',1)" aria-label="增加">›</button>
+            </div>
+            <span>周内日程</span>
+          </div>
+          <div class="setting-hint" style="margin-top:6px">两个选项只能选一个；都不选就全部平铺</div>
+
         </div>
 
         <div class="settings-pane" data-pane="data" style="display:none">
@@ -4202,6 +4323,76 @@ async function initBackground() {
 function setShowCompleted(on) {
   var s = loadSettings(); s.showCompleted = !!on; saveSettings(s);
   render();
+}
+
+/* ===== DDL 折叠规则：条数 / 周内日程，二选一 =====
+   模式存在 settings.ddlCollapseMode：'count' | 'weeks' | 'none' */
+function ddlCollapseMode() {
+  var s = loadSettings();
+  var m = s.ddlCollapseMode;
+  if (m !== 'count' && m !== 'weeks' && m !== 'none') {
+    /* 兼容旧字段 */
+    if (s.ddlCollapseByWeeks === true) m = 'weeks';
+    else if (s.ddlCollapseByCount === false) m = 'none';
+    else m = 'count';
+  }
+  return m;
+}
+
+function paintDdlCollapseUi() {
+  var m = ddlCollapseMode();
+  var c = document.getElementById('optDdlCollapseCountCheck');
+  var w = document.getElementById('optDdlCollapseWeeksCheck');
+  var rc = document.getElementById('ddlCollapseRowCount');
+  var rw = document.getElementById('ddlCollapseRowWeeks');
+  if (c) c.classList.toggle('checked', m === 'count');
+  if (w) w.classList.toggle('checked', m === 'weeks');
+  if (rc) rc.classList.toggle('is-dim', m !== 'count');
+  if (rw) rw.classList.toggle('is-dim', m !== 'weeks');
+}
+
+/* 点已选中的选项 = 取消选择（都不选 → 全部平铺） */
+function toggleDdlCollapseMode(kind) {
+  var s = loadSettings();
+  s.ddlCollapseMode = (ddlCollapseMode() === kind) ? 'none' : kind;
+  saveSettings(s);
+  paintDdlCollapseUi();
+  renderDDLCountdown();
+}
+
+function setDdlCollapseCount(v) {
+  var n = parseInt(v, 10);
+  if (isNaN(n)) n = 5;
+  n = Math.max(1, Math.min(50, n));
+  var s = loadSettings();
+  s.ddlCollapseCount = n;
+  s.ddlCollapseMode = 'count';
+  saveSettings(s);
+  var input = document.getElementById('optDdlCollapseCount');
+  if (input) input.value = String(n);
+  paintDdlCollapseUi();
+  renderDDLCountdown();
+}
+
+function setDdlCollapseWeeks(v) {
+  var n = parseInt(v, 10);
+  if (isNaN(n)) n = 1;
+  n = Math.max(1, Math.min(52, n));
+  var s = loadSettings();
+  s.ddlCollapseWeeks = n;
+  s.ddlCollapseMode = 'weeks';
+  saveSettings(s);
+  var input = document.getElementById('optDdlCollapseWeeks');
+  if (input) input.value = String(n);
+  paintDdlCollapseUi();
+  renderDDLCountdown();
+}
+
+/* ‹ › 快捷调节：kind = 'count' | 'weeks' */
+function stepDdlCollapse(kind, delta) {
+  var s = loadSettings();
+  if (kind === 'count') setDdlCollapseCount((s.ddlCollapseCount || 5) + delta);
+  else setDdlCollapseWeeks((s.ddlCollapseWeeks || 1) + delta);
 }
 
 function setShowCompletedDDL(on) {
@@ -4889,6 +5080,11 @@ if (c2b) c2b.checked = s.weekTimeline !== false;
   if (compInput) compInput.value = String(comp);
   var compVal = document.getElementById('optDdlCompValue');
   if (compVal) compVal.textContent = comp + '%';
+  var dccInput = document.getElementById('optDdlCollapseCount');
+  if (dccInput) dccInput.value = String(s.ddlCollapseCount || 5);
+  var dcwInput = document.getElementById('optDdlCollapseWeeks');
+  if (dcwInput) dcwInput.value = String(s.ddlCollapseWeeks || 1);
+  try { paintDdlCollapseUi(); } catch (e) {}
   var st = document.getElementById('optShowStats');
   if (st) st.checked = s.showStats !== false;
   var compFill = document.getElementById('optDdlCompFill');
@@ -6593,6 +6789,7 @@ function saveEvent() {
   closeModal();
   refreshCurrentView();
   showToast(wasEditing ? '已保存修改' : '已添加事项', true);
+
   if (isProject === 'yes' && projectName) autoSaveProjectEvent(date, content, projectName);
 }
 
@@ -6646,6 +6843,8 @@ async function deleteEvent() {
     ev2[target.date] = l2;
     saveEvents(ev2);
     refreshCurrentView();
+    try { renderDDLCountdown(); } catch (err) {}
+    try { renderSideStats(); } catch (err) {}
     syncToFile();
     showToast('已恢复', true, 2200);
   });
@@ -7932,7 +8131,7 @@ async function syncZjuNow() {
     tips.push('课表与校历');
     var res = await zjuFetchFromService();
     if (res.ok) {
-      zjuMergeTodos(res.list);
+      await zjuEnrichNotes(res.list); zjuMergeTodos(res.list);
       tips.push('待办');
     }
     refreshAllUI();
@@ -8506,14 +8705,40 @@ function zjuParseDeadline(iso) {
   };
 }
 
+/* 学在浙大返回的说明是 HTML，转成纯文本再放进备注 */
+function zjuPlainText(html) {
+  if (!html) return '';
+  return String(html)
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li)>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/&lt;/gi, '<')
+    .replace(/&gt;/gi, '>')
+    .replace(/&amp;/gi, '&')
+    .replace(/[ \t]+/g, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/* 备注只放「作业说明」；没有说明就留空，不再拼课程代码 / 链接那套 */
 function zjuBuildNotes(t, when) {
-  var type = ZJU_TYPE_CN[t.type] || t.type || '待办';
-  var lines = [];
-  lines.push('学在浙大 · ' + (t.course_name || '未知课程') + '（' + type + '）');
-  lines.push('截止：' + when.date + ' ' + when.time);
-  if (t.course_code) lines.push('课程代码：' + t.course_code);
-  lines.push('打开：https://courses.zju.edu.cn/course/' + (t.course_id || '') + '/learning-activity#/' + t.id);
-  return lines.join('\n');
+  return zjuPlainText(t && t.zjuDesc);
+}
+
+/* 作业说明不在 /todos 里，要按 activity id 逐条去详情接口取。
+   页面跨域拿不到学在浙大，所以走 127.0.0.1:8766 的本地代理。 */
+async function zjuEnrichNotes(list) {
+  if (!Array.isArray(list) || !list.length) return list;
+  var shim = (typeof ZJU_LOGIN_SHIM === 'string' && ZJU_LOGIN_SHIM) ? ZJU_LOGIN_SHIM : 'http://127.0.0.1:8766';
+  await Promise.all(list.map(function (t) {
+    if (!t || t.id === undefined || t.id === null) return Promise.resolve();
+    return fetch(shim + '/activity?id=' + encodeURIComponent(t.id), { cache: 'no-store' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && d.ok && d.description) t.zjuDesc = d.description; })
+      .catch(function () {});
+  }));
+  return list;
 }
 
 function zjuSortDay(list) {
@@ -9603,7 +9828,7 @@ async function syncZjuThenObsidian() {
     /* 服务优先；服务不可用时只读库里旧缓存，不写库 */
     var svc = await zjuFetchFromService();
     if (svc.ok) {
-      const merged = zjuMergeTodos(svc.list);
+      await zjuEnrichNotes(svc.list); const merged = zjuMergeTodos(svc.list);
       const sum = zjuSummary(merged);
       changed = merged.changed;
       if (sum.indexOf('无变化') !== 0) tips.push('学在浙大：' + sum);
@@ -9758,10 +9983,18 @@ function renderDDLCountdown() {
   }
 
   /* 折叠规则：一周内没有 DDL 就显示最近的 5 个；总条数不足 5 条则全部显示 */
-  var withinWeek = pendingAll.filter(function(d) { return d.days <= 7; });
-  var collapsedShown = (pendingAll.length <= 5)
-    ? pendingAll.slice()
-    : (withinWeek.length ? withinWeek : pendingAll.slice(0, 5));
+  var ddlCfg = loadSettings();
+  var collapseMode = ddlCollapseMode();
+  var collapseN = Math.max(1, Math.min(50, ddlCfg.ddlCollapseCount || 5));
+  var collapseWeeks = Math.max(1, Math.min(52, ddlCfg.ddlCollapseWeeks || 1));
+  var collapsedShown = pendingAll.slice();
+  if (collapseMode === 'weeks') {
+    collapsedShown = collapsedShown.filter(function(d) { return d.days <= collapseWeeks * 7; });
+  } else if (collapseMode === 'count') {
+    collapsedShown = collapsedShown.slice(0, collapseN);
+  }
+  /* 规则太严一条都不剩时至少留最近的，避免区块看着像空的 */
+  if (!collapsedShown.length && pendingAll.length) collapsedShown = [pendingAll[0]];
   var foldedCount = pendingAll.length - collapsedShown.length;
   var shown = ddlShowAll ? pendingAll.slice() : collapsedShown;
   if (showDoneDDL) shown = shown.concat(doneAll);
@@ -9844,18 +10077,43 @@ function renderDDLCountdown() {
     /* 名称色条：勾选框 → 分类 → 名称 → 截止日 */
     var nameBar = document.createElement('div');
     nameBar.className = 'ddl-name-bar ' + colorClass;
-    nameBar.title = tip;
+    if (!ev.notes) nameBar.title = tip;   /* 有备注时交给悬浮气泡 */
     nameBar.addEventListener('click', function() { openEditModal(d.date, d.idx); });
 
     var check = document.createElement('button');
     check.type = 'button';
     check.className = 'complete-btn' + (ev.done ? ' checked' : '');
     check.title = ev.done ? '取消完成' : '标记完成';
+    /* 直接改本地数据再刷新 DDL 区块：
+       不走 toggleComplete（它有课程拦截、且内部 render() 主要服务周视图），
+       这样勾选一定立即生效并重画这一列。 */
     check.addEventListener('click', function(e) {
       e.stopPropagation();
-      toggleComplete(d.date, d.idx);
+      var all = loadEvents();
+      var target = (all[d.date] || [])[d.idx];
+      if (!target) return;
+      target.done = !target.done;
+      saveEvents(all);
+      try { syncToFile(); } catch (err) {}
+      renderDDLCountdown();
+      try { renderSideStats(); } catch (err) {}
     });
     nameBar.appendChild(check);
+
+    /* 删除：和日程一致，删完在底部弹可撤销胶囊 */
+    var delBtn = document.createElement('button');
+    delBtn.type = 'button';
+    delBtn.className = 'ddl-del-btn';
+    delBtn.title = '删除这条 DDL';
+    delBtn.textContent = '×';
+    delBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      editingId = { date: d.date, index: d.idx };
+      deleteEvent();
+      /* deleteEvent 内部的 render() 主要服务周视图，DDL 这一列不会自己更新，补一次 */
+      try { renderDDLCountdown(); } catch (err) {}
+      try { renderSideStats(); } catch (err) {}
+    });
 
     var tag = document.createElement('span');
     tag.className = 'ddl-tag';
@@ -9864,7 +10122,7 @@ function renderDDLCountdown() {
 
     var title = document.createElement('span');
     title.className = 'ddl-title';
-    title.textContent = ev.content || '';
+    title.textContent = (ev.content || '') + (ev.notes ? '…' : '');
     nameBar.appendChild(title);
 
     var due = document.createElement('span');
@@ -9872,6 +10130,14 @@ function renderDDLCountdown() {
     /* 与日期轴一致用 M/D，避免出现 11-13 与 11/14 两种写法 */
     due.textContent = d.date.slice(5, 7).replace(/^0/, '') + '/' + d.date.slice(8).replace(/^0/, '') + (ev.time ? ' ' + ev.time : '');
     nameBar.appendChild(due);
+
+    /* 删除键放最后，CSS 里绝对定位到右上角 */
+    nameBar.appendChild(delBtn);
+
+    if (ev.notes) {
+      row.addEventListener('mouseenter', function() { showNotesTooltip(nameBar, ev.notes); });
+      row.addEventListener('mouseleave', hideNotesTooltip);
+    }
 
     /* 天数条 */
     var track = document.createElement('div');
@@ -9889,7 +10155,7 @@ function renderDDLCountdown() {
     } else {
       bar.style.width = (ddlFrac(d.days) * 100).toFixed(3) + '%';
     }
-    bar.title = tip;
+    if (!ev.notes) bar.title = tip;
 
     var label = document.createElement('span');
     label.className = 'ddl-bar-label';
@@ -11533,6 +11799,8 @@ renderGreeting();
 setRailActive('week');
 railSpyInit();
 renderSideStats();
+/* 初始化时首屏渲染可能早于 DDL 数据就绪，收尾再补一次，避免 DDL 区块空着 */
+try { renderDDLCountdown(); } catch (eDDL) { console.warn('[DDL] 首屏渲染失败', eDDL); }
 </script>
 </body>
 </html>
