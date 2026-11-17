@@ -108,10 +108,20 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
     this.register(() => tabStyle.remove());
     this.registerEvent(this.app.workspace.on("layout-change", () => this.markZjuTabs()));
     this.registerEvent(this.app.workspace.on("active-leaf-change", () => this.markZjuTabs()));
+    /* 记录「打开时间」，最近笔记才能真的按打开先后排序 */
+    this.registerEvent(this.app.workspace.on("file-open", (file) => {
+      if (!file || !file.path) return;
+      this.openTimes = this.openTimes || {};
+      this.openTimes[file.path] = Date.now();
+      this.pruneOpenTimes();
+      this.scheduleSaveOpenTimes();
+    }));
 
     /* 上次保存的侧边栏图标：没存过就用小猪 */
     const data = await this.loadData();
     const logo = data && data.logo === "mushroom" ? "mushroom" : "pig";
+    /* 每篇笔记最后一次被打开的时间（毫秒），右栏「最近笔记」按它排序 */
+    this.openTimes = (data && data.openTimes && typeof data.openTimes === "object") ? data.openTimes : {};
     const iconId = logo === "mushroom" ? ICON_ID_MUSHROOM : ICON_ID;
     this.logo = logo;
     this.ribbonEl = this.addRibbonIcon(iconId, "打开猪事顺利", () => this.openPage());
@@ -136,6 +146,10 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
   }
 
   onunload() {
+    if (this._saveOpenTimesTimer) {
+      clearTimeout(this._saveOpenTimesTimer);
+      this._saveOpenTimesTimer = null;
+    }
     this.unpatchOpenFile();
     try {
       this.app.workspace.iterateAllLeaves((leaf) => {
@@ -334,6 +348,28 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
     }
   }
 
+  /* 打开记录只留最近 300 条，避免 data.json 越滚越大 */
+  pruneOpenTimes() {
+    try {
+      const entries = Object.entries(this.openTimes || {});
+      if (entries.length <= 300) return;
+      entries.sort((a, b) => b[1] - a[1]);
+      this.openTimes = Object.fromEntries(entries.slice(0, 300));
+    } catch (e) {}
+  }
+
+  /* 打开记录攒 1.5 秒再落盘，连续翻笔记不会每篇都写一次 data.json */
+  scheduleSaveOpenTimes() {
+    if (this._saveOpenTimesTimer) return;
+    this._saveOpenTimesTimer = setTimeout(async () => {
+      this._saveOpenTimesTimer = null;
+      try {
+        const data = (await this.loadData()) || {};
+        data.openTimes = this.openTimes;
+        await this.saveData(data);
+      } catch (e) {}
+    }, 1500);
+  }
   /* 切换左侧边栏图标：kind = "pig" | "mushroom" */
   async setLogo(kind) {
     try {
@@ -405,40 +441,44 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
       /* 最近打开过的笔记：给页面右栏「最近笔记」用 */
       case "recent": {
         const limit = Math.max(1, Math.min(20, Number(a.limit) || 5));
-        const out = [];
-        const push = (p) => {
-          if (!p) return;
-          let path = String(p);
-          if (!/\.md$/i.test(path)) path += ".md";
-          if (out.some((x) => x.path === path)) return;
-          if (!this.app.vault.getAbstractFileByPath(path)) return;
-          out.push({ path, name: path.split("/").pop() });
-        };
+        const times = this.openTimes && typeof this.openTimes === "object" ? this.openTimes : {};
+        let files = [];
         try {
-          const paths = this.app.workspace.getLastOpenFiles
-            ? this.app.workspace.getLastOpenFiles()
-            : [];
-          for (const p of paths) {
-            push(p);
-            if (out.length >= limit) break;
-          }
-        } catch (e) {}
-        /* 拿不到「最近打开」（不同版本字段不一）时退回「最近修改」，保证右栏有内容 */
-        if (out.length < limit) {
+          files = this.app.vault.getMarkdownFiles() || [];
+        } catch (e) {
+          files = [];
+        }
+        const scored = [];
+        for (const f of files) {
+          if (!f || !f.path) continue;
+          const opened = times[f.path] || 0;
+          const mtime = (f.stat && f.stat.mtime) || 0;
+          scored.push({
+            path: f.path,
+            name: f.name || f.path.split("/").pop(),
+            /* 打开过的按打开时间；没打开过的用修改时间兜底，保证右栏一开始也有内容 */
+            score: opened || mtime
+          });
+        }
+        scored.sort((x, y) => y.score - x.score || x.path.localeCompare(y.path));
+        const out = scored.slice(0, limit).map((x) => ({ path: x.path, name: x.name }));
+        /* 万一 vault 拿不到列表，退回 Obsidian 自带的「最近打开」 */
+        if (!out.length) {
           try {
-            const files = this.app.vault
-              .getMarkdownFiles()
-              .slice()
-              .sort((x, y) => (y.stat.mtime || 0) - (x.stat.mtime || 0));
-            for (const f of files) {
-              push(f.path);
+            const paths = this.app.workspace.getLastOpenFiles
+              ? this.app.workspace.getLastOpenFiles()
+              : [];
+            for (const p of paths) {
+              const path = /\.md$/i.test(p) ? p : p + ".md";
+              if (!this.app.vault.getAbstractFileByPath(path)) continue;
+              if (out.some((x) => x.path === path)) continue;
+              out.push({ path, name: path.split("/").pop() });
               if (out.length >= limit) break;
             }
           } catch (e) {}
         }
-        return out.slice(0, limit);
-      }
-      /* 从页面点开一条笔记：开在新标签页，不影响当前页面 */
+        return out;
+      }      /* 从页面点开一条笔记：开在新标签页，不影响当前页面 */
       case "openFile": {
         const file = this.app.vault.getAbstractFileByPath(String(a.path || ""));
         if (!file) return false;

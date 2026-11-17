@@ -1,4 +1,4 @@
-﻿# 给协作 Agent 的规则
+# 给协作 Agent 的规则
 
 ## 只有一个源文件
 
@@ -13,7 +13,8 @@
    - `powershell -ExecutionPolicy Bypass -File tools\publish.ps1 -DryRun` 把页面复制到本仓库并脱敏；
    - `node tools\build.js 猪事顺利.html` 在 `zhushroom-calendar` 仓库里重建 `main.js`；
    - 跑 `node --check main.js`、`node test\harness.js`、`node tools\check-manifest.js`、`node tools\rebuild.js`。
-3. 不要「改一处就发一个版本」：版本号、`git push`、`gh release create` 都要等用户明确说。
+3. **每次改完都提交**：一批改动做完就 `git commit`（提交信息写清改了什么），不要攒着。
+4. **推送等指令**：`git push`、版本号、`gh release create` 都要等用户明确说，不要自己推。
 
 ## 两套东西别混
 
