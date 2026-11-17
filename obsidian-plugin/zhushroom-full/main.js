@@ -438,7 +438,24 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
         if (await adapter.exists(path)) await adapter.remove(path);
         return "ok";
       }
-      /* 最近打开过的笔记：给页面右栏「最近笔记」用 */
+      /* 列出库里的所有文件夹，供「最近笔记」筛选面板使用 */
+      case "folders": {
+        const out = [];
+        try {
+          const all = this.app.vault.getAllLoadedFiles
+            ? this.app.vault.getAllLoadedFiles()
+            : [];
+          for (const f of all) {
+            if (!f || !f.path) continue;
+            /* TFolder 才有 children 数组 */
+            if (!Array.isArray(f.children)) continue;
+            if (!f.path || f.path === "/") continue;
+            out.push(f.path);
+          }
+        } catch (e) {}
+        out.sort((x, y) => x.localeCompare(y));
+        return out.slice(0, 800);
+      }      /* 最近打开过的笔记：给页面右栏「最近笔记」用 */
       case "recent": {
         const limit = Math.max(1, Math.min(20, Number(a.limit) || 5));
         const times = this.openTimes && typeof this.openTimes === "object" ? this.openTimes : {};
@@ -448,9 +465,19 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
         } catch (e) {
           files = [];
         }
+        /* 页面设置里限定只看某些文件夹时，按前缀过滤 */
+        const folders = Array.isArray(a.folders)
+          ? a.folders.map((x) => String(x || "").replace(/^\/+|\/+$/g, "")).filter(Boolean)
+          : [];
+        const inScope = (p) => {
+          if (!folders.length) return true;
+          const path = String(p || "");
+          return folders.some((dir) => path === dir || path.startsWith(dir + "/"));
+        };
         const scored = [];
         for (const f of files) {
           if (!f || !f.path) continue;
+          if (!inScope(f.path)) continue;
           const opened = times[f.path] || 0;
           const mtime = (f.stat && f.stat.mtime) || 0;
           scored.push({
@@ -462,8 +489,8 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
         }
         scored.sort((x, y) => y.score - x.score || x.path.localeCompare(y.path));
         const out = scored.slice(0, limit).map((x) => ({ path: x.path, name: x.name }));
-        /* 万一 vault 拿不到列表，退回 Obsidian 自带的「最近打开」 */
-        if (!out.length) {
+        /* 万一 vault 拿不到列表，退回 Obsidian 自带的「最近打开」（限定文件夹时不用它，否则会绕过筛选） */
+        if (!out.length && !folders.length) {
           try {
             const paths = this.app.workspace.getLastOpenFiles
               ? this.app.workspace.getLastOpenFiles()
