@@ -3210,7 +3210,82 @@
     font-family: inherit;
     cursor: pointer;
   }
-  .folder-picker-actions .btn-save:hover { background: var(--primary-dark); }</style>
+  .folder-picker-actions .btn-save:hover { background: var(--primary-dark); }
+  /* 「最近笔记」范围选择：折叠树 + 每项「显示 / 不显示」两个小按钮 */
+  .folder-picker.fp-tree { width: min(520px, 92vw); max-height: 78vh; }
+  .fp-legend {
+    font-size: var(--fs-11);
+    color: var(--muted);
+    margin: -4px 0 8px;
+  }
+  .fp-folder > summary {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 2px;
+    cursor: pointer;
+    list-style: none;
+    border-radius: 6px;
+  }
+  .fp-folder > summary::-webkit-details-marker { display: none; }
+  .fp-folder > summary::before {
+    content: "▶";
+    font-size: var(--fs-10);
+    color: var(--muted);
+    width: 10px;
+    flex: 0 0 auto;
+  }
+  .fp-folder[open] > summary::before { content: "▼"; }
+  .fp-folder > summary:hover, .fp-row:hover { background: color-mix(in srgb, var(--text) 5%, transparent); }
+  .fp-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 2px;
+    border-radius: 6px;
+  }
+  .fp-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: var(--fs-13);
+    color: var(--sub);
+  }
+  .fp-dot {
+    width: 10px;
+    flex: 0 0 auto;
+    text-align: center;
+    color: var(--muted);
+  }
+  .fp-dot::before { content: "·"; }
+  .fp-acts { display: flex; gap: 4px; flex: 0 0 auto; }
+  .fp-act {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 1px solid var(--line);
+    border-radius: 5px;
+    background: transparent;
+    color: var(--muted);
+    font-size: var(--fs-11);
+    line-height: 1;
+    cursor: pointer;
+  }
+  .fp-act.on {
+    background: color-mix(in srgb, var(--primary) 16%, var(--card));
+    border-color: color-mix(in srgb, var(--primary) 45%, var(--line));
+    color: var(--primary);
+    font-weight: 700;
+  }
+  .fp-count {
+    font-size: var(--fs-10);
+    color: var(--muted);
+    flex: 0 0 auto;
+  }  .fp-off .fp-name { opacity: .42; }
+  .fp-off .fp-act.on { opacity: 1; }
+  .fp-folder > summary::before { font-size: var(--fs-12); }</style>
 </head>
 <body>
 
@@ -3714,9 +3789,7 @@
       <span>只看这些文件夹</span>
       <button class="setting-btn" type="button" onclick="openRecentFolderPicker()">从库中选择…</button>
     </div>
-    <input type="text" id="optRecentFolders" placeholder="留空 = 全部；多个文件夹用逗号分隔"
-           onchange="setRecentFoldersFromInput(this.value)">
-    <div class="setting-hint" id="recentFoldersHint">留空表示全库笔记都参与排序</div>
+    <div class="setting-hint" id="recentFoldersHint">默认全库笔记都参与排序</div>
 
     <label style="margin-top:16px">已结项项目</label>
     <div id="archivedProjectList" class="archived-list"></div>
@@ -3921,7 +3994,7 @@ function loadSettings() {
     fontScale: 1, theme: 'monet', showCompleted: true, showCompletedDDL: false, ddlAxisDays: 0,
     pageTitle: '猪事顺利', ddlDoneText: '全部 DDL 已完成，强强！', bgBlur: 0,
     railCollapsed: false, showStats: true, statsCollapsed: false, userName: '你',
-    weekAutoRange: false, weekTimeline: true, recentFolders: []
+    weekAutoRange: false, weekTimeline: true, recentFolders: [], recentInclude: [], recentExclude: []
   };
   try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
   catch(e) { return defaults; }
@@ -4353,73 +4426,160 @@ function renderGreeting() {
 
 /* 右侧统计栏：今日完成 / 最近 DDL / 今日待打卡 */
 /* 右栏「最近笔记」：只有连接了 Obsidian（插件桥）才有数据，点一条就在新标签页打开 */
-/* 最近笔记的文件夹过滤：数组，空数组 = 全库 */
-function recentFolderList() {
+/* 最近笔记的显示范围：include = 只看这些，exclude = 不显示这些；两者都可以是文件夹或单篇笔记 */
+function recentScope() {
   var s = loadSettings();
-  var list = (s && Array.isArray(s.recentFolders)) ? s.recentFolders : [];
-  return list.map(function (x) { return String(x || '').replace(/^\/+|\/+$/g, ''); }).filter(Boolean);
+  var norm = function (x) { return String(x || '').replace(/^\/+|\/+$/g, ''); };
+  var inc = Array.isArray(s.recentInclude) ? s.recentInclude.map(norm).filter(Boolean) : [];
+  var exc = Array.isArray(s.recentExclude) ? s.recentExclude.map(norm).filter(Boolean) : [];
+  /* 旧版本只有文件夹白名单，自动迁移成 include */
+  if (!inc.length && !exc.length && Array.isArray(s.recentFolders)) {
+    inc = s.recentFolders.map(norm).filter(Boolean);
+  }
+  return { include: inc, exclude: exc };
 }
-function setRecentFolders(list) {
+/* 单条路径当前是显示还是不显示：取最深的规则，同深度「不显示」优先 */
+function recentScopeState(path, scope) {
+  var best = { depth: -1, state: '' };
+  var consider = function (list, state) {
+    (list || []).forEach(function (entry) {
+      if (path !== entry && path.indexOf(entry + '/') !== 0) return;
+      var depth = entry.split('/').length;
+      if (depth > best.depth || (depth === best.depth && state === 'hide')) best = { depth: depth, state: state };
+    });
+  };
+  consider(scope.include, 'show');
+  consider(scope.exclude, 'hide');
+  if (best.state) return best.state;
+  return (scope.include && scope.include.length) ? 'hide' : 'show';
+}
+function setRecentScope(include, exclude) {
   var s = loadSettings();
-  s.recentFolders = (list || []).map(function (x) { return String(x || '').trim().replace(/^\/+|\/+$/g, ''); }).filter(Boolean);
+  s.recentInclude = (include || []).map(function (x) { return String(x || '').trim(); }).filter(Boolean);
+  s.recentExclude = (exclude || []).map(function (x) { return String(x || '').trim(); }).filter(Boolean);
+  s.recentFolders = [];
   saveSettings(s);
-  var input = document.getElementById('optRecentFolders');
-  if (input) input.value = s.recentFolders.join(', ');
   var hint = document.getElementById('recentFoldersHint');
-  if (hint) hint.textContent = s.recentFolders.length
-    ? '只显示这些文件夹里的笔记：' + s.recentFolders.join('、')
-    : '留空表示全库笔记都参与排序';
+  if (hint) {
+    var inc = s.recentInclude.length, exc = s.recentExclude.length;
+    if (!inc && !exc) hint.textContent = '默认全库笔记都参与排序';
+    else if (!inc) hint.textContent = '不显示 ' + exc + ' 个范围，其余全部参与排序';
+    else hint.textContent = '只显示 ' + inc + ' 个范围' + (exc ? '，并排除 ' + exc + ' 个' : '');
+  }
   if (typeof refreshRecentNotes === 'function') refreshRecentNotes();
 }
-function setRecentFoldersFromInput(text) {
-  setRecentFolders(String(text || '').split(/[，,;；]/));
-}
-/* 从库里拉全部文件夹，勾选后应用 */
+/* 从库里拉「文件夹 + 笔记」树，按结构折叠，逐项可切「显示 / 不显示」 */
 async function openRecentFolderPicker() {
   if (typeof zsBridge === 'undefined' || !zsBridge) {
-    setSyncStatus('要在 Obsidian 插件里才能选文件夹', false, 4000);
+    setSyncStatus('要在 Obsidian 插件里才能选范围', false, 4000);
     return;
   }
-  var folders = [];
+  var data = null;
   try {
-    folders = await zsBridgeCall('folders', {});
+    data = await zsBridgeCall('tree', {});
   } catch (e) {
-    folders = [];
+    data = null;
   }
-  if (!Array.isArray(folders) || !folders.length) {
-    setSyncStatus('没读到库里的文件夹', false, 4000);
+  var folders = (data && Array.isArray(data.folders)) ? data.folders : [];
+  var notes = (data && Array.isArray(data.notes)) ? data.notes : [];
+  if (!folders.length && !notes.length) {
+    setSyncStatus('没读到库里的笔记结构', false, 4000);
     return;
   }
-  var chosen = recentFolderList();
+  var scope = recentScope();
+  var working = { include: scope.include.slice(), exclude: scope.exclude.slice() };
+
+  var childFolders = {};
+  var childNotes = {};
+  var parentOf = function (p) {
+    var i = p.lastIndexOf('/');
+    return i >= 0 ? p.slice(0, i) : '';
+  };
+  folders.forEach(function (p) { var k = parentOf(p); (childFolders[k] = childFolders[k] || []).push(p); });
+  notes.forEach(function (p) { var k = parentOf(p); (childNotes[k] = childNotes[k] || []).push(p); });
+
+  var baseName = function (p) { return p.split('/').pop().replace(/\.md$/i, ''); };
+
+  function rowHtml(path, isNote) {
+    var depth = path.split('/').length;
+    return '<div class="fp-row' + (isNote ? ' fp-note' : '') + '" data-path="' + escapeHtml(path) + '" style="padding-left:' + (depth * 14) + 'px">'
+      + (isNote ? '<span class="fp-dot"></span>' : '')
+      + '<span class="fp-name" title="' + escapeHtml(path) + '">' + escapeHtml(baseName(path)) + '</span>'
+      + '<span class="fp-acts">'
+      + '<button type="button" class="fp-act" data-act="show" data-path="' + escapeHtml(path) + '" title="只显示这里">✓</button>'
+      + '<button type="button" class="fp-act" data-act="hide" data-path="' + escapeHtml(path) + '" title="不显示这里">✕</button>'
+      + '</span></div>';
+  }
+
+  function nodesHtml(parent) {
+    var out = '';
+    (childFolders[parent] || []).forEach(function (f) {
+      var kids = (childFolders[f] || []).length + (childNotes[f] || []).length;
+      out += '<details class="fp-folder" data-path="' + escapeHtml(f) + '"' + (parent === '' ? ' open' : '') + '>'
+        + '<summary><span class="fp-name" title="' + escapeHtml(f) + '">' + escapeHtml(baseName(f)) + '</span>'
+        + '<span class="fp-acts">'
+        + '<button type="button" class="fp-act" data-act="show" data-path="' + escapeHtml(f) + '" title="只显示这里">✓</button>'
+        + '<button type="button" class="fp-act" data-act="hide" data-path="' + escapeHtml(f) + '" title="不显示这里">✕</button>'
+        + '</span><span class="fp-count">' + kids + '</span></summary>'
+        + nodesHtml(f) + '</details>';
+    });
+    (childNotes[parent] || []).forEach(function (n) { out += rowHtml(n, true); });
+    return out;
+  }
+
   var box = document.createElement('div');
   box.className = 'folder-picker-mask';
-  box.innerHTML = '<div class="folder-picker">'
-    + '<div class="folder-picker-title">选择「最近笔记」显示的文件夹</div>'
-    + '<div class="folder-picker-list">'
-    + folders.map(function (f) {
-        var checked = chosen.indexOf(f) >= 0 ? ' checked' : '';
-        return '<label class="folder-picker-row"><input type="checkbox" value="' + escapeHtml(f) + '"' + checked + '>'
-          + '<span>' + escapeHtml(f) + '</span></label>';
-      }).join('')
-    + '</div>'
+  box.innerHTML = '<div class="folder-picker fp-tree">'
+    + '<div class="folder-picker-title">「最近笔记」显示范围</div>'
+    + '<div class="fp-legend">✓ 只显示这里 · ✕ 不显示这里 · 都不点表示跟随上级</div>'
+    + '<div class="folder-picker-list" id="fpList">' + nodesHtml('') + '</div>'
     + '<div class="folder-picker-actions">'
-    + '<button class="setting-btn" type="button" data-act="clear">清空（全库）</button>'
+    + '<button class="setting-btn" type="button" data-act="clear">全部显示</button>'
     + '<button class="setting-btn" type="button" data-act="cancel">取消</button>'
     + '<button class="btn-save" type="button" data-act="ok">确定</button>'
     + '</div></div>';
   document.body.appendChild(box);
+
+  function paint() {
+    box.querySelectorAll('.fp-act').forEach(function (btn) {
+      var path = btn.getAttribute('data-path');
+      var act = btn.getAttribute('data-act');
+      var list = act === 'show' ? working.include : working.exclude;
+      btn.classList.toggle('on', list.indexOf(path) >= 0);
+    });
+    /* 按当前规则灰化「不会出现在最近笔记里」的节点 */
+    box.querySelectorAll('[data-path]').forEach(function (node) {
+      var path = node.getAttribute('data-path');
+      if (!path) return;
+      node.classList.toggle('fp-off', recentScopeState(path, working) === 'hide');
+    });
+  }
+  paint();
+
   box.addEventListener('click', function (e) {
-    if (e.target === box) { box.remove(); return; }
-    var act = e.target.getAttribute && e.target.getAttribute('data-act');
-    if (!act) return;
-    if (act === 'cancel') { box.remove(); return; }
-    if (act === 'clear') { setRecentFolders([]); box.remove(); return; }
-    if (act === 'ok') {
-      var picked = [];
-      box.querySelectorAll('input[type=checkbox]').forEach(function (i) { if (i.checked) picked.push(i.value); });
-      setRecentFolders(picked);
-      box.remove();
+    var btn = e.target.closest ? e.target.closest('.fp-act') : null;
+    if (btn) {
+      e.preventDefault();
+      e.stopPropagation();
+      var path = btn.getAttribute('data-path');
+      var act = btn.getAttribute('data-act');
+      var mine = act === 'show' ? 'include' : 'exclude';
+      var other = act === 'show' ? 'exclude' : 'include';
+      if (working[mine].indexOf(path) >= 0) {
+        working[mine] = working[mine].filter(function (x) { return x !== path; });
+      } else {
+        working[mine].push(path);
+        working[other] = working[other].filter(function (x) { return x !== path; });
+      }
+      paint();
+      return;
     }
+    if (e.target === box) { box.remove(); return; }
+    var act2 = e.target.getAttribute && e.target.getAttribute('data-act');
+    if (!act2) return;
+    if (act2 === 'cancel') { box.remove(); return; }
+    if (act2 === 'clear') { working = { include: [], exclude: [] }; paint(); return; }
+    if (act2 === 'ok') { setRecentScope(working.include, working.exclude); box.remove(); }
   });
 }
 async function refreshRecentNotes() {
@@ -4431,7 +4591,8 @@ async function refreshRecentNotes() {
   }
   var list = [];
   try {
-    list = await zsBridgeCall('recent', { limit: 5, folders: recentFolderList() });
+    var scope = recentScope();
+    list = await zsBridgeCall('recent', { limit: 5, include: scope.include, exclude: scope.exclude });
   } catch (e) {
     list = [];
   }
@@ -4650,12 +4811,13 @@ function openSettings() {
   applyLogoUI();
   try { refreshStoreUI(); } catch (e) {}
   document.getElementById('settingsOverlay').classList.add('active');
-  var rf = document.getElementById('optRecentFolders');
-  if (rf) rf.value = recentFolderList().join(', ');
   var rfh = document.getElementById('recentFoldersHint');
   if (rfh) {
-    var rfl = recentFolderList();
-    rfh.textContent = rfl.length ? '只显示这些文件夹里的笔记：' + rfl.join('、') : '留空表示全库笔记都参与排序';
+    var sc0 = recentScope();
+    var nInc = sc0.include.length, nExc = sc0.exclude.length;
+    rfh.textContent = (!nInc && !nExc) ? '默认全库笔记都参与排序'
+      : (!nInc ? '不显示 ' + nExc + ' 个范围，其余全部参与排序'
+        : '只显示 ' + nInc + ' 个范围' + (nExc ? '，并排除 ' + nExc + ' 个' : ''));
   }
   var input = document.getElementById('dingtalkWebhookInput');
   if (input) input.value = localStorage.getItem('dingtalkWebhook') || '';
@@ -4699,12 +4861,13 @@ if (c2b) c2b.checked = s.weekTimeline !== false;
   renderArchivedProjects();
 }
 function closeSettings() {
-  var rf = document.getElementById('optRecentFolders');
-  if (rf) rf.value = recentFolderList().join(', ');
   var rfh = document.getElementById('recentFoldersHint');
   if (rfh) {
-    var rfl = recentFolderList();
-    rfh.textContent = rfl.length ? '只显示这些文件夹里的笔记：' + rfl.join('、') : '留空表示全库笔记都参与排序';
+    var sc0 = recentScope();
+    var nInc = sc0.include.length, nExc = sc0.exclude.length;
+    rfh.textContent = (!nInc && !nExc) ? '默认全库笔记都参与排序'
+      : (!nInc ? '不显示 ' + nExc + ' 个范围，其余全部参与排序'
+        : '只显示 ' + nInc + ' 个范围' + (nExc ? '，并排除 ' + nExc + ' 个' : ''));
   }
   var input = document.getElementById('dingtalkWebhookInput');
   if (input) {

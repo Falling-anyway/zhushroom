@@ -461,7 +461,27 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
         if (await adapter.exists(path)) await adapter.remove(path);
         return "ok";
       }
-      /* 列出库里的所有文件夹，供「最近笔记」筛选面板使用 */
+      /* 给「最近笔记」范围选择器：一次返回所有文件夹与所有笔记 */
+      case "tree": {
+        const folders = [];
+        const notes = [];
+        try {
+          const all = this.app.vault.getAllLoadedFiles
+            ? this.app.vault.getAllLoadedFiles()
+            : [];
+          for (const f of all) {
+            if (!f || !f.path) continue;
+            if (Array.isArray(f.children)) {
+              if (f.path && f.path !== "/") folders.push(f.path);
+            } else if (/\.md$/i.test(f.path)) {
+              notes.push(f.path);
+            }
+          }
+        } catch (e) {}
+        folders.sort((x, y) => x.localeCompare(y));
+        notes.sort((x, y) => x.localeCompare(y));
+        return { folders: folders.slice(0, 1200), notes: notes.slice(0, 4000) };
+      }      /* 列出库里的所有文件夹，供「最近笔记」筛选面板使用 */
       case "folders": {
         const out = [];
         try {
@@ -488,15 +508,33 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
         } catch (e) {
           files = [];
         }
-        /* 页面设置里限定只看某些文件夹时，按前缀过滤 */
-        const folders = Array.isArray(a.folders)
-          ? a.folders.map((x) => String(x || "").replace(/^\/+|\/+$/g, "")).filter(Boolean)
-          : [];
-        const inScope = (p) => {
-          if (!folders.length) return true;
+        /* 页面设置的显示范围：include = 只看这些，exclude = 不显示这些；都能是文件夹或单篇笔记。
+           同一路径同时命中时取较深的规则，同深度以「不显示」优先 */
+        const normPath = (x) => String(x || "").replace(/^\/+|\/+$/g, "");
+        const incList = Array.isArray(a.include) ? a.include.map(normPath).filter(Boolean) : [];
+        const excList = Array.isArray(a.exclude) ? a.exclude.map(normPath).filter(Boolean) : [];
+        /* 兼容旧参数：folders 视为 include */
+        if (!incList.length && Array.isArray(a.folders)) {
+          a.folders.map(normPath).filter(Boolean).forEach((x) => incList.push(x));
+        }
+        const scopeState = (p) => {
           const path = String(p || "");
-          return folders.some((dir) => path === dir || path.startsWith(dir + "/"));
+          let best = { depth: -1, state: "" };
+          const consider = (list, state) => {
+            for (const entry of list) {
+              if (path !== entry && !path.startsWith(entry + "/")) continue;
+              const depth = entry.split("/").length;
+              if (depth > best.depth || (depth === best.depth && state === "hide")) {
+                best = { depth, state };
+              }
+            }
+          };
+          consider(incList, "show");
+          consider(excList, "hide");
+          if (best.state) return best.state;
+          return incList.length ? "hide" : "show";
         };
+        const inScope = (p) => scopeState(p) === "show";
         const scored = [];
         for (const f of files) {
           if (!f || !f.path) continue;
@@ -513,7 +551,7 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
         scored.sort((x, y) => y.score - x.score || x.path.localeCompare(y.path));
         const out = scored.slice(0, limit).map((x) => ({ path: x.path, name: x.name }));
         /* 万一 vault 拿不到列表，退回 Obsidian 自带的「最近打开」（限定文件夹时不用它，否则会绕过筛选） */
-        if (!out.length && !folders.length) {
+        if (!out.length && !incList.length && !excList.length) {
           try {
             const paths = this.app.workspace.getLastOpenFiles
               ? this.app.workspace.getLastOpenFiles()
