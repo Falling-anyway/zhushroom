@@ -136,6 +136,9 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
     this.app.workspace.onLayoutReady(() => {
       window.setTimeout(async () => {
         await this.restoreSidebarsOnce();
+        try {
+          this.ensureOutlinePanel();
+        } catch (e) {}
         this.closeOtherLeaves();
         await this.openPage(true);
         this.markZjuTabs();
@@ -370,6 +373,26 @@ module.exports = class ZhushiRibbonPlugin extends Plugin {
       } catch (e) {}
     }, 1500);
   }
+  /* 左栏加一个「大纲」面板：核心插件 outline 若被关掉就先打开，再在最左侧栏新建一个分栏放它 */
+  ensureOutlinePanel() {
+    try {
+      const ip = this.app.internalPlugins;
+      const outlinePlugin = ip && ip.plugins && ip.plugins.outline;
+      if (outlinePlugin && outlinePlugin.enabled === false) {
+        outlinePlugin.enable(true);
+      }
+    } catch (e) {}
+    const ws = this.app.workspace;
+    if (!ws) return;
+    try {
+      /* 已经有大纲面板（左栏右栏都算）就不再重复创建 */
+      if (ws.getLeavesOfType("outline").length) return;
+      const leaf = ws.getLeftLeaf(true);
+      if (!leaf) return;
+      leaf.setViewState({ type: "outline", active: false });
+    } catch (e) {}
+  }
+
   /* 切换左侧边栏图标：kind = "pig" | "mushroom" */
   async setLogo(kind) {
     try {
