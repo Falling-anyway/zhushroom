@@ -462,21 +462,24 @@
   }
   .event.flow .event-body {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 4px;
     min-width: 0;
     flex: 1 1 auto;
   }
+  /* 列窄时不再截断成省略号：让标题自动换行，卡片高度跟着长 */
   .event.flow .event-content {
     flex: 1 1 auto;
     min-width: 0;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    text-overflow: clip;
   }
-  .event.flow .event-time { flex: 0 0 auto; font-size: var(--fs-10); color: var(--sub); }
+  .event.flow .event-time { flex: 0 0 auto; font-size: var(--fs-10); color: var(--sub); align-self: flex-start; margin-top: 1px; }
   .event.flow .tag { display: none; }
-  .event.flow .complete-btn { left: 6px; top: 50%; transform: translateY(-50%); width: 13px; height: 13px; border-width: 1.5px; }
+  /* 勾选框跟第一行文字对齐：多行卡片不会飘到中间（单行时 7px 与原居中一致） */
+  .event.flow .complete-btn { left: 6px; top: 7px; transform: none; width: 13px; height: 13px; border-width: 1.5px; }
   .event.flow .event-loc { display: none; }
   .day-cell.today {
     background-color: color-mix(in srgb, var(--primary) 3.5%, var(--card));
@@ -560,8 +563,7 @@
     text-overflow: ellipsis;
   }
   .event.timed.mini .tag,
-  .event.timed.mini .event-loc,
-  .event.timed.mini .notes-indicator {
+  .event.timed.mini .event-loc {
     display: none;
   }
   .event.timed.mini .complete-btn {
@@ -1812,31 +1814,7 @@
     vertical-align: -1px;
     opacity: 0.75;
   }
-  .event .notes-indicator {
-    /* 挪到卡片右下角做角标，避免和标题/location 抢行宽 */
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background: var(--primary);
-    border-radius: 50%;
-    cursor: pointer;
-    position: absolute;
-    right: 6px;
-    bottom: 5px;
-    box-shadow: 0 0 0 5px color-mix(in srgb, var(--primary) 18%, transparent), 0 1px 3px color-mix(in srgb, var(--text) 25%, transparent);
-    opacity: 1;
-    transition: transform 0.2s ease, box-shadow 0.25s ease;
-  }
-  .event .notes-indicator::before {
-    content: '';
-    position: absolute;
-    inset: -6px;
-    border-radius: 50%;
-  }
-  .event .notes-indicator:hover {
-    transform: scale(1.25);
-    box-shadow: 0 0 0 9px color-mix(in srgb, var(--primary) 22%, transparent), 0 2px 6px color-mix(in srgb, var(--text) 35%, transparent);
-  }
+
   .notes-tooltip {
     position: fixed;
     z-index: 9999;
@@ -2805,6 +2783,38 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   /* 失败气泡跟主题走；85% 混 --text 是为了在沙色主题下也保住白字 4.5 对比度 */
   .toast.err { background: color-mix(in srgb, var(--ddl-overdue) 85%, var(--text)); }
+  /* ===== 删除后的撤销胶囊（底部居中） ===== */
+  .undo-toast {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    max-width: 70vw;
+    padding: 9px 18px;
+    border-radius: 22px;
+    font-size: var(--fs-13);
+    line-height: 1.4;
+    color: #fff;
+    background: color-mix(in srgb, var(--text) 92%, #000);
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--text) 28%, transparent);
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .45s ease, transform .45s ease;
+    white-space: nowrap;
+  }
+  .undo-toast.show { transform: translateY(0); }
+  /* 「恢复」用鹅黄 + 下划线 */
+  .undo-toast .undo-action {
+    flex: 0 0 auto;
+    margin: 0; padding: 0; border: 0; background: none;
+    font: inherit; font-size: var(--fs-13);
+    color: #F0D07A;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    transition: color .18s;
+  }
+  .undo-toast .undo-action:hover { color: #F7E2A6; }
   /* ===== 左侧导航栏 + 右侧统计栏（方案 D） ===== */
   :root { --rail-w: 208px; --stats-w: 260px; }
   html.rail-collapsed { --rail-w: 64px; }
@@ -2849,6 +2859,9 @@
   }
   .rail-item:hover { background: var(--tint); }
   .rail-item.active { background: var(--primary); color: #fff; font-weight: 600; }
+  /* 滚到哪个区块，对应图标就给淡绿底；和「视图」的深绿 .active 区分开 */
+  .rail-item.in-view { background: color-mix(in srgb, var(--primary) 12%, var(--card)); color: var(--primary); }
+  .rail-item.in-view:hover { background: color-mix(in srgb, var(--primary) 18%, var(--card)); }
   .rail-item svg { width: 15px; height: 15px; flex: 0 0 auto; }
   .rail-foot { margin-top: auto; }
   html.rail-collapsed .rail-title,
@@ -3080,6 +3093,11 @@
   }
   .settings-adv[open] summary { margin-bottom: 6px; }
   .settings-adv .setting-hint { margin-bottom: 8px; }
+  .project-node-empty {
+    font-size: var(--fs-12);
+    color: var(--muted);
+    padding: 6px 2px;
+  }
 </style>
 </head>
 <body>
@@ -3100,12 +3118,12 @@
   </div>
   <div class="rail-group">
     <div class="rail-label">区块</div>
-    <button class="rail-item" type="button" onclick="railScrollTo('ddlSection')" title="DDL 倒计时"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-1.5 4L16 12H5z"/></svg><span>DDL 倒计时</span></button>
-    <button class="rail-item" type="button" onclick="railScrollTo('projectSection')" title="项目追踪"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>项目追踪</span></button>
-    <button class="rail-item" type="button" onclick="railScrollTo('secHabit')" title="习惯打卡"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg><span>习惯打卡</span></button>
-    <button class="rail-item" type="button" onclick="railScrollTo('secMood')" title="每日心情"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4 4 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg><span>每日心情</span></button>
-    <button class="rail-item" type="button" onclick="railScrollTo('secReview')" title="每日复盘"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16z"/></svg><span>每日复盘</span></button>
-    <button class="rail-item" type="button" onclick="railScrollTo('secChart')" title="完成统计"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>完成统计</span></button>
+    <button class="rail-item" type="button" data-target="ddlSection" onclick="railScrollTo('ddlSection')" title="DDL 倒计时"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4"/><path d="M5 4h11l-1.5 4L16 12H5z"/></svg><span>DDL 倒计时</span></button>
+    <button class="rail-item" type="button" data-target="projectSection" onclick="railScrollTo('projectSection')" title="项目追踪"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>项目追踪</span></button>
+    <button class="rail-item" type="button" data-target="secHabit" onclick="railScrollTo('secHabit')" title="习惯打卡"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg><span>习惯打卡</span></button>
+    <button class="rail-item" type="button" data-target="secMood" onclick="railScrollTo('secMood')" title="每日心情"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5a4 4 0 0 0 7 0"/><path d="M9 9.5h.01M15 9.5h.01"/></svg><span>每日心情</span></button>
+    <button class="rail-item" type="button" data-target="secReview" onclick="railScrollTo('secReview')" title="每日复盘"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4l10-10a2.8 2.8 0 0 0-4-4L4 16z"/></svg><span>每日复盘</span></button>
+    <button class="rail-item" type="button" data-target="secChart" onclick="railScrollTo('secChart')" title="完成统计"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg><span>完成统计</span></button>
   </div>
   <div class="rail-foot">
     <button class="rail-item" type="button" onclick="openSettings()" title="设置"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg><span>设置</span></button>
@@ -3492,16 +3510,6 @@
   </div>
 </div>
 
-<!-- 备注弹窗 -->
-<div class="modal-overlay" id="notesOverlay">
-  <div class="modal" style="max-width:500px">
-    <h3>备注</h3>
-    <div id="notesPopupContent" style="white-space:pre-wrap;font-size:var(--fs-14);color:var(--text);line-height:1.6;padding:12px 0;max-height:400px;overflow-y:auto"></div>
-    <div class="btn-row">
-      <button class="btn-save" onclick="closeNotesPopup()">关闭</button>
-    </div>
-  </div>
-</div>
 
 <!-- 设置弹窗 -->
 <div class="modal-overlay" id="settingsOverlay">
@@ -4050,6 +4058,56 @@ function railScrollTo(id) {
   el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+/* ===== 区块滚动联动：滚到哪个区块，左侧对应图标就淡绿高亮 =====
+   只作用于「区块」组（data-target）；「视图」组的深绿 .active 不受影响 */
+var railSpyItems = null;
+var railSpyRaf = 0;
+
+function railSpyCollect() {
+  railSpyItems = Array.prototype.slice.call(
+    document.querySelectorAll('.app-rail .rail-item[data-target]')
+  );
+}
+
+function railSpyUpdate() {
+  railSpyRaf = 0;
+  if (!railSpyItems || !railSpyItems.length) railSpyCollect();
+  /* 判定线：区块顶边越过这条线才算进入视野，稍低于顶部避免刚露头就跳 */
+  var threshold = 120;
+  var alive = [];
+  for (var i = 0; i < railSpyItems.length; i++) {
+    var btn = railSpyItems[i];
+    var el = document.getElementById(btn.getAttribute('data-target'));
+    if (el && el.offsetParent !== null) alive.push({ btn: btn, el: el });
+    else btn.classList.remove('in-view');
+  }
+  var best = null;
+  for (var j = 0; j < alive.length; j++) {
+    /* 循环到最后一个仍在判定线以上的区块，就是"当前所在区块" */
+    if (alive[j].el.getBoundingClientRect().top <= threshold) best = alive[j];
+  }
+  /* 滚到底部时最后一节可能够不到判定线，兜一下 */
+  if (!best && alive.length) {
+    var doc = document.documentElement;
+    if (window.innerHeight + window.scrollY >= doc.scrollHeight - 4) best = alive[alive.length - 1];
+  }
+  for (var k = 0; k < alive.length; k++) {
+    alive[k].btn.classList.toggle('in-view', !!best && alive[k].btn === best.btn);
+  }
+}
+
+function railSpyKick() {
+  if (railSpyRaf) return;
+  railSpyRaf = window.requestAnimationFrame ? window.requestAnimationFrame(railSpyUpdate) : setTimeout(railSpyUpdate, 16);
+}
+
+function railSpyInit() {
+  railSpyCollect();
+  window.addEventListener('scroll', railSpyKick, { passive: true });
+  window.addEventListener('resize', railSpyKick);
+  railSpyUpdate();
+}
+
 function applyRailState(collapsed) {
   document.documentElement.classList.toggle('rail-collapsed', !!collapsed);
   var btn = document.getElementById('railCollapseBtn');
@@ -4546,7 +4604,8 @@ function createEventEl(ev, dateStr, dayEvents) {
   const isPast = dateStr < todayStr;
   const postponeBtn = isPast ? `<button class="postpone-btn" title="顺延到今天" data-idx="${idx}">&#9193;</button>` : '';
   const checkedClass = ev.done ? ' checked' : '';
-  const notesIndicator = ev.notes ? '<span class="notes-indicator" title="查看备注" data-idx="' + idx + '" data-notes="' + ev.notes.replace(/"/g, '&quot;') + '"></span>' : '';
+  /* 备注不再用右下角绿点：标题末尾加「…」，悬停整块弹气泡 */
+  const notesMark = ev.notes ? '…' : '';
 
   const chunks = splitEventContent(ev);
   const locHtml = chunks.loc
@@ -4554,7 +4613,7 @@ function createEventEl(ev, dateStr, dayEvents) {
     : '';
   const checkBtn = isCourseEv ? '' : `<button class="complete-btn${checkedClass}" title="完成" data-idx="${idx}"></button>`;
   const tagName = isCourseEv ? '课程' : CATEGORY_NAMES[ev.category];
-  el.innerHTML = `${checkBtn}<span class="tag">${tagName}</span><span class="event-body"><span class="event-content">${chunks.name}</span>${notesIndicator}${locHtml}</span><button class="delete-btn" title="删除" data-idx="${idx}">&times;</button>${postponeBtn}`;
+  el.innerHTML = `${checkBtn}<span class="tag">${tagName}</span><span class="event-body"><span class="event-content">${chunks.name}${notesMark}</span>${locHtml}</span><button class="delete-btn" title="删除" data-idx="${idx}">&times;</button>${postponeBtn}`;
   const completeBtnEl = el.querySelector('.complete-btn');
   if (completeBtnEl) {
     completeBtnEl.addEventListener('click', (e) => {
@@ -4574,25 +4633,20 @@ function createEventEl(ev, dateStr, dayEvents) {
       postponeEvent(dateStr, idx);
     });
   }
-  const notesIndicatorEl = el.querySelector('.notes-indicator');
-  if (notesIndicatorEl) {
-    notesIndicatorEl.addEventListener('click', (e) => {
-      e.stopPropagation();
-      hideNotesTooltip();
-      showNotesPopup(ev.notes);
-    });
-    notesIndicatorEl.addEventListener('mouseenter', (e) => {
-      showNotesTooltip(e.currentTarget, ev.notes);
-    });
-    notesIndicatorEl.addEventListener('mouseleave', hideNotesTooltip);
+  /* 悬停整块就弹备注气泡，移开收起 */
+  if (ev.notes) {
+    el.addEventListener('mouseenter', () => showNotesTooltip(el, ev.notes));
+    el.addEventListener('mouseleave', hideNotesTooltip);
   }
   el.addEventListener('click', (e) => {
     e.stopPropagation();
     openEditModal(dateStr, idx);
   });
   /* 时间块窄，名称可能被截断；悬停用原生提示补全时间、名称、备注 */
-  el.title = (ev.time ? ev.time + (ev.endTime ? '–' + ev.endTime : '') + ' · ' : '') +
-    (chunks.name || '') + (ev.notes ? ' · ' + ev.notes : '');
+  /* 有备注时不设原生 title：备注交给气泡，避免系统提示框和气泡叠在一起 */
+  if (!ev.notes) {
+    el.title = (ev.time ? ev.time + (ev.endTime ? '–' + ev.endTime : '') + ' · ' : '') + (chunks.name || '');
+  }
   return el;
 }
 
@@ -5303,6 +5357,8 @@ async function loadBentoData() {
     for (var c = 0; c < categories.length; c++) {
       await loadBentoCategory(categories[c]);
     }
+    /* 顺带把库里 09-项目追踪 的项目名拉进来，然后重画一次 */
+    try { await loadVaultProjectNames(); renderProjectFlow(); } catch (e) {}
   } catch (e) {
     console.error('加载便当盒内容失败:', e);
     loadBentoMockData();
@@ -5858,10 +5914,6 @@ function closeModal() {
   editingId = null;
 }
 
-function showNotesPopup(notes) {
-  document.getElementById('notesPopupContent').textContent = notes;
-  document.getElementById('notesOverlay').classList.add('active');
-}
 
 function showNotesTooltip(target, notes) {
   if (!notes) return;
@@ -5895,13 +5947,6 @@ function hideNotesTooltip() {
   if (tip) tip.classList.remove('visible');
 }
 
-function closeNotesPopup() {
-  document.getElementById('notesOverlay').classList.remove('active');
-}
-
-document.getElementById('notesOverlay').addEventListener('click', (e) => {
-  if (e.target.id === 'notesOverlay') closeNotesPopup();
-});
 
 function saveEvent() {
   const isDDLTab = currentModalTab === 'ddl';
@@ -6011,9 +6056,6 @@ async function deleteEvent() {
   const evFp = e => [e.content || '', e.time || '', e.endTime || '', e.endDate || '', !!e.isDDL, e.category || ''].join('\u0001');
   const want = evFp(before);
   const when = target.date + (before.time ? ' ' + before.time : '');
-  if (!(await confirmDanger('删除这条事项？',
-    '「' + before.content + '」\n' + when +
-    '\n删除后会一并写回 Obsidian（对应日期下这条记录消失），无法撤销。'))) return;
 
   const events = loadEvents();
   const list = events[target.date] || [];
@@ -6026,12 +6068,23 @@ async function deleteEvent() {
   }
   /* 同指纹不止一条时，取离原位置最近的那条（就近消歧） */
   const idx = hits.reduce((best, i) => Math.abs(i - target.index) < Math.abs(best - target.index) ? i : best, hits[0]);
+  const removed = list[idx];
   list.splice(idx, 1);
   if (!list.length) delete events[target.date];
   saveEvents(events);
   closeModal();
   render();
-  showToast('已删除事项', true);
+  showUndoToast('该事项已删除', function () {
+    /* 放回原来的位置；期间若同一天有别的改动，把位置夹到当前长度内 */
+    const ev2 = loadEvents();
+    const l2 = ev2[target.date] || [];
+    l2.splice(Math.min(idx, l2.length), 0, removed);
+    ev2[target.date] = l2;
+    saveEvents(ev2);
+    render();
+    syncToFile();
+    showToast('已恢复', true, 2200);
+  });
 }
 
 function toggleComplete(dateStr, index) {
@@ -7239,6 +7292,65 @@ function toggleZjuAssist() {
   if (willOpen) probeZjuService(false);
 }
 
+/* ===== 登录入口：没登录就自动弹窗，登完自动继续 =====
+   页面既拿不到学在浙大的 Cookie，也没权限启动进程；
+   所以由 127.0.0.1:8766 上的极简本地服务（login-shim.ps1）代劳弹「登录一次.bat」，
+   页面只负责调它一下，然后轮询 /health 等登录态出现。 */
+var ZJU_LOGIN_SHIM = 'http://127.0.0.1:8766';
+
+/* 返回 'ok'（已登录）/ 'no-cookie'（助手在跑但没登录）/ 'off'（助手没跑） */
+function zjuLoginState() {
+  var ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
+  var timer = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 2500) : null;
+  return fetch(zjuServiceOrigin() + '/health', { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) {
+      if (timer) clearTimeout(timer);
+      if (!d) return 'off';
+      return d.cookie ? 'ok' : 'no-cookie';
+    })
+    .catch(function () {
+      if (timer) clearTimeout(timer);
+      return 'off';
+    });
+}
+
+/* 请本地小服务弹出登录窗口；它没在跑就返回 false */
+function zjuRequestLogin() {
+  return fetch(ZJU_LOGIN_SHIM + '/login', { cache: 'no-store' })
+    .then(function (r) { return r.ok; })
+    .catch(function () { return false; });
+}
+
+/* 已登录 → 立刻 true；没登录 → 弹窗并等（最多 5 分钟），登录成功再 true */
+async function zjuEnsureLogin() {
+  var st = await zjuLoginState();
+  /* off 不拦：后面还会读库内缓存兜底，弹窗也没意义 */
+  if (st === 'ok' || st === 'off') return true;
+
+  var started = await zjuRequestLogin();
+  if (!started) {
+    setSyncStatus('请双击助手目录里的「登录一次.bat」完成登录', false, 8000);
+    return false;
+  }
+  setSyncStatus('已弹出登录窗口：学在浙大和教务网都登录后会自动继续', true, 9000);
+  var deadline = Date.now() + 5 * 60 * 1000;
+  while (Date.now() < deadline) {
+    await new Promise(function (r) { setTimeout(r, 2000); });
+    var s2 = await zjuLoginState();
+    if (s2 === 'ok') {
+      setSyncStatus('登录成功，正在同步…', true, 3000);
+      return true;
+    }
+    if (s2 === 'off') {
+      setSyncStatus('同步助手掉线了，请重新启动它', false, 8000);
+      return false;
+    }
+  }
+  setSyncStatus('登录超时，稍后再点一次同步即可', false, 8000);
+  return false;
+}
+
 async function syncZjuNow() {
   if (zjuSyncBusy) return;
   zjuSyncBusy = true;
@@ -7247,7 +7359,7 @@ async function syncZjuNow() {
   try {
     var st = await probeZjuService(true);
     if (st === 'off') { setSyncStatus('没连上同步助手：先把助手启动起来', false, 5000); return; }
-    if (st === 'no-cookie') { setSyncStatus('助手没登录：双击「登录一次.bat」', false, 5000); return; }
+    if (st === 'no-cookie') { if (!(await zjuEnsureLogin())) return; }
     await loadTimetable(true);
     tips.push('课表与校历');
     var res = await zjuFetchFromService();
@@ -7426,15 +7538,26 @@ function zsBridgeFolder(rel) {
       };
     },
     removeEntry: function(name) { return zsBridgeCall('remove', { path: join(name) }); },
+    /* 注意：必须吐出「像 FileSystemFileHandle 的对象」。
+       便当盒等调用方会执行 entry.getFile()，只给 {name, kind} 会抛 TypeError，
+       异常被 loadBentoData 兜住后整页退回示例数据（看起来像"没读到库"）。 */
     values: async function*() {
       var items = [];
       try { items = await zsBridgeCall('list', { path: base }); } catch (e) { items = []; }
-      for (var i = 0; i < items.length; i++) yield { name: items[i].name, kind: items[i].kind };
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (it.kind === 'directory') { yield zsBridgeFolder(join(it.name)); continue; }
+        try { yield await dir.getFileHandle(it.name); } catch (e) {}
+      }
     },
     entries: async function*() {
       var items = [];
       try { items = await zsBridgeCall('list', { path: base }); } catch (e) { items = []; }
-      for (var i = 0; i < items.length; i++) yield [items[i].name, { name: items[i].name, kind: items[i].kind }];
+      for (var i = 0; i < items.length; i++) {
+        var it = items[i];
+        if (it.kind === 'directory') { yield [it.name, zsBridgeFolder(join(it.name))]; continue; }
+        try { yield [it.name, await dir.getFileHandle(it.name)]; } catch (e) {}
+      }
     }
   };
   return dir;
@@ -7685,6 +7808,69 @@ function showToast(msg, ok, ms) {
     el.classList.remove('show');
     setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 250);
   }, ms || 3200);
+}
+
+/* ===== 删除后可撤销：底部胶囊「该事项已删除  恢复」 =====
+   最多同时挂 3 条：最新的在最下面，旧的被顶上去并降一点透明度 */
+var undoQueue = [];
+
+function undoApplyDepths() {
+  for (var i = 0; i < undoQueue.length; i++) {
+    var fromNewest = undoQueue.length - 1 - i;
+    /* 最新 1.0，往上依次 0.78 / 0.6 */
+    undoQueue[i].el.style.opacity = fromNewest === 0 ? '1' : (fromNewest === 1 ? '0.78' : '0.6');
+  }
+}
+
+function undoDrop(item, fast) {
+  var i = undoQueue.indexOf(item);
+  if (i >= 0) undoQueue.splice(i, 1);
+  clearTimeout(item.timer);
+  item.el.style.opacity = '0';
+  setTimeout(function () { if (item.el.parentNode) item.el.parentNode.removeChild(item.el); }, fast ? 140 : 600);
+  undoApplyDepths();
+}
+
+function showUndoToast(msg, onUndo, ms) {
+  var host = document.getElementById('toastHost');
+  if (!host) {
+    host = document.createElement('div');
+    host.id = 'toastHost';
+    host.className = 'toast-host';
+    document.body.appendChild(host);
+  }
+  var el = document.createElement('div');
+  el.className = 'undo-toast';
+  var label = document.createElement('span');
+  label.textContent = String(msg || '该事项已删除');
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'undo-action';
+  btn.textContent = '恢复';
+  el.appendChild(label);
+  el.appendChild(btn);
+  /* 追加到末尾 = 显示在最下方，先前的自然被顶上去 */
+  host.appendChild(el);
+
+  var item = { el: el, timer: null };
+  undoQueue.push(item);
+  /* 超员就挤掉最旧的那条，它的撤销机会随之作废 */
+  while (undoQueue.length > 3) undoDrop(undoQueue[0], true);
+
+  requestAnimationFrame(function () { el.classList.add('show'); undoApplyDepths(); });
+
+  function arm(ms2) {
+    clearTimeout(item.timer);
+    item.timer = setTimeout(function () { undoDrop(item); }, ms2);
+  }
+  btn.addEventListener('click', function () {
+    undoDrop(item, true);
+    try { onUndo(); } catch (e) { console.warn('[撤销] 恢复失败', e); }
+  });
+  /* 鼠标停上去就暂停这一条的倒计时 */
+  el.addEventListener('mouseenter', function () { clearTimeout(item.timer); });
+  el.addEventListener('mouseleave', function () { arm(2000); });
+  arm(ms || 6000);
 }
 
 /* 复合操作（如"同步学在浙大"）期间把内层提示静音，最后只弹一条 */
@@ -8813,6 +8999,17 @@ async function syncZjuThenObsidian() {
   var btn = document.getElementById('zjuSyncBtn');
   if (btn) { btn.disabled = true; btn.classList.add('busy'); btn.title = '拉取中…'; }
 
+  /* 还没登录就先弹登录窗口，登完再往下走（这一步的提示要看得见，所以放在静音之前） */
+  try {
+    if (!(await zjuEnsureLogin())) {
+      zjuPullBusy = false;
+      if (btn) { btn.disabled = false; btn.classList.remove('busy'); btn.title = '拉取学在浙大 DDL（仅更新本地）'; }
+      return;
+    }
+  } catch (e0) {
+    console.warn('[学在浙大] 登录检查失败', e0);
+  }
+
   /* 这一串内部调用各自会写提示，先全部静音，最后只弹一条 */
   const prevSilent = syncStatusSilent;
   syncStatusSilent = true;
@@ -9153,6 +9350,24 @@ function saveArchivedProjects(list) {
   localStorage.setItem('archivedProjects', JSON.stringify(list));
 }
 
+/* 库里 09-项目追踪 下的项目文件夹名：没有日程事件的项目也要能在项目追踪里出现 */
+var vaultProjectNames = [];
+async function loadVaultProjectNames() {
+  try {
+    if (!obsidianDirHandle) { vaultProjectNames = []; return; }
+    var folder = await getObsidianFolder('09-项目追踪');
+    if (!folder) { vaultProjectNames = []; return; }
+    var names = [];
+    for await (var entry of folder.values()) {
+      if (entry.kind === 'directory') names.push(entry.name);
+    }
+    vaultProjectNames = names;
+  } catch (e) {
+    console.warn('[项目追踪] 读取库内项目文件夹失败', e);
+    vaultProjectNames = [];
+  }
+}
+
 function loadProjects() {
   var events = loadEvents();
   var names = {};
@@ -9161,6 +9376,9 @@ function loadProjects() {
       if (ev.isProject === 'yes' && ev.projectName) names[ev.projectName] = true;
     });
   }
+  /* 库里已有的项目文件夹也算一个项目，即使还没有任何日程事件 */
+  /* 首屏 render() 早于下面那行 var 赋值，这里必须兜住 undefined */
+  (vaultProjectNames || []).forEach(function(n) { names[n] = true; });
   var archived = loadArchivedProjects();
   return Object.keys(names).filter(function(n) { return archived.indexOf(n) === -1; }).sort();
 }
@@ -9218,6 +9436,12 @@ function renderProjectFlow() {
     timelineWrap.className = 'project-timeline-wrap';
     var timeline = document.createElement('div');
     timeline.className = 'project-timeline';
+    if (!evts.length) {
+      var emptyHint = document.createElement('div');
+      emptyHint.className = 'project-node-empty';
+      emptyHint.textContent = '还没有推进记录';
+      timeline.appendChild(emptyHint);
+    }
 
     evts.forEach(function(ev, i) {
       if (i > 0) {
@@ -9263,13 +9487,20 @@ function renderProjectFlow() {
   noteSection.style.display = '';
 }
 
-async function archiveProject(name) {
-  if (!(await confirmDanger('把项目「' + name + '」结项？', '结项后不再显示在项目追踪里，历史事项仍保留在日程中。'))) return;
+function archiveProject(name) {
   var archived = loadArchivedProjects();
   if (archived.indexOf(name) === -1) archived.push(name);
   saveArchivedProjects(archived);
   renderProjectFlow();
-  showToast('项目「' + name + '」已结项', true);
+  /* 和删除日程一致：不弹确认框，底部给一条可撤销的胶囊 */
+  showUndoToast(name + '已结项', function () {
+    var list = loadArchivedProjects();
+    var i = list.indexOf(name);
+    if (i >= 0) list.splice(i, 1);
+    saveArchivedProjects(list);
+    renderProjectFlow();
+    showToast('已恢复', true, 2200);
+  });
 }
 
 async function autoSaveProjectEvent(date, content, projectName) {
@@ -9313,34 +9544,28 @@ async function saveProjectNote() {
   var projectFolder = await folder.getDirectoryHandle(sanitizeFilename(sel.value), { create: true });
   var now = new Date();
   var dateCompact = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
-  // Find today's existing project event file
-  var targetFile = null;
-  try {
-    for await (var entry of projectFolder.values()) {
-      if (entry.kind === 'file' && entry.name.startsWith(dateCompact + '-') && entry.name.endsWith('.md')) {
-        targetFile = entry;
-        break;
-      }
-    }
-  } catch(e) { console.warn('遍历项目文件夹失败:', e); }
-  if (!targetFile) {
-    // No event file yet, create one with the note as first content
-    var fileName = dateCompact + '-' + sanitizeFilename(text.split('\n')[0]) + '.md';
-    targetFile = await projectFolder.getFileHandle(fileName, { create: true });
-    var w = await targetFile.createWritable();
-    await w.write('# ' + sel.value + '\n\n' + text + '\n');
-    await w.close();
-  } else {
-    // Append to existing event file
-    var existing = '';
-    try { existing = await (await targetFile.getFile()).text(); } catch(e) {}
-    var content = existing.replace(/\s+$/, '') + '\n\n' + text + '\n';
-    var w = await targetFile.createWritable();
-    await w.write(content);
-    await w.close();
+  /* 每次保存都单独新建一篇：年月日-今日子项目名.md
+     子项目名取「今日推进」的第一行；重名时自动加 -2 / -3，绝不覆盖已有笔记。 */
+  var titleLine = (text.split('\n')[0] || '').trim() || '推进';
+  var base = dateCompact + '-' + sanitizeFilename(titleLine);
+  var fileName = base + '.md';
+  var seq = 1;
+  for (;;) {
+    var taken = false;
+    try { await projectFolder.getFileHandle(fileName); taken = true; } catch (e) { taken = false; }
+    if (!taken) break;
+    seq++;
+    fileName = base + '-' + seq + '.md';
+    if (seq > 50) break;
   }
+
+  var noteFile = await projectFolder.getFileHandle(fileName, { create: true });
+  var w = await noteFile.createWritable();
+  await w.write('# ' + sel.value + '\n\n' + text + '\n');
+  await w.close();
+
   document.getElementById('projectNoteText').value = '';
-  setProjectNoteStatus('已保存', true);
+  setProjectNoteStatus('已保存到 ' + fileName, true);
 }
 
 /* ===== 初始化：复盘草稿恢复 + 事件监听 ===== */
@@ -10650,6 +10875,7 @@ applyStatsVisible(loadSettings().showStats !== false);
 applyStatsCollapsed(loadSettings().statsCollapsed);
 renderGreeting();
 setRailActive('week');
+railSpyInit();
 renderSideStats();
 </script>
 </body>
