@@ -3857,25 +3857,12 @@
     <div class="settings-layout">
       <div class="settings-tabs">
         <button class="settings-tab active" type="button" data-tab="general" onclick="switchSettingsTab('general')">通用</button>
-        <button class="settings-tab" type="button" data-tab="display" onclick="switchSettingsTab('display')">显示</button>
-        <button class="settings-tab" type="button" data-tab="personal" onclick="switchSettingsTab('personal')">个性化</button>
-        <button class="settings-tab" type="button" data-tab="sync" onclick="switchSettingsTab('sync')"><span id="settingsSyncTabLabel">同步</span></button>
+        <button class="settings-tab" type="button" data-tab="display" onclick="switchSettingsTab('display')">外观与显示</button>
+        <button class="settings-tab" type="button" data-tab="calendar" onclick="switchSettingsTab('calendar')">日历与视图</button>
+        <button class="settings-tab" type="button" data-tab="data" onclick="switchSettingsTab('data')"><span id="settingsSyncTabLabel">数据与同步</span></button>
       </div>
       <div class="settings-body">
         <div class="settings-pane" data-pane="general">
-
-          <label class="settings-label">字体大小</label>
-    <div class="font-preset-row">
-      <button class="font-preset" data-scale="0.9" onclick="setFontScale(0.9)">小</button>
-      <button class="font-preset active" data-scale="1" onclick="setFontScale(1)">标准</button>
-      <button class="font-preset" data-scale="1.15" onclick="setFontScale(1.15)">大</button>
-    </div>
-    <div class="font-slider-row">
-      <span>微调</span>
-      <input type="range" id="fontScaleSlider" min="0.8" max="1.4" step="0.05" value="1"
-             oninput="setFontScale(parseFloat(this.value), true)">
-      <span id="fontScaleValue">100%</span>
-    </div>
 
           <label class="settings-label">称呼</label>
           <input type="text" id="optUserName" placeholder="你">
@@ -3888,71 +3875,44 @@
           <label class="settings-label">DDL 全部完成后的鼓励语</label>
           <textarea id="optDdlDoneText" rows="3" placeholder="全部 DDL 已完成，强强！" style="line-height:1.5"></textarea>
           <div class="setting-hint">所有 DDL 都勾完时，「DDL 倒计时」里显示这句话</div>
+
+          <label class="settings-label">已结项项目</label>
+          <div id="archivedProjectList" class="archived-list"></div>
         </div>
 
         <div class="settings-pane" data-pane="display" style="display:none">
-    <label class="settings-label">显示选项</label>
-    <label class="setting-check">
-      <input type="checkbox" id="optShowCompleted" onchange="setShowCompleted(this.checked)">
-      <span>周视图显示已完成事项</span>
-    </label>
-    <label class="setting-check">
-      <input type="checkbox" id="optShowCompletedDDL" onchange="setShowCompletedDDL(this.checked)">
-      <span>DDL 倒计时显示已完成</span>
-    </label>
-    <label class="setting-check">
-      <input type="checkbox" id="optWeekTimeline" onchange="setWeekTimeline(this.checked)">
-      <span>周视图显示时间轴</span>
-    </label>
-    <label class="setting-check">
-      <input type="checkbox" id="optWeekAutoRange" onchange="setWeekAutoRange(this.checked)">
-      <span>周视图时间轴按日程自动收缩</span>
-    </label>
-    <div class="setting-row">
-      <span>DDL 日期轴最长</span>
-      <select id="optDdlAxisDays" onchange="setDdlAxisDays(parseInt(this.value, 10))">
-        <option value="0">不限制</option>
-        <option value="30">30 天</option>
-        <option value="60">60 天</option>
-        <option value="90">90 天</option>
-        <option value="180">180 天</option>
-      </select>
-    </div>
-    <div class="setting-row">
-      <span>DDL 条长压缩</span>
-      <div class="range-wrap">
-        <div class="range-fill" id="optDdlCompFill"></div>
-        <input type="range" id="optDdlComp" min="0" max="100" step="5" value="40"
-               oninput="setDdlComp(parseInt(this.value, 10))" aria-label="DDL 条长压缩">
-      </div>
-      <span id="optDdlCompValue" style="font-size:var(--fs-12);color:var(--muted);min-width:34px;text-align:right">40%</span>
-    </div>
+          <label class="settings-label">字体大小</label>
+          <div class="font-preset-row">
+            <button class="font-preset" data-scale="0.9" onclick="setFontScale(0.9)">小</button>
+            <button class="font-preset active" data-scale="1" onclick="setFontScale(1)">标准</button>
+            <button class="font-preset" data-scale="1.15" onclick="setFontScale(1.15)">大</button>
+          </div>
+          <div class="font-slider-row">
+            <span>微调</span>
+            <input type="range" id="fontScaleSlider" min="0.8" max="1.4" step="0.05" value="1"
+                   oninput="setFontScale(parseFloat(this.value), true)">
+            <span id="fontScaleValue">100%</span>
+          </div>
 
-    <label class="setting-check">
-      <input type="checkbox" id="optShowStats" onchange="setShowStats(this.checked)">
-      <span>显示右侧统计栏</span>
-    </label>
-    <label class="settings-label">最近笔记</label>
-    <div class="setting-row">
-      <span>只看这些文件夹</span>
-      <button class="setting-btn" type="button" onclick="openRecentFolderPicker()">从库中选择…</button>
-    </div>
-    <div class="setting-hint" id="recentFoldersHint">默认全库笔记都参与排序</div>
-
-    <label class="settings-label">已结项项目</label>
-    <div id="archivedProjectList" class="archived-list"></div>
-
-
-
-        </div>
-
-        <div class="settings-pane" data-pane="personal" style="display:none">
           <label class="settings-label">配色主题</label>
           <div class="font-preset-row">
             <button class="theme-preset" type="button" data-theme="monet" onclick="setTheme('monet')">莫奈绿</button>
             <button class="theme-preset" type="button" data-theme="mist" onclick="setTheme('mist')">雾蓝</button>
             <button class="theme-preset" type="button" data-theme="sand" onclick="setTheme('sand')">暖沙</button>
             <button class="theme-preset" type="button" data-theme="lilac" onclick="setTheme('lilac')">藕荷</button>
+          </div>
+
+          <label class="settings-label">自定义背景</label>
+          <div class="setting-row" style="justify-content:flex-start;flex-wrap:wrap;gap:8px">
+            <button type="button" class="setting-btn" onclick="pickBackgroundImage()">选择图片…</button>
+            <button type="button" class="setting-btn" onclick="clearBackgroundImage()">移除背景</button>
+            <span class="setting-hint" id="bgFileName" style="margin:0">未设置背景</span>
+          </div>
+          <div class="font-slider-row">
+            <span>模糊度</span>
+            <input type="range" id="bgBlurSlider" min="0" max="30" step="1" value="0"
+                   oninput="setBgBlur(parseFloat(this.value))">
+            <span id="bgBlurValue">0px</span>
           </div>
 
           <label class="settings-label">左侧边栏图标</label>
@@ -3976,20 +3936,54 @@
           </div>
           <div class="setting-hint">改的是 Obsidian 左侧边栏里的图标，重开 Obsidian 仍保留</div>
 
-          <label class="settings-label">自定义背景</label>
-          <div class="setting-row" style="justify-content:flex-start;flex-wrap:wrap;gap:8px">
-            <button type="button" class="setting-btn" onclick="pickBackgroundImage()">选择图片…</button>
-            <button type="button" class="setting-btn" onclick="clearBackgroundImage()">移除背景</button>
-            <span class="setting-hint" id="bgFileName" style="margin:0">未设置背景</span>
+          <label class="settings-label">显示选项</label>
+          <label class="setting-check">
+            <input type="checkbox" id="optShowCompleted" onchange="setShowCompleted(this.checked)">
+            <span>周视图显示已完成事项</span>
+          </label>
+          <label class="setting-check">
+            <input type="checkbox" id="optShowCompletedDDL" onchange="setShowCompletedDDL(this.checked)">
+            <span>DDL 倒计时显示已完成</span>
+          </label>
+          <label class="setting-check">
+            <input type="checkbox" id="optShowStats" onchange="setShowStats(this.checked)">
+            <span>显示右侧统计栏</span>
+          </label>
+        </div>
+
+        <div class="settings-pane" data-pane="calendar" style="display:none">
+          <label class="settings-label">周视图</label>
+          <label class="setting-check">
+            <input type="checkbox" id="optWeekTimeline" onchange="setWeekTimeline(this.checked)">
+            <span>周视图显示时间轴</span>
+          </label>
+          <label class="setting-check">
+            <input type="checkbox" id="optWeekAutoRange" onchange="setWeekAutoRange(this.checked)">
+            <span>周视图时间轴按日程自动收缩</span>
+          </label>
+
+          <label class="settings-label">DDL 倒计时</label>
+          <div class="setting-row">
+            <span>DDL 日期轴最长</span>
+            <select id="optDdlAxisDays" onchange="setDdlAxisDays(parseInt(this.value, 10))">
+              <option value="0">不限制</option>
+              <option value="30">30 天</option>
+              <option value="60">60 天</option>
+              <option value="90">90 天</option>
+              <option value="180">180 天</option>
+            </select>
           </div>
-          <div class="font-slider-row">
-            <span>模糊度</span>
-            <input type="range" id="bgBlurSlider" min="0" max="30" step="1" value="0"
-                   oninput="setBgBlur(parseFloat(this.value))">
-            <span id="bgBlurValue">0px</span>
+          <div class="setting-row">
+            <span>DDL 条长压缩</span>
+            <div class="range-wrap">
+              <div class="range-fill" id="optDdlCompFill"></div>
+              <input type="range" id="optDdlComp" min="0" max="100" step="5" value="40"
+                     oninput="setDdlComp(parseInt(this.value, 10))" aria-label="DDL 条长压缩">
+            </div>
+            <span id="optDdlCompValue" style="font-size:var(--fs-12);color:var(--muted);min-width:34px;text-align:right">40%</span>
           </div>
 
-          <label style="margin-top:16px">DDL 折叠时显示</label>
+          <label class="settings-label">DDL 折叠时显示</label>
           <div class="ddl-collapse-row" id="ddlCollapseRowCount">
             <button type="button" class="ddl-collapse-check" id="optDdlCollapseCountCheck" onclick="toggleDdlCollapseMode('count')" aria-label="按条数折叠"></button>
             <span>折叠状态下最多显示</span>
@@ -4012,6 +4006,12 @@
           </div>
           <div class="setting-hint" style="margin-top:6px">两个选项只能选一个；都不选就全部平铺</div>
 
+          <label class="settings-label">最近笔记</label>
+          <div class="setting-row">
+            <span>只看这些文件夹</span>
+            <button class="setting-btn" type="button" onclick="openRecentFolderPicker()">从库中选择…</button>
+          </div>
+          <div class="setting-hint" id="recentFoldersHint">默认全库笔记都参与排序</div>
         </div>
 
         <div class="settings-pane" data-pane="data" style="display:none">
@@ -4038,16 +4038,13 @@
           </div>
           <div class="setting-hint" id="dataUsage" style="margin-top:10px"></div>
 
-        </div>
+          <label class="settings-label">钉钉 Webhook URL</label>
+          <input type="text" id="dingtalkWebhookInput" placeholder="https://oapi.dingtalk.com/robot/send?access_token=..." style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:var(--fs-14);color:var(--text);outline:none;font-family:inherit">
+          <div class="setting-hint">在钉钉群中添加自定义机器人，复制 Webhook 地址粘贴到此处</div>
 
-        <div class="settings-pane" data-pane="sync" style="display:none">
-    <label class="settings-label">钉钉 Webhook URL</label>
-    <input type="text" id="dingtalkWebhookInput" placeholder="https://oapi.dingtalk.com/robot/send?access_token=..." style="width:100%;padding:8px 12px;border:1px solid var(--line);border-radius:8px;font-size:var(--fs-14);color:var(--text);outline:none;font-family:inherit">
-    <div class="setting-hint">在钉钉群中添加自定义机器人，复制 Webhook 地址粘贴到此处</div>
-
-    <label class="settings-label">同步备份</label>
-    <div class="setting-hint" style="margin-top:2px">推送覆盖库文件前、读取覆盖本地前都会自动留底</div>
-    <div id="backupList" class="bak-list"></div>
+          <label class="settings-label">同步备份</label>
+          <div class="setting-hint" style="margin-top:2px">推送覆盖库文件前、读取覆盖本地前都会自动留底</div>
+          <div id="backupList" class="bak-list"></div>
 
         </div>
       </div>
@@ -4066,7 +4063,7 @@
     <div class="welcome-step" data-step="1">
       <p>先用一句话介绍一下：</p>
       <input type="text" id="welcomeName" placeholder="怎么称呼你？例如：小陈" maxlength="12">
-      <p class="welcome-hint">之后可以在「设置 → 个性化」里改</p>
+      <p class="welcome-hint">之后可以在「设置 → 通用」里改</p>
     </div>
     <div class="welcome-step" data-step="2" style="display:none">
       <p>要不要先放几条示例日程？</p>
@@ -4465,7 +4462,7 @@ function restoreArchivedProject(name) {
   renderProjectFlow();
 }
 
-/* 设置的左侧选项卡：通用 / 显示 / 个性化 / 同步 */
+/* 设置的左侧选项卡：通用 / 外观与显示 / 日历与视图 / 数据与同步 */
 function switchSettingsTab(name) {
   var target = (isWebMode() && name === 'sync') ? 'data' : name;
   document.querySelectorAll('.settings-tab').forEach(function(b) {
@@ -5253,30 +5250,30 @@ try { zsFreshStorage = localStorage.getItem('weeklyPlanEvents') === null; } catc
 
 const DEFAULT_EVENTS = {
   '2026-08-31': [
-    { content: '上课（北3-310）', category: 'study', time: '09:00' },
-    { content: '上课（北3-310）', category: 'study', time: '14:00' },
+    { content: '上课（教1-101）', category: 'study', time: '09:00' },
+    { content: '上课（教1-101）', category: 'study', time: '14:00' },
     { content: '跑步+无氧', category: 'exercise', time: '18:00' }
   ],
   '2026-09-01': [
     { content: '跑步+无氧', category: 'exercise', time: '07:00' },
-    { content: '上课（北3-310）', category: 'study', time: '09:00' },
-    { content: '上课（北3-310）', category: 'study', time: '14:00' },
+    { content: '上课（教1-101）', category: 'study', time: '09:00' },
+    { content: '上课（教1-101）', category: 'study', time: '14:00' },
     { content: '阅读', category: 'study', time: '19:00' }
   ],
   '2026-09-02': [
-    { content: '上课（北3-310）', category: 'study', time: '09:00' },
-    { content: '上课（北3-310）', category: 'study', time: '14:00' },
+    { content: '上课（教1-101）', category: 'study', time: '09:00' },
+    { content: '上课（教1-101）', category: 'study', time: '14:00' },
     { content: '游泳', category: 'exercise', time: '18:00' }
   ],
   '2026-09-03': [
-    { content: '上课（北3-310）', category: 'study', time: '09:00' },
-    { content: '上课（北3-310）', category: 'study', time: '14:00' },
+    { content: '上课（教1-101）', category: 'study', time: '09:00' },
+    { content: '上课（教1-101）', category: 'study', time: '14:00' },
     { content: '跑步+无氧', category: 'exercise', time: '18:00' }
   ],
   '2026-09-04': [
     { content: '跑步+无氧', category: 'exercise', time: '07:00' },
-    { content: '上课（北3-310）', category: 'study', time: '09:00' },
-    { content: '上课（北3-310）', category: 'study', time: '14:00' },
+    { content: '上课（教1-101）', category: 'study', time: '09:00' },
+    { content: '上课（教1-101）', category: 'study', time: '14:00' },
     { content: '阅读', category: 'study', time: '19:00' }
   ],
   '2026-09-05': [
@@ -7987,7 +7984,7 @@ function applyAppMode(mode) {
 
 function setSettingsSyncLabel() {
   var l = document.getElementById('settingsSyncTabLabel');
-  if (l) l.textContent = isWebMode() ? '数据' : '同步';
+  if (l) l.textContent = '数据与同步';
 }
 
 function applySettingsMode() {
@@ -8199,7 +8196,7 @@ function finishWelcome() {
   hideWelcome();
   try { render(); } catch (e) {}
   try { refreshAllUI(); } catch (e2) {}
-  setSyncStatus('数据保存在本浏览器，可随时在「设置 → 数据」导出备份', true, 6000);
+  setSyncStatus('数据保存在本浏览器，可随时在「设置 → 数据与同步」导出备份', true, 6000);
 }
 
 function closeWelcome() {
@@ -9000,18 +8997,11 @@ var ttFallbackWarned = false; /* 兜底保留旧课表的提示只弹一次 */
 /* 兜底数据：结构同教务网 /jwglxt/kbcx/xskbcx_cxXsKb.html 返回的 kbList */
 var TT_EMBEDDED = {
   kbList: [
-    { kcb: '计算机网络<br>秋冬{第1-8周|3节/周}<br>吴强<br>玉泉教4-306', xqj: '1', djj: '3', skcd: '3', xkkh: '(2026-2027-1)-CS3136M-0025078-1', xxq: '秋冬' },
-    { kcb: '计算理论<br>秋冬{第1-8周|2节/周}<br>郑乾<br>玉泉教4-302', xqj: '2', djj: '3', skcd: '2', xkkh: '(2026-2027-1)-CS3140M-0022009-1', xxq: '秋冬' },
-    { kcb: '操作系统<br>秋冬{第1-8周|2节/周}<br>张治坤<br>玉泉教4-310', xqj: '2', djj: '9', skcd: '2', xkkh: '(2026-2027-1)-CS3103M-0024116-1', xxq: '秋冬' },
-    { kcb: '操作系统<br>秋冬{第1-8周|2节/周}<br>张治坤<br>玉泉曹光彪西-503', xqj: '2', djj: '11', skcd: '2', xkkh: '(2026-2027-1)-CS3103M-0024116-1A', xxq: '秋冬' },
-    { kcb: '自我探索与心理成长<br>秋{第1-8周|1节/周}<br>邵瑾/王地<br>玉泉教4-220', xqj: '3', djj: '6', skcd: '2', xkkh: '(2026-2027-1)-ADMN0604G-0018515-1', xxq: '秋' },
-    { kcb: '自我探索与心理成长<br>秋{第1-8周|2节/周}<br>邵瑾/王地<br>玉泉教4-220', xqj: '3', djj: '7', skcd: '2', xkkh: '(2026-2027-1)-ADMN0604G-0018515-1', xxq: '秋' },
-    { kcb: '计算机网络<br>秋冬{第1-8周|3节/周}<br>吴强<br>玉泉曹光彪西-304', xqj: '3', djj: '3', skcd: '3', xkkh: '(2026-2027-1)-CS3136M-0025078-1A', xxq: '秋冬' },
-    { kcb: '操作系统<br>秋冬{第1-8周|1节/周}<br>张治坤<br>玉泉教4-310', xqj: '4', djj: '6', skcd: '1', xkkh: '(2026-2027-1)-CS3103M-0024116-1', xxq: '秋冬' },
-    { kcb: '操作系统<br>秋冬{第1-8周|1节/周}<br>张治坤<br>玉泉教4-310', xqj: '4', djj: '7', skcd: '1', xkkh: '(2026-2027-1)-CS3103M-0024116-1', xxq: '秋冬' },
-    { kcb: '实用营养与保健<br>秋{第1-8周|3节/周}<br>杨敏<br>紫金港北3-110', xqj: '4', djj: '11', skcd: '3', xkkh: '(2026-2027-1)-MED0668G-0095524-1', xxq: '秋' },
-    { kcb: '轮滑（初级）<br>秋冬{第1-8周|2节/周}<br>刘明<br>紫金港碧峰南（篮球场）', xqj: '5', djj: '1', skcd: '2', xkkh: '(2026-2027-1)-PPAE0077G-0015107-3', xxq: '秋冬' },
-    { kcb: '习近平新时代中国特色社会主义思想概论<br>秋冬{第1-8周|3节/周}<br>叶文/苏冬<br>紫金港北1-114', xqj: '5', djj: '3', skcd: '3', xkkh: '(2026-2027-1)-MARX3002G-0011306-1', xxq: '秋冬' }
+    { kcb: '高等数学<br>秋冬{第1-8周|3节/周}<br>李老师<br>教1-101', xqj: '1', djj: '3', skcd: '3', xkkh: '(2026-2027-1)-MATH1001-0000001-1', xxq: '秋冬' },
+    { kcb: '大学物理<br>秋冬{第1-8周|2节/周}<br>王老师<br>教1-202', xqj: '2', djj: '3', skcd: '2', xkkh: '(2026-2027-1)-PHYS1002-0000002-1', xxq: '秋冬' },
+    { kcb: '程序设计基础<br>秋冬{第1-8周|2节/周}<br>赵老师<br>机房 A-301', xqj: '3', djj: '6', skcd: '2', xkkh: '(2026-2027-1)-CS1003-0000003-1', xxq: '秋冬' },
+    { kcb: '大学英语<br>秋冬{第1-8周|2节/周}<br>孙老师<br>教2-105', xqj: '4', djj: '9', skcd: '2', xkkh: '(2026-2027-1)-ENG1004-0000004-1', xxq: '秋冬' },
+    { kcb: '体育（羽毛球）<br>秋冬{第1-8周|2节/周}<br>周老师<br>体育馆 3 号场', xqj: '5', djj: '3', skcd: '2', xkkh: '(2026-2027-1)-PE1005-0000005-1', xxq: '秋冬' }
   ]
 };
 
