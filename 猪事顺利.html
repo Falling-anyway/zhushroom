@@ -1328,6 +1328,19 @@
     text-align: center;
     line-height: 11px;
   }
+  /* 日程标题里的课程名：只减淡颜色，字号与正文一致，内联在同一段文字里 */
+  .event-course-label {
+    color: var(--muted);
+    font-weight: 400;
+    margin-right: 4px;
+  }
+
+  /* 设置面板里的二级标题：挂在「DDL」这类分组下面 */
+  .setting-sub-label {
+    font-weight: 500;
+    color: var(--sub);
+  }
+
   /* DDL 折叠设置：勾选框 + 单一圆角步进器 */
   .ddl-collapse-row {
     display: flex;
@@ -1478,15 +1491,9 @@
   .ddl-bar .ddl-bar-label { overflow: hidden; text-overflow: ellipsis; }
   /* 今天截止 / 已过期 / 已完成：没有可画的区间，退化成小胶囊 */
   .ddl-bar.chip { width: auto !important; }
-  /* 条太短放不下天数文字：补到最小宽度，右端虚线提示比例被压缩 */
-  .ddl-bar.clamped {
-    border-right: 3px dashed color-mix(in srgb, var(--text) 60%, transparent);
-    box-shadow: inset -12px 0 9px -8px color-mix(in srgb, var(--text) 18%, transparent);
-  }
-  /* 截止日超出日期轴上限：条拉满，右端用虚线提示还有更多 */
-  .ddl-bar.beyond {
-    border-right: 2px dashed color-mix(in srgb, var(--text) 35%, transparent);
-  }
+  /* 说明：以前「条太短被补到最小宽度」和「超出轴上限」都会在右端画虚线，
+     看起来像是渲染瑕疵，已去掉。.clamped / .beyond 这两个类仍由 JS 加上，
+     但只保留宽度含义，不再有视觉样式。 */
 
   /* 分类 / 状态配色：名称条与天数条同色 */
   /* 名称条与天数条同色：类目走 --cat-X-strong，状态走 --ddl-* 的 40% 派生，文字统一 --text 保对比度 */
@@ -1499,6 +1506,8 @@
   .ddl-name-bar.color-today,     .ddl-bar.color-today     { background: var(--ddl-today-bg); border-left-color: var(--ddl-today); color: var(--text); }
   .ddl-name-bar.color-overdue,   .ddl-bar.color-overdue   { background: color-mix(in srgb, var(--ddl-overdue) 35%, var(--card)); border-left-color: var(--ddl-overdue); color: var(--text); }
   .ddl-name-bar.color-completed, .ddl-bar.color-completed { background: color-mix(in srgb, var(--ddl-done) 40%, var(--card)); border-left-color: var(--ddl-done); color: var(--text); }
+  /* 紧急：低饱和红（用主题里本就偏灰的 overdue 色再压低一档） */
+  .ddl-name-bar.color-urgent,    .ddl-bar.color-urgent    { background: color-mix(in srgb, var(--ddl-overdue) 20%, var(--card)); border-left-color: color-mix(in srgb, var(--ddl-overdue) 70%, var(--card)); color: var(--text); }
   .ddl-name-bar.color-completed .ddl-title { text-decoration: line-through; }
 
   /* 全部完成时的报喜提示 */
@@ -1760,6 +1769,39 @@
     transition: border 0.2s;
   }
   .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); }
+
+  /* 「选择或新建项目」自绘下拉：原生 datalist 的字体由浏览器决定，改不了，所以自己画 */
+  .project-combo { position: relative; }
+  .project-suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 3px);
+    z-index: 30;
+    padding: 4px 0;
+    max-height: 180px;
+    overflow-y: auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--text) 16%, transparent);
+  }
+  .project-suggest-item {
+    padding: 6px 12px;
+    font-size: var(--fs-14);
+    font-weight: 400;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .project-suggest-item:hover { background: var(--tint); }
+  .project-suggest-empty {
+    padding: 6px 12px;
+    font-size: var(--fs-14);
+    color: var(--muted);
+  }
   .modal textarea { resize: vertical; min-height: 60px; }
   /* 原生下拉箭头贴边难看：换成自绘箭头，并内收 14px */
   .modal select {
@@ -2897,6 +2939,16 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   /* 失败气泡跟主题走；85% 混 --text 是为了在沙色主题下也保住白字 4.5 对比度 */
   .toast.err { background: color-mix(in srgb, var(--ddl-overdue) 85%, var(--text)); }
+  /* 胶囊里可点的动作文字：鹅黄 + 下划线 */
+  .toast-link {
+    color: #F0D07A;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    margin: 0 1px;
+  }
+  .toast-link:hover { color: #F7E2A6; }
   /* ===== 删除后的撤销胶囊（底部居中） ===== */
   .undo-toast {
     pointer-events: auto;
@@ -2940,7 +2992,22 @@
     transition: padding-left 0.22s ease, padding-right 0.22s ease;
   }
   html.stats-hidden body { padding-right: 24px; }
-  .app-shell { max-width: 1100px; margin: 0 auto; }
+  .app-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    transition: max-width .22s ease;
+  }
+  /* 任一侧收起/隐藏后，中间内容跟着变宽，自适应可用空间 */
+  html.rail-collapsed .app-shell,
+  html.stats-collapsed .app-shell,
+  html.stats-hidden .app-shell {
+    max-width: min(1600px, 100%);
+  }
+  /* 两侧都收起：再多给一点 */
+  html.rail-collapsed.stats-collapsed .app-shell,
+  html.rail-collapsed.stats-hidden .app-shell {
+    max-width: min(1900px, 100%);
+  }
 
   .app-rail {
     position: fixed; inset: 0 auto 0 0; z-index: 40;
@@ -3826,8 +3893,10 @@
       </select>
       <div id="projectSelectWrap" style="display:none">
         <label>选择或新建项目</label>
-        <input type="text" id="eventProjectName" list="projectOptions" placeholder="输入项目名称，或从列表选择">
-        <datalist id="projectOptions"></datalist>
+        <div class="project-combo">
+          <input type="text" id="eventProjectName" placeholder="输入项目名称，或从列表选择" autocomplete="off">
+          <div class="project-suggest" id="projectSuggest" style="display:none"></div>
+        </div>
       </div>
     </div>
 
@@ -3989,7 +4058,9 @@
             <span id="bgBlurValue">0px</span>
           </div>
 
-          <label style="margin-top:16px">DDL 折叠时显示</label>
+          <label class="settings-label" style="margin-top:16px">DDL</label>
+
+          <label class="setting-sub-label" style="margin-top:10px">DDL 折叠时显示</label>
           <div class="ddl-collapse-row" id="ddlCollapseRowCount">
             <button type="button" class="ddl-collapse-check" id="optDdlCollapseCountCheck" onclick="toggleDdlCollapseMode('count')" aria-label="按条数折叠"></button>
             <span>折叠状态下最多显示</span>
@@ -4011,6 +4082,17 @@
             <span>周内日程</span>
           </div>
           <div class="setting-hint" style="margin-top:6px">两个选项只能选一个；都不选就全部平铺</div>
+
+          <label class="setting-sub-label" style="margin-top:12px">紧急 DDL</label>
+          <div class="ddl-collapse-row">
+            <span>距 DDL</span>
+            <div class="ddl-stepper">
+              <button type="button" onclick="stepDdlUrgent(-1)" aria-label="减少">‹</button>
+              <input type="number" id="optDdlUrgentDays" min="0" max="60" step="1" value="3" onchange="setDdlUrgentDays(this.value)">
+              <button type="button" onclick="stepDdlUrgent(1)" aria-label="增加">›</button>
+            </div>
+            <span>天内视为紧急</span>
+          </div>
 
         </div>
 
@@ -4386,6 +4468,25 @@ function setDdlCollapseWeeks(v) {
   if (input) input.value = String(n);
   paintDdlCollapseUi();
   renderDDLCountdown();
+}
+
+/* 紧急 DDL：距截止 N 天内（0 = 关闭） */
+function setDdlUrgentDays(v) {
+  var n = parseInt(v, 10);
+  if (isNaN(n)) n = 3;
+  n = Math.max(0, Math.min(60, n));
+  var s = loadSettings();
+  s.ddlUrgentDays = n;
+  saveSettings(s);
+  var input = document.getElementById('optDdlUrgentDays');
+  if (input) input.value = String(n);
+  renderDDLCountdown();
+}
+
+function stepDdlUrgent(delta) {
+  var s = loadSettings();
+  var cur = (s.ddlUrgentDays === undefined) ? 3 : s.ddlUrgentDays;
+  setDdlUrgentDays(cur + delta);
 }
 
 /* ‹ › 快捷调节：kind = 'count' | 'weeks' */
@@ -5084,6 +5185,8 @@ if (c2b) c2b.checked = s.weekTimeline !== false;
   if (dccInput) dccInput.value = String(s.ddlCollapseCount || 5);
   var dcwInput = document.getElementById('optDdlCollapseWeeks');
   if (dcwInput) dcwInput.value = String(s.ddlCollapseWeeks || 1);
+  var urgentInput = document.getElementById('optDdlUrgentDays');
+  if (urgentInput) urgentInput.value = String(s.ddlUrgentDays === undefined ? 3 : s.ddlUrgentDays);
   try { paintDdlCollapseUi(); } catch (e) {}
   var st = document.getElementById('optShowStats');
   if (st) st.checked = s.showStats !== false;
@@ -5347,12 +5450,21 @@ function createEventEl(ev, dateStr, dayEvents) {
   const notesMark = ev.notes ? '…' : '';
 
   const chunks = splitEventContent(ev);
-  const locHtml = chunks.loc
+  /* 手动指定了课程的日程：课程名已经被拼进 content 开头，splitEventContent 会把它当标题、
+     把真正的内容当"地点"，而流式排布里地点是隐藏的 —— 结果只看得见课程名。
+     这里改成：淡色「课程」标签 + 真正的内容；课表生成的条目保持原样。 */
+  const hasManualCourse = !!(ev.course && ev.ttGen !== true);
+  /* 不写「课程」两个字：把课程名本身淡显放在前面，正文保持正常颜色 */
+  const courseLabelHtml = hasManualCourse
+    ? '<span class="event-course-label">' + escapeHtml(String(ev.course)) + '</span>'
+    : '';
+  const titleText = hasManualCourse ? (chunks.loc || '') : chunks.name;
+  const locHtml = (!hasManualCourse && chunks.loc)
     ? `<span class="event-loc">${PIN_SVG}${escapeHtml(chunks.loc)}</span>`
     : '';
   const checkBtn = isCourseEv ? '' : `<button class="complete-btn${checkedClass}" title="完成" data-idx="${idx}"></button>`;
   const tagName = isCourseEv ? '课程' : CATEGORY_NAMES[ev.category];
-  el.innerHTML = `${checkBtn}<span class="tag">${tagName}</span><span class="event-body"><span class="event-content">${chunks.name}${notesMark}</span>${locHtml}</span><button class="delete-btn" title="删除" data-idx="${idx}">&times;</button>${postponeBtn}`;
+  el.innerHTML = `${checkBtn}<span class="tag">${tagName}</span><span class="event-body"><span class="event-content">${courseLabelHtml}${escapeHtml(titleText)}${notesMark}</span>${locHtml}</span><button class="delete-btn" title="删除" data-idx="${idx}">&times;</button>${postponeBtn}`;
   const completeBtnEl = el.querySelector('.complete-btn');
   if (completeBtnEl) {
     completeBtnEl.addEventListener('click', (e) => {
@@ -5622,9 +5734,33 @@ function renderWeekFlow(monday, events, cal) {
     cell.style.gridColumn = String(i + 1);
     cell.addEventListener('click', (e) => { if (e.target === cell) openAddModal(dateStr); });
 
-    /* 跨日拖放：拖到别的日期就挪过去 */
+    /* 跨日拖放：拖到别的日期就挪过去；同日拖动「无时间」事项可在当天上下重排 */
     cell.addEventListener('dragover', (e) => {
-      if (!dragCtx || dragCtx.date === dateStr) return;
+      if (!dragCtx) return;
+      if (dragCtx.date === dateStr) {
+        const draggingEl = cell.querySelector('.event.flow.dragging');
+        if (!draggingEl || !draggingEl.classList.contains('no-time')) return;
+        e.preventDefault();
+        const others = Array.prototype.filter.call(
+          cell.querySelectorAll('.event.flow.no-time:not(.dragging):not(.spanning-event)'),
+          (el) => el !== draggingEl
+        );
+        let afterEl = null;
+        for (let k = 0; k < others.length; k++) {
+          const r = others[k].getBoundingClientRect();
+          if (e.clientY < r.top + r.height / 2) { afterEl = others[k]; break; }
+        }
+        if (afterEl) {
+          cell.insertBefore(draggingEl, afterEl);
+        } else {
+          const last = others.length ? others[others.length - 1] : null;
+          if (last) {
+            if (last.nextSibling) cell.insertBefore(draggingEl, last.nextSibling);
+            else cell.appendChild(draggingEl);
+          }
+        }
+        return;
+      }
       e.preventDefault();
       cell.classList.add('drop-target');
     });
@@ -5633,7 +5769,40 @@ function renderWeekFlow(monday, events, cal) {
     });
     cell.addEventListener('drop', (e) => {
       cell.classList.remove('drop-target');
-      if (!dragCtx || dragCtx.date === dateStr) return;
+      if (!dragCtx) return;
+      if (dragCtx.date === dateStr) {
+        const draggedEl = cell.querySelector('.event.flow.dragging');
+        if (!draggedEl || !draggedEl.classList.contains('no-time')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const domOrder = Array.prototype.map.call(
+          cell.querySelectorAll('.event.flow.no-time:not(.spanning-event)'),
+          (el) => {
+            const b = el.querySelector('.delete-btn');
+            return parseInt((b && b.dataset.idx) || '-1', 10);
+          }
+        ).filter((n) => n >= 0);
+        const all = loadEvents();
+        const list = all[dateStr] || [];
+        const slots = [];
+        list.forEach((ev, i) => { if (!ev.isDDL && !ev.time) slots.push(i); });
+        if (!domOrder.length || !slots.length) { dragCtx = null; return; }
+        const showDone = loadSettings().showCompleted !== false;
+        const newList = list.slice();
+        let vi = 0;
+        slots.forEach((slot) => {
+          const cur = list[slot];
+          if (cur && cur.done && !showDone) return;   /* 隐藏的已完成项保持原位 */
+          const srcIdx = domOrder[vi++];
+          if (srcIdx !== undefined && list[srcIdx]) newList[slot] = list[srcIdx];
+        });
+        all[dateStr] = newList;
+        saveEvents(all);
+        syncToFile();
+        dragCtx = null;
+        render();
+        return;
+      }
       e.preventDefault();
       const from = dragCtx;
       dragCtx = null;
@@ -5660,6 +5829,8 @@ function renderWeekFlow(monday, events, cal) {
     items.forEach((it) => {
       const el = createEventEl(it.ev, it.startDate, events[it.startDate] || []);
       el.classList.add('flow');
+      /* 无具体时间的事项可同日上下拖动重排 */
+      if (!it.ev.time) el.classList.add('no-time');
       if (it.ev.time) {
         const timeLabel = document.createElement('span');
         timeLabel.className = 'event-time';
@@ -6659,15 +6830,64 @@ function toggleProjectSelect() {
   if (isProject === 'yes') updateProjectOptions();
 }
 
+/* 渲染候选项（同名函数给「聚焦/输入」和「打开弹窗」共用） */
+function renderProjectSuggest(list) {
+  const box = document.getElementById('projectSuggest');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!list.length) {
+    const empty = document.createElement('div');
+    empty.className = 'project-suggest-empty';
+    empty.textContent = '没有匹配的项目，回车直接新建';
+    box.appendChild(empty);
+    box.style.display = 'block';
+    return;
+  }
+  list.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'project-suggest-item';
+    item.textContent = p;
+    /* 用 mousedown 而不是 click：不然 input 先失焦，下拉已经收起来了 */
+    item.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('eventProjectName');
+      if (input) input.value = p;
+      hideProjectSuggest();
+    });
+    box.appendChild(item);
+  });
+  box.style.display = 'block';
+}
+
+function filterProjectSuggest() {
+  const box = document.getElementById('projectSuggest');
+  const input = document.getElementById('eventProjectName');
+  if (!box || !input) return;
+  let all = [];
+  try { all = JSON.parse(box.dataset.all || '[]'); } catch (e) { all = []; }
+  const q = input.value.trim();
+  renderProjectSuggest(q ? all.filter(p => p.indexOf(q) !== -1) : all);
+}
+
+function hideProjectSuggest() {
+  const box = document.getElementById('projectSuggest');
+  if (box) box.style.display = 'none';
+}
+
 function updateProjectOptions() {
   const projects = loadProjects();
-  const datalist = document.getElementById('projectOptions');
-  datalist.innerHTML = '';
-  projects.forEach(p => {
-    const option = document.createElement('option');
-    option.value = p;
-    datalist.appendChild(option);
-  });
+  const input = document.getElementById('eventProjectName');
+  const box = document.getElementById('projectSuggest');
+  if (!input || !box) return;
+  box.dataset.all = JSON.stringify(projects);
+  if (!input.dataset.comboWired) {
+    input.dataset.comboWired = '1';
+    input.addEventListener('focus', filterProjectSuggest);
+    input.addEventListener('input', filterProjectSuggest);
+    input.addEventListener('blur', function () { setTimeout(hideProjectSuggest, 120); });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideProjectSuggest(); });
+  }
+  renderProjectSuggest(projects);
 }
 
 function closeModal() {
@@ -6788,6 +7008,10 @@ function saveEvent() {
   saveEvents(events);
   closeModal();
   refreshCurrentView();
+  /* refreshCurrentView 只重画当前视图，DDL 倒计时区块不在它范围内：
+     不补这一下，新加的 DDL 要等下次别的操作触发刷新才出现 */
+  try { renderDDLCountdown(); } catch (eDDL) {}
+  try { renderSideStats(); } catch (eDDL) {}
   showToast(wasEditing ? '已保存修改' : '已添加事项', true);
 
   if (isProject === 'yes' && projectName) autoSaveProjectEvent(date, content, projectName);
@@ -8083,6 +8307,49 @@ function zjuLoginState() {
 }
 
 /* 请本地小服务弹出登录窗口；它没在跑就返回 false */
+/* 学在浙大助手没在跑：请本地小服务把它拉起来 */
+function zjuStartService() {
+  function probe() {
+    return fetch(zjuServiceOrigin() + '/health', { cache: 'no-store' })
+      .then(function (r) { return r.ok; })
+      .catch(function () { return false; });
+  }
+  return fetch(ZJU_LOGIN_SHIM + '/start', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { return !!(d && d.ok); })
+    .catch(function () { return false; })
+    .then(function (ok) {
+      if (!ok) return false;
+      var deadline = Date.now() + 12000;
+      return new Promise(function (resolve) {
+        (function tick() {
+          probe().then(function (alive) {
+            if (alive) return resolve(true);
+            if (Date.now() > deadline) return resolve(false);
+            setTimeout(tick, 500);
+          });
+        })();
+      });
+    });
+}
+
+/* 胶囊里点「学在浙大同步助手」：启动服务 → 自动重新同步 */
+async function startZjuHelperAndSync() {
+  setSyncStatus('正在启动学在浙大同步助手…', true, 3000);
+  var up = await zjuStartService();
+  if (!up) {
+    setSyncStatus('没能自动启动助手：请手动双击 D:\\zju-sync\\start-hidden.vbs', false, 9000);
+    return;
+  }
+  setSyncStatus('助手已启动，正在同步…', true, 3000);
+  try {
+    if (typeof syncZjuThenObsidian === 'function') await syncZjuThenObsidian();
+    else if (typeof syncZjuNow === 'function') await syncZjuNow();
+  } catch (e) {
+    setSyncStatus('同步失败：' + (e && e.message ? e.message : e), false, 6000);
+  }
+}
+
 function zjuRequestLogin() {
   return fetch(ZJU_LOGIN_SHIM + '/login', { cache: 'no-store' })
     .then(function (r) { return r.ok; })
@@ -8559,7 +8826,7 @@ async function syncMoodToObsidian() {
 }
 
 /* 全局轻提示：任何操作结果都弹一下，避免「点了没反应」 */
-function showToast(msg, ok, ms) {
+function showToast(msg, ok, ms, link) {
   if (!msg) return;
   var host = document.getElementById('toastHost');
   if (!host) {
@@ -8580,7 +8847,27 @@ function showToast(msg, ok, ms) {
   }
   var el = document.createElement('div');
   el.className = 'toast' + (ok === false ? ' err' : '');
-  el.textContent = String(msg);
+  var raw = String(msg);
+  if (link && link.text) {
+    var li = raw.indexOf(link.text);
+    if (li >= 0) {
+      var linkEl = document.createElement('span');
+      linkEl.className = 'toast-link';
+      linkEl.textContent = link.text;
+      linkEl.title = link.title || '点击执行';
+      linkEl.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        try { if (link.onClick) link.onClick(); } catch (e) { console.warn('[提示] 链接动作失败', e); }
+      });
+      el.appendChild(document.createTextNode(raw.slice(0, li)));
+      el.appendChild(linkEl);
+      el.appendChild(document.createTextNode(raw.slice(li + link.text.length)));
+    } else {
+      el.textContent = raw;
+    }
+  } else {
+    el.textContent = raw;
+  }
   host.appendChild(el);
   requestAnimationFrame(function() { el.classList.add('show'); });
   el._hide = setTimeout(function() {
@@ -8655,13 +8942,13 @@ function showUndoToast(msg, onUndo, ms) {
 /* 复合操作（如"同步学在浙大"）期间把内层提示静音，最后只弹一条 */
 var syncStatusSilent = false;
 
-function setSyncStatus(msg, ok, ms) {
+function setSyncStatus(msg, ok, ms, link) {
   if (syncStatusSilent) return;
   var el = document.getElementById('syncStatus');
-  if (!el) { if (msg) showToast(msg, ok); return; }
+  if (!el) { if (msg) showToast(msg, ok, ms, link); return; }
   el.textContent = msg;
   el.className = 'note-status sync-msg' + (ok ? ' ok' : ' err');
-  if (msg) showToast(msg, ok === false ? false : true, ms || 2600);
+  if (msg) showToast(msg, ok === false ? false : true, ms || 2600, link);
   setTimeout(function() { el.textContent = ''; }, ms || 5000);
 }
 
@@ -9827,6 +10114,7 @@ async function syncZjuThenObsidian() {
   syncStatusSilent = true;
   const tips = [];        /* 只记录真正发生变化的部分 */
   let failMsg = '';
+  let failLink = null;
   let okFlag = true;
   let changed = false;
   let obsState = null;      /* true=库里已一致，false=还没写进去，null=没连库或读不到 */
@@ -9851,7 +10139,8 @@ async function syncZjuThenObsidian() {
       } else if (svc.code === 'NO_COOKIE') {
         failMsg = '本地服务已运行，但尚未登录学在浙大：请在弹出的窗口中完成登录';
       } else {
-        failMsg = '无可用的拉取通道：请先启动「学在浙大同步」助手，再重试';
+        failMsg = '无可用的拉取通道：请先启动「学在浙大同步助手」，再重试';
+        failLink = { text: '学在浙大同步助手', onClick: startZjuHelperAndSync };
       }
     }
 
@@ -9866,7 +10155,7 @@ async function syncZjuThenObsidian() {
     zjuPullBusy = false;
     syncStatusSilent = prevSilent;
     if (btn) { btn.disabled = false; btn.classList.remove('busy'); btn.title = '拉取学在浙大 DDL（仅更新本地）'; }
-    if (failMsg) setSyncStatus(failMsg, false, 10000);
+    if (failMsg) setSyncStatus(failMsg, false, 10000, failLink);
     else if (changed) {
       const tail = obsState === true ? '；Obsidian 已同步' : obsState === false ? '；Obsidian 未同步，需手动保存' : '';
       setSyncStatus((tips.length ? tips.join('；') : '学在浙大 DDL 已更新') + tail, okFlag, 8000);
@@ -10067,11 +10356,14 @@ function renderDDLCountdown() {
   body.appendChild(axis);
 
   // —— 每条 DDL：左边名称色条，右边天数条（左端贴「今天」，右端贴截止日）——
+  /* 距截止 N 天内算紧急；0 = 关闭 */
+  var urgentDays = Math.max(0, Math.min(60, loadSettings().ddlUrgentDays === undefined ? 3 : loadSettings().ddlUrgentDays));
   shown.forEach(function(d) {
     var ev = d.ev;
     var stateKey = ev.done ? 'completed'
       : d.days < 0 ? 'overdue'
       : d.days === 0 ? 'today'
+      : (urgentDays > 0 && d.days <= urgentDays) ? 'urgent'
       : (ev.category || 'work');
     var colorClass = 'color-' + stateKey;
 
