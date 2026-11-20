@@ -893,18 +893,18 @@
     margin-bottom: 6px;
   }
   .year-nav button {
-    padding: 3px 8px;
-    border-radius: 4px;
+    padding: 5px 12px;
+    border-radius: 6px;
     border: 1px solid var(--line);
     background: var(--card);
     color: var(--sub);
-    font-size: 10px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
   }
   .year-nav button:hover { background: var(--tint); }
   .year-nav span {
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text);
   }
@@ -918,10 +918,10 @@
     flex-direction: column;
   }
   .year-month-title {
-    font-size: 10px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text);
-    margin-bottom: 2px;
+    margin-bottom: 6px;
     text-align: center;
   }
   .year-month-grid {
@@ -930,10 +930,10 @@
     gap: 1px;
   }
   .year-weekday {
-    font-size: 6px;
+    font-size: 10px;
     color: var(--muted);
     text-align: center;
-    padding: 1px 0;
+    padding: 2px 0;
   }
   .year-day {
     width: 100%;
@@ -945,7 +945,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 6px;
+    font-size: 11px;
     color: var(--sub);
   }
   .year-day:hover {
@@ -962,11 +962,11 @@
   }
   /* 完成热度：只跟主色（不跟类目）；level≥2 起用白字保证对比度 */
   .year-day.level-0 { background: var(--tint-soft); color: var(--text); }
-  .year-day.level-1, .year-legend-box.level-1 { background: color-mix(in srgb, var(--primary) 30%, var(--card)); color: var(--text); }
-  .year-day.level-2, .year-legend-box.level-2 { background: color-mix(in srgb, var(--primary) 80%, var(--text)); color: #fff; }
-  .year-day.level-3, .year-legend-box.level-3 { background: color-mix(in srgb, var(--primary) 60%, var(--text)); color: #fff; }
-  .year-day.level-4, .year-legend-box.level-4 { background: color-mix(in srgb, var(--primary) 40%, var(--text)); color: #fff; }
-  .year-day.level-5, .year-legend-box.level-5 { background: color-mix(in srgb, var(--primary) 20%, var(--text)); color: #fff; }
+  .year-day.level-1, .year-legend-box.level-1 { background: color-mix(in srgb, var(--primary) 20%, var(--card)); color: var(--text); }
+  .year-day.level-2, .year-legend-box.level-2 { background: color-mix(in srgb, var(--primary) 40%, var(--card)); color: var(--text); }
+  .year-day.level-3, .year-legend-box.level-3 { background: color-mix(in srgb, var(--primary) 60%, var(--card)); color: var(--text); }
+  .year-day.level-4, .year-legend-box.level-4 { background: color-mix(in srgb, var(--primary) 80%, var(--card)); color: #fff; }
+  .year-day.level-5, .year-legend-box.level-5 { background: var(--primary); color: #fff; }
   .year-legend-box.level-0 { background: var(--tint-soft); }
   .year-legend {
     display: flex;
@@ -2731,6 +2731,21 @@
     align-items: center;
   }
 
+  /* 饼图（含图例）在左、柱状图在右，同一行；只按内容宽度占位 */
+  .chart-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .chart-col-pie { flex: 0 0 auto; }
+  .chart-bar-wrap {
+    flex: 1 1 auto;
+    min-width: 280px;
+    max-width: 640px;
+  }
+  .chart-bar-wrap canvas { display: block; width: 100%; height: 150px; }
   .chart-legend {
     display: flex;
     flex-wrap: wrap;
@@ -3939,10 +3954,17 @@
     <button class="chart-view-btn" data-view="week" onclick="switchChartView('week')">周</button>
     <button class="chart-view-btn" data-view="month" onclick="switchChartView('month')">月</button>
   </div>
-  <div class="chart-canvas-wrap">
-    <canvas id="pieChart" width="200" height="200"></canvas>
+  <div class="chart-row">
+    <div class="chart-col-pie">
+      <div class="chart-canvas-wrap">
+        <canvas id="pieChart" width="200" height="200"></canvas>
+      </div>
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+    <div class="chart-bar-wrap" id="chartBarWrap" style="display:none">
+      <canvas id="barChart" width="520" height="150"></canvas>
+    </div>
   </div>
-  <div class="chart-legend" id="chartLegend"></div>
 </div>
 
 <div class="footer">点击日期添加事项 · 可设置时间自动排序 · 无时间任务可拖拽排序 · 过往事项可顺延到今天 · 编辑先保存在本地 · 点击顶部保存按钮写入 Obsidian 库</div>
@@ -4583,6 +4605,18 @@ function cssColor(name) {
   }
   _cssProbeEl.style.color = '';
   _cssProbeEl.style.color = 'var(' + name + ')';
+  return getComputedStyle(_cssProbeEl).color;
+}
+
+/* 直接给一个颜色串（hex / rgb / color-mix）求它的计算值，供 canvas 使用 */
+function cssColorValue(value) {
+  if (!_cssProbeEl) {
+    _cssProbeEl = document.createElement('span');
+    _cssProbeEl.style.cssText = 'position:absolute;left:-9999px;top:0;width:0;height:0;';
+    document.body.appendChild(_cssProbeEl);
+  }
+  _cssProbeEl.style.color = '';
+  _cssProbeEl.style.color = value || 'transparent';
   return getComputedStyle(_cssProbeEl).color;
 }
 
@@ -6833,9 +6867,12 @@ function switchView(view) {
 
 /* 当前视图是哪一种就重绘哪一种：删改事项后月/年/课程表都要跟着更新 */
 function refreshCurrentView() {
-  if (currentViewName === 'month') { renderMonthCalendar(); return; }
-  if (currentViewName === 'year') { renderYearView(); loadBentoData(); return; }
-  if (currentViewName === 'tt') { renderTimetable(); return; }
+  /* 完成统计是全局区块，不能只在周视图里刷新：月/年/课表切换时也要重画，
+     否则勾选完成后切到年视图，饼图还是旧的「暂无数据」 */
+  const refreshChart = function () { try { renderPieChart(); } catch (e) {} };
+  if (currentViewName === 'month') { renderMonthCalendar(); refreshChart(); return; }
+  if (currentViewName === 'year') { renderYearView(); loadBentoData(); refreshChart(); return; }
+  if (currentViewName === 'tt') { renderTimetable(); refreshChart(); return; }
   render();
 }
 
@@ -8376,7 +8413,107 @@ function getChartEvents(view) {
   return result.filter(ev => ev && ev.category !== 'course');
 }
 
+/* 每周/每月每天完成了多少（课程不计入完成统计） */
+function dailyDoneCounts(view) {
+  const events = loadEvents();
+  const todayStr = formatDate(new Date());
+  const out = [];
+  const doneOf = function (ds) {
+    return (events[ds] || []).filter(function (ev) {
+      return ev && ev.done && ev.category !== 'course';
+    }).length;
+  };
+  if (view === 'week') {
+    const WD = ['一', '二', '三', '四', '五', '六', '日'];
+    const monday = getMonday(weekOffset);
+    for (let i = 0; i < 7; i++) {
+      const ds = formatDate(new Date(monday.getTime() + i * 86400000));
+      out.push({ label: WD[i], count: doneOf(ds), today: ds === todayStr });
+    }
+  } else if (view === 'month') {
+    const today = new Date();
+    const y = today.getFullYear(), m = today.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    for (let d = 1; d <= days; d++) {
+      const ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      out.push({ label: String(d), count: doneOf(ds), today: ds === todayStr });
+    }
+  }
+  return out;
+}
+
+/* 把 "rgb(r, g, b)" 解析成数组 */
+function parseRgbColor(str) {
+  const m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/.exec(String(str || ''));
+  return m ? [+m[1], +m[2], +m[3]] : [0, 0, 0];
+}
+/* 两个颜色按比例混合，t=0 取 a，t=1 取 b */
+function mixRgbColor(a, b, t) {
+  const ca = parseRgbColor(a), cb = parseRgbColor(b);
+  const c = [0, 1, 2].map(function (i) { return Math.round(ca[i] + (cb[i] - ca[i]) * t); });
+  return 'rgb(' + c[0] + ', ' + c[1] + ', ' + c[2] + ')';
+}
+
+/* 每周/每月「每日完成数」柱状图：完成越多颜色越深 */
+function renderBarChart() {
+  const wrap = document.getElementById('chartBarWrap');
+  const canvas = document.getElementById('barChart');
+  if (!wrap || !canvas) return;
+  if (chartView === 'day') { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const data = dailyDoneCounts(chartView);
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  const cssW = Math.max(300, wrap.clientWidth || 560);
+  const cssH = 150;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const padL = 8, padR = 8, padT = 20, padB = 20;
+  const plotW = cssW - padL - padR;
+  const plotH = cssH - padT - padB;
+  const max = Math.max(1, Math.max.apply(null, data.map(function (d) { return d.count; })));
+  const slot = plotW / Math.max(1, data.length);
+  const barW = Math.min(26, Math.max(4, slot * 0.55));
+  const base = cssColor('--primary');
+  const card = cssColor('--card');
+
+  data.forEach(function (d, i) {
+    const x = padL + slot * i + (slot - barW) / 2;
+    const ratio = d.count ? 0.25 + 0.75 * (d.count / max) : 0.1;
+    const h = d.count ? Math.max(4, (d.count / max) * plotH) : 2;
+    const y = padT + plotH - h;
+    ctx.fillStyle = mixRgbColor(card, base, ratio);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, barW, h, Math.min(3, barW / 2));
+    else ctx.rect(x, y, barW, h);
+    ctx.fill();
+
+    if (d.count > 0 && data.length <= 12) {
+      ctx.fillStyle = cssColor('--text');
+      ctx.font = '600 10px system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(String(d.count), x + barW / 2, y - 4);
+    }
+
+    if (data.length <= 12 || i % 2 === 0) {
+      ctx.fillStyle = d.today ? cssColor('--text') : cssColor('--muted');
+      ctx.font = '10px system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(d.label, x + barW / 2, cssH - 6);
+    }
+  });
+}
+
 function renderPieChart() {
+  try { renderBarChart(); } catch (e) { console.warn('[统计] 柱状图渲染失败', e); }
   const canvas = document.getElementById('pieChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -8395,7 +8532,12 @@ function renderPieChart() {
      这里先剔掉，饼图切片、图例、总数三者口径一致。 */
   const chartCats = getCategories().map(m => m.key).filter(c => c !== 'course');
   const chartColors = {};
-  chartCats.forEach(c => { chartColors[c] = cssColor('--cat-' + c); });
+  chartCats.forEach(c => {
+    const raw = categoryColorOf(c) || '';
+    /* 内置分类是 var(--cat-x)，自定义分类是十六进制；两种都要能转成 canvas 认的颜色 */
+    if (/^var\(--/.test(raw)) chartColors[c] = cssColor(raw.slice(4, -1).trim());
+    else chartColors[c] = cssColorValue(raw);
+  });
 
   const doneEvents = getChartEvents(chartView);
   const counts = {};
@@ -8408,7 +8550,10 @@ function renderPieChart() {
     ctx.font = '500 14px system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('暂无数据', size / 2, size / 2);
+    const emptyLabel = chartView === 'week' ? '本周还没有完成的日程'
+      : chartView === 'month' ? '本月还没有完成的日程'
+      : '今天还没有完成的日程';
+    ctx.fillText(emptyLabel, size / 2, size / 2);
     document.getElementById('chartLegend').innerHTML = '';
     return;
   }
