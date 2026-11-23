@@ -167,6 +167,8 @@ const PET_CSS = [
   "#zhushroom-pet.is-dragging .zspet-art{animation:none}",
   "#zhushroom-pet.pet-breath .zspet-art{animation:zspetBreath 4.2s ease-in-out infinite;transform-origin:50% 92%}",
   "@keyframes zspetBreath{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-2px) scale(1.012)}}",
+  "#zhushroom-pet.pet-hop .zspet-art{animation:zspetHop .6s cubic-bezier(.34,1.4,.64,1)}",
+  "@keyframes zspetHop{0%,100%{transform:translateY(0) scale(1)}35%{transform:translateY(-7px) scale(.98,1.03)}70%{transform:translateY(0) scale(1.04,.96)}}",
   "#zhushroom-pet.mood-angry .zspet-art{animation:zspetShake .28s ease-in-out 3}",
   "@keyframes zspetShake{0%,100%{transform:translateX(0) rotate(0)}25%{transform:translateX(-2px) rotate(-2deg)}75%{transform:translateX(2px) rotate(2deg)}}",
   "#zhushroom-pet.mood-surprised .zspet-art{animation:zspetPop .32s cubic-bezier(.34,1.56,.64,1)}",
@@ -212,7 +214,11 @@ class ZhushiPet {
     this.drag = null;
     this.eyeDX = 0;
     this.eyeDY = 0;
+    this.eyeTX = 0;
+    this.eyeTY = 0;
     this.raf = 0;
+    this.idleTimer = null;
+    this.lastPointerAt = 0;
     this.pointer = { x: -1, y: -1 };
     this.onMoveBound = false;
     this.cfg = Object.assign({}, PET_DEFAULT, plugin.petState || {});
@@ -282,10 +288,14 @@ class ZhushiPet {
     this.el && this.el.classList.toggle("pet-breath", !!on);
     if (!on) {
       this.stopBlink();
+      this.stopIdle();
+      this.stopEyeLoop();
       this.detachFollow();
     } else {
       this.startBlink();
       this.attachFollow();
+      this.startIdle();
+      this.startEyeLoop();
     }
   }
 
@@ -360,6 +370,8 @@ class ZhushiPet {
 
   stopBlink() {
     if (this.blinkTimer) { clearInterval(this.blinkTimer); this.blinkTimer = null; }
+    this.stopIdle();
+    this.stopEyeLoop();
     this.blinking = false;
     this.applyEyes();
   }
@@ -380,6 +392,7 @@ class ZhushiPet {
   onPointerMove(e) {
     this.pointer.x = e.clientX;
     this.pointer.y = e.clientY;
+    this.lastPointerAt = Date.now();
     if (this.drag) return;
     if (!this.followBound || !this.el) return;
     if (this.mood !== "neutral" && this.mood !== "happy") return;
@@ -395,8 +408,60 @@ class ZhushiPet {
     const r = this.el.getBoundingClientRect();
     const dx = this.pointer.x - (r.left + r.width / 2);
     const dy = this.pointer.y - (r.top + r.height / 2);
-    this.eyeDX = Math.max(-1, Math.min(1, dx / 260)) * 2.6;
-    this.eyeDY = Math.max(-1, Math.min(1, dy / 260)) * 1.8;
+    this.eyeTX = Math.max(-1, Math.min(1, dx / 220)) * 4.2;
+    this.eyeTY = Math.max(-1, Math.min(1, dy / 220)) * 3.0;
+  }
+
+  /* ---------- 待机：环视、偶尔蹦一下 ---------- */
+  startIdle() {
+    if (this.idleTimer) return;
+    this.idleTimer = setInterval(() => {
+      if (!this.el || document.hidden) return;
+      if (this.drag) return;
+      if (this.mood !== "neutral" && this.mood !== "happy") return;
+      const idleFor = Date.now() - (this.lastPointerAt || 0);
+      if (idleFor < 2600) return;
+      /* 环视：随机看向一侧 */
+      this.eyeTX = (Math.random() * 2 - 1) * 3.4;
+      this.eyeTY = (Math.random() * 2 - 1) * 2.2;
+      /* 每 3 次环视，轻轻蹦一下 */
+      this.idleTick = (this.idleTick || 0) + 1;
+      if (this.idleTick % 3 === 0) this.hop();
+    }, 3200);
+  }
+
+  stopIdle() {
+    if (this.idleTimer) { clearInterval(this.idleTimer); this.idleTimer = null; }
+    this.el && this.el.classList.remove("pet-hop");
+  }
+
+  hop() {
+    if (!this.el || this.cfg.motion === false) return;
+    this.el.classList.remove("pet-hop");
+    void this.el.offsetWidth;
+    this.el.classList.add("pet-hop");
+    setTimeout(() => this.el && this.el.classList.remove("pet-hop"), 700);
+  }
+
+  /* 眼睛平滑跟随（每帧向目标插值） */
+  startEyeLoop() {
+    if (this.eyeLoop) return;
+    const step = () => {
+      this.eyeLoop = requestAnimationFrame(step);
+      if (!this.el) return;
+      const dx = this.eyeTX - this.eyeDX;
+      const dy = this.eyeTY - this.eyeDY;
+      if (Math.abs(dx) < 0.02 && Math.abs(dy) < 0.02) return;
+      this.eyeDX += dx * 0.22;
+      this.eyeDY += dy * 0.22;
+      this.applyEyes();
+    };
+    this.eyeLoop = requestAnimationFrame(step);
+  }
+
+  stopEyeLoop() {
+    if (this.eyeLoop) { cancelAnimationFrame(this.eyeLoop); this.eyeLoop = 0; }
+    this.eyeDX = 0; this.eyeDY = 0; this.eyeTX = 0; this.eyeTY = 0;
     this.applyEyes();
   }
 
