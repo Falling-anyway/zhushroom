@@ -1850,6 +1850,63 @@
   .modal .dt-row { display: flex; align-items: center; gap: 8px; }
   .modal .dt-row input[type="date"] { flex: 1 1 130px; min-width: 0; width: auto; }
   .modal .dt-row input[type="time"] { flex: 0 0 118px; width: 118px; }
+  /* 重复日期：点一次选中、再点取消，按住拖动可连续多选 */
+  .repeat-box { position: relative; }
+  #eventRepeat { cursor: pointer; }
+  .repeat-pop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 40;
+    padding: 10px 10px 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--text) 18%, transparent);
+  }
+  .rp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: var(--fs-13);
+    color: var(--text);
+  }
+  .rp-head button {
+    border: none;
+    background: none;
+    color: var(--sub);
+    font-size: var(--fs-16);
+    line-height: 1;
+    padding: 2px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .rp-head button:hover { background: var(--tint); }
+  .rp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .rp-wd {
+    text-align: center;
+    font-size: var(--fs-10);
+    color: var(--muted);
+    padding: 2px 0;
+  }
+  .rp-day {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-12);
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+  }
+  .rp-day:hover { background: var(--tint); }
+  .rp-day.other { visibility: hidden; cursor: default; }
+  .rp-day.sel { background: var(--primary); color: #fff; }
+  .rp-hint { margin-top: 6px; font-size: var(--fs-10); color: var(--muted); }
 
   .modal .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
 
@@ -3766,6 +3823,7 @@
       </div>
     </span>
     <button onclick="goToday()">今天</button>
+    <button class="postpone-all-btn settings-btn" onclick="copyViewImage()" title="导出当前视图为图片（复制到剪贴板）" aria-label="导出"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg></button>
     <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
   </div>
   <div class="week-nav" id="monthNav" style="display:none;">
@@ -3773,6 +3831,15 @@
     <span class="week-label" id="monthLabel"></span>
     <button class="nav-icon" onclick="changeMonth(1)" title="下个月" aria-label="下个月"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
     <button onclick="goTodayMonth()" style="margin-left:8px;">本月</button>
+    <button class="postpone-all-btn settings-btn" onclick="copyViewImage()" title="导出当前视图为图片（复制到剪贴板）" aria-label="导出"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg></button>
+    <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+  </div>
+  <div class="week-nav" id="yearNav" style="display:none;">
+    <button class="nav-icon" onclick="changeYear(-1)" title="上一年" aria-label="上一年"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
+    <span class="week-label" id="yearNavLabel"></span>
+    <button class="nav-icon" onclick="changeYear(1)" title="下一年" aria-label="下一年"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
+    <button onclick="goThisYear()" style="margin-left:8px;">本年</button>
+    <button class="postpone-all-btn settings-btn" onclick="copyViewImage()" title="导出当前视图为图片（复制到剪贴板）" aria-label="导出"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg></button>
     <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
   </div>
 </div>
@@ -3999,6 +4066,13 @@
       <div class="dt-row">
         <input type="date" id="eventEndDate">
         <input type="time" id="eventEndTime">
+      </div>
+    </div>
+    <div id="rowRepeat">
+      <label>重复（时间可选）</label>
+      <div class="repeat-box">
+        <input type="text" id="eventRepeat" readonly placeholder="点击选择要重复的日期（可拖动连选）">
+        <div class="repeat-pop" id="repeatPop" style="display:none"></div>
       </div>
     </div>
     <label>内容</label>
@@ -6537,12 +6611,9 @@ function renderYearView() {
   }
   var WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
   var MONTH_NAMES = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-  var html = '<div class="year-nav">';
-  html += '<button onclick="changeYear(-1)">← 上一年</button>';
-  html += '<span>' + year + ' 年</span>';
-  html += '<button onclick="changeYear(1)">下一年 →</button>';
-  html += '</div>';
-  html += '<div class="year-months">';
+  var yearLabelEl = document.getElementById('yearNavLabel');
+  if (yearLabelEl) yearLabelEl.textContent = year + ' 年';
+  var html = '<div class="year-months">';
   for (var m = 0; m < 12; m++) {
     html += '<div class="year-month">';
     html += '<div class="year-month-title">' + MONTH_NAMES[m] + '</div>';
@@ -6599,6 +6670,162 @@ function renderYearView() {
 function changeYear(dir) {
   yearOffset += dir;
   renderYearView();
+}
+
+/* 回到今年 */
+function goThisYear() {
+  yearOffset = 0;
+  renderYearView();
+}
+
+/* ===== 导出当前视图为图片（复制到剪贴板） ===== */
+function currentExportElement() {
+  var map = { week: 'calendar', month: 'monthCalendar', year: 'yearCalendar', tt: 'ttView' };
+  return document.getElementById(map[currentViewName] || 'calendar');
+}
+
+/* 把计算后的样式一条条写到克隆节点上，否则 foreignObject 里没有页面 CSS */
+function inlineExportStyles(src, dst) {
+  var cs = getComputedStyle(src);
+  for (var i = 0; i < cs.length; i++) {
+    var prop = cs[i];
+    dst.style.setProperty(prop, cs.getPropertyValue(prop), cs.getPropertyPriority(prop));
+  }
+  var sChain = src.children, dChain = dst.children;
+  for (var j = 0; j < sChain.length && j < dChain.length; j++) inlineExportStyles(sChain[j], dChain[j]);
+}
+
+/* 伪元素不会被 cloneNode 复制：把 ::before / ::after 的 content 变成真实 <span>，
+   否则导出的图里「勾选对勾」会变成一块实心方块 */
+function materializePseudoElements(srcRoot, dstRoot) {
+  var sList = [srcRoot].concat(Array.prototype.slice.call(srcRoot.querySelectorAll('*')));
+  var dList = [dstRoot].concat(Array.prototype.slice.call(dstRoot.querySelectorAll('*')));
+  var props = ['position', 'left', 'top', 'right', 'bottom', 'transform', 'display',
+    'fontSize', 'fontWeight', 'lineHeight', 'color', 'textAlign', 'marginLeft',
+    'marginRight', 'width', 'height'];
+  for (var i = 0; i < sList.length; i++) {
+    var s = sList[i], d = dList[i];
+    if (!s || !d) continue;
+    ['::before', '::after'].forEach(function (pseudo) {
+      var cs;
+      try { cs = getComputedStyle(s, pseudo); } catch (e) { return; }
+      var content = cs.getPropertyValue('content');
+      if (!content || content === 'none' || content === 'normal') return;
+      var text = content.replace(/^["']|["']$/g, '');
+      if (!text) return;
+      var span = document.createElement('span');
+      span.textContent = text;
+      /* 勾选框的对勾：用背景图绘制，避免文字基线在 foreignObject 里被裁掉 */
+      if (d.classList && d.classList.contains('complete-btn')) {
+        var checkSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>"
+          + "<path d='M20 6.5L9.2 17.3 4 12.1' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+        d.style.backgroundImage = 'url("data:image/svg+xml;utf8,' + checkSvg + '")';
+        d.style.backgroundSize = '82% 82%';
+        d.style.backgroundPosition = 'center';
+        d.style.backgroundRepeat = 'no-repeat';
+        d.style.overflow = 'visible';
+        return;
+      } else {
+        props.forEach(function (p) { span.style.setProperty(p, cs.getPropertyValue(p)); });
+      }
+      if (d.firstChild && pseudo === '::before') d.insertBefore(span, d.firstChild);
+      else d.appendChild(span);
+    });
+  }
+}
+
+function elementToPngBlob(el, scale) {
+  return new Promise(function (resolve, reject) {
+    try {
+      var rect = el.getBoundingClientRect();
+      var w = Math.max(1, Math.ceil(rect.width));
+      var h = Math.max(1, Math.ceil(rect.height));
+      var clone = el.cloneNode(true);
+
+      /* <button> 在 foreignObject 里是原生控件，内部内容不绘制：换成等价的 div */
+      Array.prototype.forEach.call(Array.prototype.slice.call(clone.querySelectorAll('button')), function (b) {
+        var d = document.createElement('div');
+        d.className = b.className;
+        d.innerHTML = b.innerHTML;
+        b.parentNode.replaceChild(d, b);
+      });
+
+      /* canvas 在 foreignObject 里画不出来，先换成图片 */
+      var srcCanvas = el.querySelectorAll('canvas');
+      var dstCanvas = clone.querySelectorAll('canvas');
+      Array.prototype.forEach.call(dstCanvas, function (c, i) {
+        var src = srcCanvas[i];
+        if (!src) return;
+        var img = document.createElement('img');
+        try { img.src = src.toDataURL('image/png'); } catch (e) { return; }
+        img.style.width = Math.round(c.getBoundingClientRect().width) + 'px';
+        img.style.height = Math.round(c.getBoundingClientRect().height) + 'px';
+        c.parentNode.replaceChild(img, c);
+      });
+
+      inlineExportStyles(el, clone);
+      materializePseudoElements(el, clone);
+      clone.style.margin = '0';
+
+      var holder = document.createElement('div');
+      holder.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      holder.style.width = w + 'px';
+      holder.style.height = h + 'px';
+      holder.style.background = '#ffffff';
+      holder.appendChild(clone);
+
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
+        + '<foreignObject x="0" y="0" width="100%" height="100%">'
+        + new XMLSerializer().serializeToString(holder)
+        + '</foreignObject></svg>';
+
+      var img2 = new Image();
+      img2.onload = function () {
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img2, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob); else reject(new Error('生成图片失败'));
+        }, 'image/png');
+      };
+      img2.onerror = function () { reject(new Error('矢量转位图失败')); };
+      img2.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    } catch (e) { reject(e); }
+  });
+}
+
+var VIEW_NAMES_CN = { week: '周视图', month: '月视图', year: '年视图', tt: '课程表' };
+
+async function copyViewImage() {
+  var el = currentExportElement();
+  if (!el) { showToast('当前视图没有可导出的内容', false); return; }
+  setSyncStatus('正在生成图片…', true, 3000);
+  var blob = null;
+  try {
+    blob = await elementToPngBlob(el, 2);
+  } catch (e) {
+    showToast('生成图片失败：' + (e && e.message ? e.message : e), false, 5000);
+    return;
+  }
+  /* 优先写剪贴板；file:// 下若被拒，退化成下载 */
+  if (navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      showToast('当前视图已复制到剪贴板', true, 2600);
+      return;
+    } catch (e) { /* 落到下载 */ }
+  }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '猪事顺利-' + (VIEW_NAMES_CN[currentViewName] || '视图') + '-' + formatDate(new Date()) + '.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
 }
 
 // ========== Bento Grid 交互 ==========
@@ -6831,6 +7058,7 @@ function switchView(view) {
   const ttView = document.getElementById('ttView');
   const weekNav = document.getElementById('weekNav');
   const monthNav = document.getElementById('monthNav');
+  const yearNav = document.getElementById('yearNav');
   const viewBtns = document.querySelectorAll('.view-btn');
 
   viewBtns.forEach(btn => btn.classList.remove('active'));
@@ -6842,6 +7070,7 @@ function switchView(view) {
   if (ttView) ttView.style.display = 'none';
   weekNav.style.display = 'none';
   monthNav.style.display = 'none';
+  if (yearNav) yearNav.style.display = 'none';
 
   if (view === 'week') {
     calendar.style.display = '';
@@ -6853,6 +7082,7 @@ function switchView(view) {
     renderMonthCalendar();
   } else if (view === 'year') {
     yearViewContainer.style.display = '';
+    if (yearNav) yearNav.style.display = 'flex';
     renderYearView();
     loadBentoData();
   } else if (view === 'tt') {
@@ -6866,14 +7096,20 @@ function switchView(view) {
 }
 
 /* 当前视图是哪一种就重绘哪一种：删改事项后月/年/课程表都要跟着更新 */
+/* 不属于任何单一视图的区块（统计图、项目追踪、DDL 倒计时、右栏统计）：
+   任何视图下改动数据都要刷新它们，否则会出现「项目时间线不跟着日程更新」 */
+function refreshGlobalBlocks() {
+  try { renderPieChart(); } catch (e) {}
+  try { renderProjectFlow(); } catch (e) {}
+  try { renderDDLCountdown(); } catch (e) {}
+  try { renderSideStats(); } catch (e) {}
+}
+
 function refreshCurrentView() {
-  /* 完成统计是全局区块，不能只在周视图里刷新：月/年/课表切换时也要重画，
-     否则勾选完成后切到年视图，饼图还是旧的「暂无数据」 */
-  const refreshChart = function () { try { renderPieChart(); } catch (e) {} };
-  if (currentViewName === 'month') { renderMonthCalendar(); refreshChart(); return; }
-  if (currentViewName === 'year') { renderYearView(); loadBentoData(); refreshChart(); return; }
-  if (currentViewName === 'tt') { renderTimetable(); refreshChart(); return; }
-  render();
+  if (currentViewName === 'month') { renderMonthCalendar(); refreshGlobalBlocks(); return; }
+  if (currentViewName === 'year') { renderYearView(); loadBentoData(); refreshGlobalBlocks(); return; }
+  if (currentViewName === 'tt') { renderTimetable(); refreshGlobalBlocks(); return; }
+  render();   /* 周视图 render() 内部已经刷新了上面这些区块 */
 }
 
 // 渲染月视图
@@ -7117,6 +7353,9 @@ function switchModalTab(tab, keepValues) {
   /* DDL 只有「截止日期 + 截止时刻」：隐藏结束日期与长期项目 */
   document.getElementById('rowEndDate').style.display = isDDL ? 'none' : '';
   document.getElementById('rowProject').style.display = isDDL ? 'none' : '';
+  /* 重复只用于新建：DDL 和编辑已有事项都不显示 */
+  var repeatRow = document.getElementById('rowRepeat');
+  if (repeatRow) repeatRow.style.display = isDDL ? 'none' : '';
   document.getElementById('lblDate').textContent = isDDL ? '截止日期与时间（时间可选）' : '开始日期与时间（时间可选）';
   document.getElementById('eventContent').placeholder = isDDL ? '找到对象(bushi)' : '例如：跑步3公里';
   /* 「课程」只属于事项：切到 DDL 时隐藏该选项；新填的 DDL 若正选着它，回落为工作 */
@@ -7156,6 +7395,7 @@ function openAddModal(dateStr) {
   loadCourseOptions('');
   updateCourseRow();
   switchModalTab('event');
+  try { resetRepeatPicker(document.getElementById('eventDate').value); } catch (e) {}
   document.getElementById('modalOverlay').classList.add('active');
 }
 
@@ -7197,6 +7437,14 @@ function openEditModal(dateStr, idx) {
   loadCourseOptions(ev.course || '');
   updateCourseRow();
   switchModalTab(ev.isDDL ? 'ddl' : 'event', true);
+  try {
+    resetRepeatPicker(dateStr);
+    /* 这条属于某个重复组：把组里的日期全部回填，方便直接看到和修改 */
+    if (ev && Array.isArray(ev.repeatDates) && ev.repeatDates.length > 1) {
+      repeatSelected = ev.repeatDates.slice();
+      renderRepeatInput();
+    }
+  } catch (e) {}
   document.getElementById('modalOverlay').classList.add('active');
 }
 
@@ -7266,9 +7514,142 @@ function updateProjectOptions() {
   renderProjectSuggest(projects);
 }
 
+/* ===== 重复日期多选器：点选 / 再点取消 / 按住拖动连选 ===== */
+var repeatSelected = [];
+var repeatMonth = null;
+var repeatDrag = null;
+
+function repeatPopEl() { return document.getElementById('repeatPop'); }
+
+function hideRepeatPop() {
+  var pop = repeatPopEl();
+  if (pop) pop.style.display = 'none';
+  repeatDrag = null;
+}
+
+function renderRepeatInput() {
+  var input = document.getElementById('eventRepeat');
+  if (!input) return;
+  var sorted = repeatSelected.slice().sort();
+  if (!sorted.length) { input.value = ''; return; }
+  var fmt = function (d) { return d.slice(5).replace('-', '/'); };
+  input.value = sorted.length <= 4
+    ? sorted.map(fmt).join('、')
+    : sorted.slice(0, 3).map(fmt).join('、') + ' 等 ' + sorted.length + ' 天';
+}
+
+function paintRepeatDays() {
+  var pop = repeatPopEl();
+  if (!pop) return;
+  Array.prototype.forEach.call(pop.querySelectorAll('.rp-day'), function (cell) {
+    if (!cell.dataset.date) return;
+    cell.classList.toggle('sel', repeatSelected.indexOf(cell.dataset.date) >= 0);
+  });
+}
+
+function applyRepeatDrag(toDate) {
+  if (!repeatDrag || !toDate) return;
+  var a = repeatDrag.anchor, b = toDate;
+  var lo = a <= b ? a : b, hi = a <= b ? b : a;
+  var cur = new Date(lo + 'T00:00:00');
+  var end = new Date(hi + 'T00:00:00');
+  while (cur <= end) {
+    var ds = formatDate(cur);
+    var i = repeatSelected.indexOf(ds);
+    if (repeatDrag.mode === 'add') { if (i < 0) repeatSelected.push(ds); }
+    else if (i >= 0) repeatSelected.splice(i, 1);
+    cur.setDate(cur.getDate() + 1);
+  }
+  paintRepeatDays();
+  renderRepeatInput();
+}
+
+function renderRepeatPop() {
+  var pop = repeatPopEl();
+  if (!pop || !repeatMonth) return;
+  var y = repeatMonth.getFullYear(), m = repeatMonth.getMonth();
+  var first = new Date(y, m, 1);
+  var startDow = first.getDay();
+  var lead = startDow === 0 ? 6 : startDow - 1;   /* 周一开头 */
+  var days = new Date(y, m + 1, 0).getDate();
+  var html = '<div class="rp-head"><button type="button" data-nav="-1">‹</button>'
+    + '<span>' + y + ' 年 ' + (m + 1) + ' 月</span>'
+    + '<button type="button" data-nav="1">›</button></div><div class="rp-grid">';
+  ['一', '二', '三', '四', '五', '六', '日'].forEach(function (w) {
+    html += '<div class="rp-wd">' + w + '</div>';
+  });
+  for (var i = 0; i < lead; i++) html += '<div class="rp-day other"></div>';
+  for (var d = 1; d <= days; d++) {
+    var ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    html += '<div class="rp-day" data-date="' + ds + '">' + d + '</div>';
+  }
+  html += '</div><div class="rp-hint">点一次选中，再点取消；按住拖动可连续选</div>';
+  pop.innerHTML = html;
+  paintRepeatDays();
+}
+
+function bindRepeatPicker() {
+  var pop = repeatPopEl();
+  var input = document.getElementById('eventRepeat');
+  if (!pop || !input || pop.dataset.bound) return;
+  pop.dataset.bound = '1';
+
+  pop.addEventListener('click', function (e) {
+    var nav = e.target.closest('[data-nav]');
+    if (!nav) return;
+    /* 翻月会重建 DOM，此时 document 上的「点外面就关」处理器会误判为点在外面 */
+    e.stopPropagation();
+    repeatMonth = new Date(repeatMonth.getFullYear(), repeatMonth.getMonth() + Number(nav.dataset.nav), 1);
+    renderRepeatPop();
+  });
+
+  pop.addEventListener('pointerdown', function (e) {
+    var cell = e.target.closest('.rp-day');
+    if (!cell || !cell.dataset.date) return;
+    e.preventDefault();
+    var ds = cell.dataset.date;
+    repeatDrag = { mode: repeatSelected.indexOf(ds) >= 0 ? 'remove' : 'add', anchor: ds };
+    applyRepeatDrag(ds);
+  });
+  pop.addEventListener('pointerover', function (e) {
+    if (!repeatDrag) return;
+    var cell = e.target.closest('.rp-day');
+    if (!cell || !cell.dataset.date) return;
+    applyRepeatDrag(cell.dataset.date);
+  });
+  document.addEventListener('pointerup', function () { repeatDrag = null; });
+
+  input.addEventListener('click', function () {
+    var p = repeatPopEl();
+    if (!p) return;
+    if (p.style.display === 'block') { hideRepeatPop(); return; }
+    if (!repeatMonth) repeatMonth = new Date();
+    renderRepeatPop();
+    p.style.display = 'block';
+  });
+
+  document.addEventListener('click', function (e) {
+    var p = repeatPopEl();
+    if (!p || p.style.display !== 'block') return;
+    if (e.target === input || p.contains(e.target)) return;
+    hideRepeatPop();
+  });
+}
+
+function resetRepeatPicker(baseDateStr) {
+  repeatSelected = [];
+  var base = baseDateStr ? new Date(baseDateStr + 'T00:00:00') : new Date();
+  repeatMonth = isNaN(base.getTime()) ? new Date() : new Date(base.getFullYear(), base.getMonth(), 1);
+  repeatDrag = null;
+  bindRepeatPicker();
+  renderRepeatInput();
+  hideRepeatPop();
+}
+
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   editingId = null;
+  try { hideRepeatPop(); } catch (e) {}
 }
 
 
@@ -7304,6 +7685,68 @@ function hideNotesTooltip() {
   if (tip) tip.classList.remove('visible');
 }
 
+
+/* 这次要覆盖的日期集合：起始日 + 选择器里勾的日期 */
+function repeatTargetDates(baseDate) {
+  var set = {};
+  if (baseDate) set[baseDate] = true;
+  (repeatSelected || []).forEach(function (d) { if (d) set[d] = true; });
+  return Object.keys(set).sort();
+}
+
+/* 把重复组对齐到 targetDates：
+   删掉不再需要的日期、更新仍保留的、补上新增的（起始那条由 saveEvent 主流程写） */
+function syncRepeatGroup(events, baseDate, payload, oldEv, targetDates) {
+  var oldId = oldEv && oldEv.repeatId;
+  if (!oldId) {
+    /* 原来不是重复组：给新勾的日期各补一条副本 */
+    if (!payload.repeatId) return;
+    targetDates.forEach(function (d) {
+      if (d === baseDate) return;
+      if (!events[d]) events[d] = [];
+      var clone = Object.assign({}, payload);
+      delete clone.endDate;
+      delete clone.endTime;
+      events[d].push(clone);
+    });
+    return;
+  }
+  var want = {};
+  targetDates.forEach(function (d) { want[d] = true; });
+  var oldDates = Array.isArray(oldEv.repeatDates) ? oldEv.repeatDates.slice() : [oldEv.repeatBase || baseDate];
+
+  /* 1) 去掉不再需要的日期 */
+  oldDates.forEach(function (d) {
+    if (want[d]) return;
+    var list = events[d] || [];
+    for (var i = list.length - 1; i >= 0; i--) {
+      if (list[i] && list[i].repeatId === oldId) list.splice(i, 1);
+    }
+    if (list.length) events[d] = list; else delete events[d];
+  });
+
+  /* 2) 更新仍保留的、补上新增的 */
+  targetDates.forEach(function (d) {
+    if (d === baseDate) return;
+    var list = events[d] || [];
+    var hit = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] && list[i].repeatId === oldId) { hit = i; break; }
+    }
+    var baseMeta = { repeatId: oldId, repeatDates: targetDates, repeatBase: oldEv.repeatBase || baseDate };
+    if (hit >= 0) {
+      var kept = Object.assign({}, payload, baseMeta);
+      kept.done = list[hit].done;
+      list[hit] = kept;
+    } else {
+      var clone = Object.assign({}, payload, baseMeta);
+      delete clone.endDate;
+      delete clone.endTime;
+      list.push(clone);
+    }
+    events[d] = list;
+  });
+}
 
 function saveEvent() {
   const isDDLTab = currentModalTab === 'ddl';
@@ -7368,6 +7811,12 @@ function saveEvent() {
       /* 学习/课程两类以弹窗下拉为准（可改可清）；其余分类沿用旧值，避免误删 */
       if (oldEv.course && category !== 'study' && category !== 'course') payload.course = oldEv.course;
     }
+    var targetEdit = repeatTargetDates(date);
+    if (targetEdit.length > 1) {
+      payload.repeatId = (oldEv && oldEv.repeatId) || ('r' + Date.now().toString(36));
+      payload.repeatDates = targetEdit;
+      payload.repeatBase = (oldEv && oldEv.repeatBase) || date;
+    }
     if (editingId.date === date) {
       events[date][editingId.index] = payload;
     } else {
@@ -7375,8 +7824,23 @@ function saveEvent() {
       if (events[editingId.date].length === 0) delete events[editingId.date];
       events[date].push(payload);
     }
+    syncRepeatGroup(events, date, payload, oldEv, targetEdit);
   } else {
+    var targetNew = repeatTargetDates(date);
+    if (targetNew.length > 1) {
+      payload.repeatId = 'r' + Date.now().toString(36);
+      payload.repeatDates = targetNew;
+      payload.repeatBase = date;
+    }
     events[date].push(payload);
+    targetNew.forEach(function (d) {
+      if (d === date) return;
+      if (!events[d]) events[d] = [];
+      var clone = Object.assign({}, payload);
+      delete clone.endDate;
+      delete clone.endTime;
+      events[d].push(clone);
+    });
   }
 
   /* closeModal() 会把 editingId 置 null，先记下这次是编辑还是新增，供提示语判断 */
@@ -12810,6 +13274,7 @@ function refreshAllUI() {
   try { renderHabitTracker(); } catch (e) {}
   try { renderMoodTracker(); } catch (e) {}
   try { renderPieChart(); } catch (e) {}
+  try { renderProjectFlow(); } catch (e) {}
   try { renderDDLCountdown(); } catch (e) {}
   try { renderSideStats(); } catch (e) {}
   try { setRailActive(currentViewName); } catch (e) {}
