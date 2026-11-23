@@ -3443,8 +3443,15 @@
   .rail-brand .rail-title { min-width: 0; }
   /* ===== 顶部横条吸顶 ===== */
   #barStickySentinel { height: 1px; margin-top: -1px; }
-  #obsidianBar { position: sticky; top: 0; z-index: 30; }
-  #obsidianBar.is-stuck {
+/* 横条外层：左侧独立大 logo + 右侧变短的白条 */
+.bar-row { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 14px; margin: 4px 0 24px; padding-right: 48px; }
+.bar-row .bar-mark { flex: 0 0 auto; display: flex; align-items: center; justify-content: center; width: 56px; height: 56px; }
+.bar-row .bar-mark .brand-logo { width: 54px; height: 54px; }
+.bar-row .sync-bar { flex: 1 1 auto; max-width: 980px; }
+  .bar-row #obsidianBar { margin: 0; }
+@media (max-width: 1180px) { .bar-row .sync-bar { max-width: none; } }
+  /* 吸顶移到 .bar-row */
+  .bar-row.is-stuck .sync-bar {
     border-radius: 0 0 12px 12px;
     box-shadow: 0 6px 18px color-mix(in srgb, var(--text) 12%, transparent);
   }
@@ -3542,10 +3549,14 @@
 <div class="app-shell" id="appShell">
 <!-- Obsidian 库连接栏 -->
 <div id="barStickySentinel" aria-hidden="true"></div>
-<div class="sync-bar" id="obsidianBar">
+<div class="bar-row" id="barRow">
+  <div class="bar-mark">
+    <svg class="brand-logo mascot mascot-live" data-mascot="1" viewBox="0 0 100 100" aria-hidden="true"></svg>
+  </div>
+  <div class="sync-bar" id="obsidianBar">
   <div class="bar-left">
     <div class="sync-status">
-      <span class="sync-dot" id="obsidianDot" title="数据保存在本浏览器"></span><svg class="brand-logo mascot mascot-live bar-logo" data-mascot="1" viewBox="0 0 100 100" aria-hidden="true"></svg>
+      <span class="sync-dot" id="obsidianDot" title="数据保存在本浏览器"></span>
       <span id="obsidianText" class="bar-status-text">未连接 Obsidian 库</span>
       <span class="bar-title" id="topTitle">猪事顺利</span>
     </div>
@@ -3590,6 +3601,7 @@
   </div>
   </div><!-- /bar-right -->
 </div>
+</div><!-- /bar-row -->
 
 <div class="header">
   <div class="legend">
@@ -4414,7 +4426,7 @@ function initMascotMotion() {
 
 /* 顶部横条吸顶：靠哨兵判断是否已经贴住顶部 */
 function setupStickyBar() {
-  var bar = document.getElementById('obsidianBar');
+  var bar = document.getElementById('barRow');
   var sentinel = document.getElementById('barStickySentinel');
   if (!bar || !sentinel) return;
   function update() {
