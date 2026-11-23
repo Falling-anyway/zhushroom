@@ -28,3 +28,5 @@ Desktop.ini
 .idea/
 *.tmp
 *.bak
+# 运行时生成（含学号，绝不入库）
+zju-sync/.open-login.ps1
