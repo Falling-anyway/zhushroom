@@ -3433,7 +3433,60 @@
   .fp-kids > .fp-folder > summary { padding-left: 7px; }
   .fp-row, .fp-folder > summary { min-height: 24px; }
   /* 最近笔记：悬停高亮两侧留白，文字不再贴着色条 */
-  .stat-recent-row { padding-left: 10px; padding-right: 10px; margin-left: -10px; margin-right: -10px; }</style>
+  .stat-recent-row { padding-left: 10px; padding-right: 10px; margin-left: -10px; margin-right: -10px; }  /* 品牌小图标：左栏标题与顶部横条标题左侧 */
+  .brand-logo { width: 16px; height: 16px; flex: 0 0 auto; color: var(--primary); }
+  .rail-head .brand-logo, .rail-title { vertical-align: middle; }
+  .sync-status { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .rail-brand { display: flex; align-items: center; gap: 6px; min-width: 0; }
+  .rail-brand .rail-title { min-width: 0; }
+  /* ===== 顶部横条吸顶 ===== */
+  #barStickySentinel { height: 1px; margin-top: -1px; }
+  #obsidianBar { position: sticky; top: 0; z-index: 30; }
+  #obsidianBar.is-stuck {
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 6px 18px color-mix(in srgb, var(--text) 12%, transparent);
+  }
+
+  /* ===== 品牌 logo：只有横条那个会动（待机 / 跟随鼠标 / 点击互动） ===== */
+  svg.mascot { display: block; overflow: visible; }
+  .mascot-live {
+    transform-origin: left center;
+    will-change: transform;
+    cursor: pointer;
+    animation: mascotBreath 3.8s ease-in-out infinite;
+  }
+  .sync-status:hover .mascot-live { animation: none; transform: scale(1.08); transition: transform .12s ease; }
+  .m-eyes { transform: translate(var(--m-ex, 0px), var(--m-ey, 0px)); transition: transform .1s linear; will-change: transform; }
+  .m-eye { transform-box: fill-box; transform-origin: center; transition: transform .08s linear; }
+  @keyframes mascotBreath {
+    0%, 100% { transform: translateY(0) rotate(0); }
+    50% { transform: translateY(-1.2px) rotate(.6deg); }
+  }
+  @keyframes mascotBlink {
+    0%, 90%, 100% { transform: scaleY(1); }
+    94% { transform: scaleY(.12); }
+  }
+  @keyframes mascotBoing {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.1, .9); }
+    60% { transform: scale(.95, 1.05); }
+    100% { transform: scale(1); }
+  }
+  .mascot-live.boing { animation: mascotBoing .38s cubic-bezier(.34, 1.56, .64, 1); }
+  .m-eyes.blink-now .m-eye { animation: mascotBlink .3s ease-in-out; }
+  /* 设置里那行「图标小动画」 */
+  .setting-check.logo-motion { margin-top: 8px; }
+  /* 关掉动画 / 系统偏好减少动态效果 */
+  html.no-mascot-motion .mascot-live,
+  html.no-mascot-motion .m-eye { animation: none !important; }
+  html.no-mascot-motion .m-eyes { transform: none !important; transition: none; }
+  html.no-mascot-motion .sync-status:hover .mascot-live { transform: none; }
+  @media (prefers-reduced-motion: reduce) {
+    .mascot-live, .m-eye { animation: none !important; }
+    .m-eyes { transform: none !important; transition: none; }
+    .sync-status:hover .mascot-live { transform: none; }
+  }
+</style>
 </head>
 <body>
 
@@ -3441,7 +3494,7 @@
 
 <nav class="app-rail" id="appRail">
   <div class="rail-head">
-    <span class="rail-title" id="railTitle">猪事顺利</span>
+    <span class="rail-brand"><svg class="brand-logo mascot mascot-static rail-logo" data-mascot="1" viewBox="0 0 100 100" aria-hidden="true"></svg><span class="rail-title" id="railTitle">猪事顺利</span></span>
     <button class="rail-collapse" id="railCollapseBtn" onclick="toggleRail()" title="折叠/展开" aria-expanded="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
   </div>
   <div class="rail-group">
@@ -3486,10 +3539,11 @@
 
 <div class="app-shell" id="appShell">
 <!-- Obsidian 库连接栏 -->
+<div id="barStickySentinel" aria-hidden="true"></div>
 <div class="sync-bar" id="obsidianBar">
   <div class="bar-left">
     <div class="sync-status">
-      <span class="sync-dot" id="obsidianDot" title="数据保存在本浏览器"></span>
+      <span class="sync-dot" id="obsidianDot" title="数据保存在本浏览器"></span><svg class="brand-logo mascot mascot-live bar-logo" data-mascot="1" viewBox="0 0 100 100" aria-hidden="true"></svg>
       <span id="obsidianText" class="bar-status-text">未连接 Obsidian 库</span>
       <span class="bar-title" id="topTitle">猪事顺利</span>
     </div>
@@ -3927,12 +3981,12 @@
               </svg>
             </button>
             <button class="logo-preset" type="button" data-logo="mushroom" onclick="setLogo('mushroom')" title="蘑菇" aria-label="蘑菇">
-              <svg viewBox="0 0 100 100" width="18" height="18" aria-hidden="true">
-                <path fill="currentColor" fill-rule="evenodd" d="M51.89 84.43 L47.13 84.43 L36.11 83.46 L31.57 82.81 L26.60 81.51 L24.32 80.44 L22.65 79.08 L21.46 76.92 L20.64 72.76 L13.30 72.22 L11.02 71.35 L10.05 70.49 L7.83 68.05 L6.00 62.97 L6.00 58.76 L6.76 54.00 L9.35 46.87 L13.03 39.95 L19.78 31.68 L18.97 36.16 L19.30 40.71 L21.03 45.35 L23.25 47.57 L25.73 49.08 L28.65 49.84 L32.54 49.63 L36.86 48.33 L34.33 44.59 L33.24 42.21 L33.62 40.44 L35.68 39.89 L37.45 41.24 L40.16 45.35 L37.24 48.05 L38.32 49.79 L41.40 52.98 L42.81 52.87 L44.27 51.73 L44.48 50.65 L40.81 46.75 L40.37 45.79 L41.73 45.08 L42.98 43.73 L44.48 40.48 L44.92 34.44 L43.62 30.54 L40.00 26.27 L37.62 24.76 L32.87 23.57 L28.49 23.83 L33.73 20.11 L36.86 18.49 L41.62 16.65 L46.81 15.57 L53.19 15.57 L60.11 17.19 L66.27 20.11 L75.89 27.24 L80.70 32.49 L77.51 33.19 L74.64 37.13 L74.10 41.35 L74.97 43.63 L76.86 45.62 L78.05 46.16 L79.67 46.59 L82.49 46.28 L84.32 45.29 L85.78 43.73 L86.54 41.90 L86.70 39.68 L89.03 43.40 L91.29 48.38 L93.24 54.00 L94.00 58.76 L93.78 63.95 L92.48 67.41 L90.98 69.57 L88.97 71.35 L86.70 72.22 L79.67 72.65 L78.32 77.36 L76.70 79.52 L74.59 81.30 L72.11 82.38 L68.33 83.24 L51.89 84.43 Z M52.60 81.90 L67.57 81.08 L71.89 80.11 L74.06 79.03 L75.95 77.13 L77.02 73.46 L76.26 67.95 L74.21 64.16 L71.57 61.73 L66.38 59.25 L57.41 57.95 L47.03 57.62 L37.19 58.49 L32.76 59.46 L28.22 61.84 L25.57 64.49 L23.72 67.95 L23.29 69.79 L23.41 74.87 L24.05 77.13 L24.87 77.83 L30.05 80.01 L34.06 80.87 L36.65 80.87 L41.62 81.84 L52.60 81.90 Z M40.86 78.06 L39.14 77.62 L38.44 76.81 L37.57 74.54 L37.35 72.28 L37.57 69.79 L38.97 65.46 L40.10 64.22 L41.62 64.00 L42.53 64.82 L43.72 67.84 L43.95 72.71 L42.98 76.60 L42.49 77.30 L40.86 78.06 Z M59.67 78.06 L57.45 77.24 L56.05 72.81 L56.26 67.84 L57.45 64.82 L58.38 64.00 L59.90 64.22 L61.03 65.46 L62.53 70.54 L62.65 73.14 L62.10 75.73 L60.76 77.73 L59.67 78.06 Z M63.62 50.11 L65.88 48.60 L65.88 46.22 L64.11 44.12 L63.13 43.79 L61.07 44.12 L58.97 46.11 L58.97 48.93 L60.11 49.84 L63.62 50.11 Z" />
-              </svg>
+              <svg class="mascot mascot-static mushroom-preview" data-mascot="1" viewBox="0 0 100 100" width="18" height="18" aria-hidden="true"></svg>
             </button>
           </div>
           <div class="setting-hint">改的是 Obsidian 左侧边栏里的图标，重开 Obsidian 仍保留</div>
+
+          <label class="setting-check logo-motion"><input type="checkbox" id="optLogoAnimated" checked onchange="setLogoAnimated(this.checked)"> 图标小动画（待机、跟随鼠标）</label>
 
           <label class="settings-label">显示选项</label>
           <label class="setting-check">
@@ -4160,12 +4214,217 @@ function loadSettings() {
     fontScale: 1, theme: 'monet', showCompleted: true, showCompletedDDL: false, ddlAxisDays: 0,
     pageTitle: '猪事顺利', ddlDoneText: '全部 DDL 已完成，强强！', bgBlur: 0,
     railCollapsed: false, showStats: true, statsCollapsed: false, userName: '你',
-    weekAutoRange: false, weekTimeline: true, recentFolders: [], recentInclude: [], recentExclude: []
+    weekAutoRange: false, weekTimeline: true, recentFolders: [], recentInclude: [], recentExclude: [], logoAnimated: true
   };
   try { return Object.assign({}, defaults, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
   catch(e) { return defaults; }
 }
 function saveSettings(s) { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); }
+/* ===== 品牌 logo（蘑菇）：身体 + 两只眼睛，只有横条那个带待机/跟随/点击 ===== */
+var MASCOT_BODY_D = 'M51.89 84.43 L47.13 84.43 L36.11 83.46 L31.57 82.81 L26.60 81.51 L24.32 80.44 L22.65 79.08 L21.46 76.92 L20.64 72.76 L13.30 72.22 L11.02 71.35 L10.05 70.49 L7.83 68.05 L6.00 62.97 L6.00 58.76 L6.76 54.00 L9.35 46.87 L13.03 39.95 L19.78 31.68 L18.97 36.16 L19.30 40.71 L21.03 45.35 L23.25 47.57 L25.73 49.08 L28.65 49.84 L32.54 49.63 L36.86 48.33 L34.33 44.59 L33.24 42.21 L33.62 40.44 L35.68 39.89 L37.45 41.24 L40.16 45.35 L37.24 48.05 L38.32 49.79 L41.40 52.98 L42.81 52.87 L44.27 51.73 L44.48 50.65 L40.81 46.75 L40.37 45.79 L41.73 45.08 L42.98 43.73 L44.48 40.48 L44.92 34.44 L43.62 30.54 L40.00 26.27 L37.62 24.76 L32.87 23.57 L28.49 23.83 L33.73 20.11 L36.86 18.49 L41.62 16.65 L46.81 15.57 L53.19 15.57 L60.11 17.19 L66.27 20.11 L75.89 27.24 L80.70 32.49 L77.51 33.19 L74.64 37.13 L74.10 41.35 L74.97 43.63 L76.86 45.62 L78.05 46.16 L79.67 46.59 L82.49 46.28 L84.32 45.29 L85.78 43.73 L86.54 41.90 L86.70 39.68 L89.03 43.40 L91.29 48.38 L93.24 54.00 L94.00 58.76 L93.78 63.95 L92.48 67.41 L90.98 69.57 L88.97 71.35 L86.70 72.22 L79.67 72.65 L78.32 77.36 L76.70 79.52 L74.59 81.30 L72.11 82.38 L68.33 83.24 L51.89 84.43 Z  M52.60 81.90 L67.57 81.08 L71.89 80.11 L74.06 79.03 L75.95 77.13 L77.02 73.46 L76.26 67.95 L74.21 64.16 L71.57 61.73 L66.38 59.25 L57.41 57.95 L47.03 57.62 L37.19 58.49 L32.76 59.46 L28.22 61.84 L25.57 64.49 L23.72 67.95 L23.29 69.79 L23.41 74.87 L24.05 77.13 L24.87 77.83 L30.05 80.01 L34.06 80.87 L36.65 80.87 L41.62 81.84 L52.60 81.90 Z  M63.62 50.11 L65.88 48.60 L65.88 46.22 L64.11 44.12 L63.13 43.79 L61.07 44.12 L58.97 46.11 L58.97 48.93 L60.11 49.84 L63.62 50.11 Z';
+var MASCOT_EYE_D = ['M40.86 78.06 L39.14 77.62 L38.44 76.81 L37.57 74.54 L37.35 72.28 L37.57 69.79 L38.97 65.46 L40.10 64.22 L41.62 64.00 L42.53 64.82 L43.72 67.84 L43.95 72.71 L42.98 76.60 L42.49 77.30 L40.86 78.06 Z', 'M59.67 78.06 L57.45 77.24 L56.05 72.81 L56.26 67.84 L57.45 64.82 L58.38 64.00 L59.90 64.22 L61.03 65.46 L62.53 70.54 L62.65 73.14 L62.10 75.73 L60.76 77.73 L59.67 78.06 Z'];
+function mascotMarkup(cls) {
+  return '<svg class="' + cls + '" viewBox="0 0 100 100" aria-hidden="true">'
+    + '<g class="m-body"><path fill="currentColor" fill-rule="evenodd" d="' + MASCOT_BODY_D + '"/></g>'
+    + '<g class="m-eyes"><path class="m-eye" fill="currentColor" d="' + MASCOT_EYE_D[0] + '"/>'
+    + '<path class="m-eye" fill="currentColor" d="' + MASCOT_EYE_D[1] + '"/></g></svg>';
+}
+function paintMascotLogos() {
+  document.querySelectorAll('svg[data-mascot]').forEach(function (svg) {
+    if (svg.getAttribute('data-painted') === '1') return;
+    var cls = svg.getAttribute('class') || 'mascot';
+    var tmp = document.createElement('div');
+    tmp.innerHTML = mascotMarkup(cls);
+    var fresh = tmp.firstElementChild;
+    if (!fresh) return;
+    svg.innerHTML = fresh.innerHTML;
+    svg.setAttribute('data-painted', '1');
+  });
+}
+
+/* ---- 跟随鼠标 / 待机张望 ---- */
+var mascotMotionBound = false, mascotRaf = 0, mascotRects = [], mascotIdleTimer = 0;
+var mascotEyeDX = 0, mascotEyeDY = 0, mascotBlinking = false, mascotBlinkTimer = null;
+var MASCOT_EYE_PTS = [parseEyePath(MASCOT_EYE_D[0]), parseEyePath(MASCOT_EYE_D[1])];
+var mascotPointer = { x: -1, y: -1, at: 0 };
+function mascotAllowed() {
+  if (document.documentElement.classList.contains('no-mascot-motion')) return false;
+  try { if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return false; } catch (e) {}
+  return true;
+}
+function setMascotEyes(dx, dy) {
+  mascotEyeDX = dx || 0;
+  mascotEyeDY = dy || 0;
+  applyMascotEyes();
+}
+
+/* 逐只眼睛写 transform：translate 跟随 + scaleY 眨眼，避免与 CSS 动画抢 transform */
+function applyMascotEyes() {
+  /* 直接改写眼睛路径坐标（纯几何，不依赖 SVG/CSS transform，任何环境都能渲染） */
+  var sy = mascotBlinking ? 0.18 : 1;
+  document.querySelectorAll('.mascot-live .m-eye').forEach(function (eye, i) {
+    var pts = MASCOT_EYE_PTS[i];
+    if (!pts) return;
+    eye.setAttribute('d', eyePathD(pts, mascotEyeDX, mascotEyeDY, sy));
+  });
+  document.querySelectorAll('.mascot-live').forEach(function (svg) {
+    svg.style.setProperty('--m-ex', mascotEyeDX.toFixed(2) + 'px');
+    svg.style.setProperty('--m-ey', mascotEyeDY.toFixed(2) + 'px');
+  });
+}
+
+/* 把 "M x y L x y ... Z" 解析成点数组（只处理本图标用到的 M/L/Z） */
+function parseEyePath(d) {
+  var nums = String(d).match(/-?\d+(?:\.\d+)?/g) || [];
+  var pts = [], i;
+  for (i = 0; i + 1 < nums.length; i += 2) pts.push([parseFloat(nums[i]), parseFloat(nums[i + 1])]);
+  return pts;
+}
+
+function eyePathD(pts, dx, dy, sy) {
+  var cx = 0, cy = 0, k;
+  for (k = 0; k < pts.length; k++) { cx += pts[k][0]; cy += pts[k][1]; }
+  cx /= pts.length; cy /= pts.length;
+  var out = [];
+  for (k = 0; k < pts.length; k++) {
+    var x = pts[k][0] + dx;
+    var y = cy + (pts[k][1] - cy) * sy + dy;
+    out.push((k === 0 ? 'M' : 'L') + x.toFixed(2) + ' ' + y.toFixed(2));
+  }
+  out.push('Z');
+  return out.join(' ');
+}
+
+/* 眨眼：每 5.6 秒合眼 130ms（原先用 CSS 动画，会覆盖内联 transform，改为 JS） */
+function startMascotBlink() {
+  if (mascotBlinkTimer) return;
+  mascotBlinkTimer = window.setInterval(function () {
+    if (!mascotAllowed()) return;
+    mascotBlinking = true;
+    applyMascotEyes();
+    window.setTimeout(function () {
+      mascotBlinking = false;
+      applyMascotEyes();
+    }, 130);
+  }, 5600);
+}
+function measureMascotRects() {
+  mascotRects = [].map.call(document.querySelectorAll('.mascot-live'), function (el) {
+    var r = el.getBoundingClientRect();
+    return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
+  });
+}
+function mascotTick() {
+  mascotRaf = 0;
+  if (!mascotAllowed()) return;
+  if (mascotPointer.x < 0 || !mascotRects.length) return;
+  var best = null;
+  mascotRects.forEach(function (r) {
+    var dx = mascotPointer.x - r.cx, dy = mascotPointer.y - r.cy;
+    var d = dx * dx + dy * dy;
+    if (!best || d < best.d) best = { d: d, dx: dx, dy: dy };
+  });
+  if (!best) return;
+  /* 位移用 viewBox 单位（100 宽）：±3.2 单位 ≈ 16px 图标里的 0.5px，眼睛不会跑出脸 */
+  var cx = Math.max(-1, Math.min(1, best.dx / 240)) * 3.2;
+  var cy = Math.max(-1, Math.min(1, best.dy / 260)) * 2.4;
+  setMascotEyes(cx, cy);
+}
+function onMascotPointer(e) {
+  mascotPointer.x = e.clientX;
+  mascotPointer.y = e.clientY;
+  mascotPointer.at = Date.now();
+  mascotTick();
+}
+var mascotResizeTimer = 0;
+function onMascotResize() {
+  if (mascotResizeTimer) return;
+  mascotResizeTimer = setTimeout(function () { mascotResizeTimer = 0; measureMascotRects(); }, 120);
+}
+function mascotIdleGlance() {
+  if (document.hidden || !mascotAllowed()) return;
+  if (!mascotPointer.at || Date.now() - mascotPointer.at < 8000) return;
+  if (Math.random() > 0.35) return;
+  var gx = (Math.random() * 2 - 1) * 1.2, gy = (Math.random() * 2 - 1) * 0.9;
+  setMascotEyes(gx, gy);
+  setTimeout(function () { if (mascotAllowed()) setMascotEyes(0, 0); }, 380);
+}
+function applyMascotMotion() {
+  var fine = true;
+  try { fine = window.matchMedia('(hover: hover) and (pointer: fine)').matches; } catch (e) {}
+  if (!mascotAllowed() || !fine) {
+    if (mascotMotionBound) {
+      document.removeEventListener('pointermove', onMascotPointer);
+      window.removeEventListener('resize', onMascotResize);
+      window.removeEventListener('scroll', onMascotResize, true);
+      if (mascotIdleTimer) { clearInterval(mascotIdleTimer); mascotIdleTimer = 0; }
+      mascotMotionBound = false;
+    }
+    setMascotEyes(0, 0);
+    return;
+  }
+  if (mascotMotionBound) { measureMascotRects(); return; }
+  measureMascotRects();
+  document.addEventListener('pointermove', onMascotPointer, { passive: true });
+  window.addEventListener('resize', onMascotResize);
+  window.addEventListener('scroll', onMascotResize, true);
+  mascotIdleTimer = setInterval(mascotIdleGlance, 2000);
+  mascotMotionBound = true;
+}
+function boingMascot(svg) {
+  if (!svg) return;
+  svg.classList.add('boing');
+  var eyes = svg.querySelector('.m-eyes');
+  if (eyes) eyes.classList.add('blink-now');
+  setTimeout(function () {
+    svg.classList.remove('boing');
+    if (eyes) eyes.classList.remove('blink-now');
+  }, 420);
+}
+function setLogoAnimated(on) {
+  var s = loadSettings(); s.logoAnimated = !!on; saveSettings(s);
+  document.documentElement.classList.toggle('no-mascot-motion', !on);
+  if (on) {
+    startMascotBlink();
+  } else {
+    if (mascotBlinkTimer) { window.clearInterval(mascotBlinkTimer); mascotBlinkTimer = null; }
+    mascotBlinking = false;
+    mascotEyeDX = 0; mascotEyeDY = 0;
+  }
+  applyMascotEyes();
+  applyMascotMotion();
+}
+function initMascotMotion() {
+  var s = loadSettings();
+  document.documentElement.classList.toggle('no-mascot-motion', s.logoAnimated === false);
+  if (s.logoAnimated === false && mascotBlinkTimer) { window.clearInterval(mascotBlinkTimer); mascotBlinkTimer = null; mascotBlinking = false; }
+  applyMascotMotion();
+  startMascotBlink();
+  document.querySelectorAll('.mascot-live').forEach(function (svg) {
+    if (svg.getAttribute('data-click') === '1') return;
+    svg.setAttribute('data-click', '1');
+    svg.addEventListener('click', function () {
+      boingMascot(svg);
+      try { setSyncStatus('咕噜～', true, 1200); } catch (e) {}
+    });
+  });
+}
+
+/* 顶部横条吸顶：靠哨兵判断是否已经贴住顶部 */
+function setupStickyBar() {
+  var bar = document.getElementById('obsidianBar');
+  var sentinel = document.getElementById('barStickySentinel');
+  if (!bar || !sentinel) return;
+  function update() {
+    /* 哨兵滑出视口顶部 = 横条已经吸住 */
+    var top = sentinel.getBoundingClientRect().top;
+    bar.classList.toggle('is-stuck', top < 0);
+  }
+  window.addEventListener('scroll', update, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+}
+
 function setFontScale(scale, fromSlider) {
   scale = Math.min(1.4, Math.max(0.8, scale));
   document.documentElement.style.setProperty('--font-scale', scale);
@@ -5057,6 +5316,8 @@ function openSettings() {
   var input = document.getElementById('dingtalkWebhookInput');
   if (input) input.value = localStorage.getItem('dingtalkWebhook') || '';
   applyTheme(s.theme);
+  var lm = document.getElementById('optLogoAnimated');
+  if (lm) lm.checked = s.logoAnimated !== false;
   var c1 = document.getElementById('optShowCompleted');
   if (c1) c1.checked = s.showCompleted !== false;
   var c2 = document.getElementById('optShowCompletedDDL');
@@ -11788,6 +12049,7 @@ initObsidianBridge();
 applyLogoUI();
 applyStoreBuildUI();
 try { applySideOrder(); initSideDrag(); } catch (e) {}
+try { paintMascotLogos(); initMascotMotion(); setupStickyBar(); } catch (e) {}
 
 /* 状态文字收进圆点的悬停提示：横条左边固定显示页面标题 */
 (function syncBarDotTitle() {
