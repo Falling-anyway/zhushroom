@@ -8827,23 +8827,21 @@ function zjuMergeTodos(todos) {
     }
   });
 
-  /* 待办消失（已交/已失效）→ 自动打勾；返回 0 条时保守跳过，避免登录异常全勾 */
-  var autoDone = 0;
-  var skipped = (!(todos || []).length && Object.keys(index).length > 0);
-  if (!skipped) {
-    Object.keys(index).forEach(function(id) {
-      if (seen[id]) return;
-      var ev = index[id].ev;
-      if (!ev || ev.done === true) return;
-      ev.done = true;
-      ev.zjuAutoDone = true;
-      autoDone++;
-    });
-  }
+  /* 学在浙大那边消失（已交/被撤销）的待办：不删除、不打勾，只在提示里报个数 */
+  /* 用户明确要求：同步只允许「新增 DDL」和「更新已有 DDL 的时间」，绝不能让旧 DDL 消失 */
+  var missing = 0;
+  Object.keys(index).forEach(function(id) {
+    if (seen[id]) return;
+    var ev = index[id].ev;
+    if (!ev) return;
+    missing++;
+    /* 早期版本曾把「消失」当成已交并自动打勾，这里顺手恢复，避免它继续从 DDL 列表里消失 */
+    if (ev.zjuAutoDone === true) { ev.done = false; delete ev.zjuAutoDone; }
+  });
 
   var changedAll = JSON.stringify(events) !== before;
   if (changedAll) saveEvents(events);
-  return { added: added, updated: updated, adopted: adopted, autoDone: autoDone, total: (todos || []).length, changed: changedAll };
+  return { added: added, updated: updated, adopted: adopted, missing: missing, total: (todos || []).length, changed: changedAll };
 }
 
 function zjuSummary(r) {
@@ -8851,7 +8849,7 @@ function zjuSummary(r) {
   var bits = [];
   if (r.added) bits.push('新增 ' + r.added);
   if (r.updated) bits.push('更新 ' + r.updated);
-  if (r.autoDone) bits.push('打勾 ' + r.autoDone);
+  if (r.missing) bits.push('保留 ' + r.missing + ' 条已消失');
   return (bits.length ? bits.join(' · ') : '无变化') + '（共 ' + r.total + ' 项）';
 }
 
