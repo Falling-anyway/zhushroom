@@ -9829,23 +9829,27 @@ async function syncZjuThenObsidian() {
       const sum = zjuSummary(merged);
       changed = merged.changed;
       if (sum.indexOf('无变化') !== 0) tips.push('学在浙大：' + sum);
+    } else if (svc.code === 'AUTH' || svc.code === 'NO_COOKIE') {
+      /* 登录失效绝不拿库里的旧缓存冒充成功：那会把过期 DDL 当成最新 */
+      failMsg = svc.code === 'AUTH'
+        ? '学在浙大登录已失效（401）：双击助手目录的「登录一次.bat」重新登录后再同步'
+        : '同步助手还没登录学在浙大：双击「登录一次.bat」完成登录后再同步';
     } else {
+      /* 服务没开/HTTP 出错时才退回库里的缓存，并在提示里说明是旧数据 */
       var cached = await zjuReadFromVaultFile();
       if (cached.ok) {
         const merged2 = zjuMergeTodos(cached.list);
         const sum2 = zjuSummary(merged2);
         changed = merged2.changed;
+        const stamp = cached.fetchedAt ? String(cached.fetchedAt).slice(0, 16).replace('T', ' ') : '未知时间';
+        tips.push('用的是库里 ' + stamp + ' 的旧缓存（同步助手没响应）');
         if (sum2.indexOf('无变化') !== 0) tips.push('学在浙大：' + sum2);
-      } else if (svc.code === 'AUTH') {
-        failMsg = '学在浙大登录已失效：同步助手会唤起浏览器重新登录，完成后请重试';
-      } else if (svc.code === 'NO_COOKIE') {
-        failMsg = '本地服务已运行，但尚未登录学在浙大：请在弹出的窗口中完成登录';
+        okFlag = false;
       } else {
         failMsg = '无可用的拉取通道：请先启动「学在浙大同步」助手，再重试';
       }
     }
 
-    if (failMsg) { okFlag = false; return; }
     if (changed) refreshAllUI();
     /* 别猜：真去读库里的月文件比对一次 */
     obsState = await mdScheduleInSync();
