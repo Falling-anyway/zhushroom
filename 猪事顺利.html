@@ -8763,6 +8763,7 @@ function zjuMergeTodos(todos) {
 
   var seen = {};
   var added = 0, updated = 0, adopted = 0;
+  var adoptedEvs = [];   /* 本次同步已认领的旧事件，避免两条待办抢同一条 */
 
   (todos || []).forEach(function(t) {
     if (!t || t.id === undefined || t.id === null) return;
@@ -8771,7 +8772,10 @@ function zjuMergeTodos(todos) {
     if (!when) return;
     seen[id] = true;
 
-    var content = ZJU_PREFIX + (t.course_name ? t.course_name + ' ' : '') + (t.title || '学在浙大待办');
+    var tTitle = String(t.title || '学在浙大待办');
+    var tCourse = String(t.course_name || '');
+    /* 标题里已经带课程名（例如「《计算机网络》第五章作业」）时不再重复加前缀 */
+    var content = ZJU_PREFIX + (tCourse && tTitle.indexOf(tCourse) < 0 ? tCourse + ' ' : '') + tTitle;
     var notes = zjuBuildNotes(t, when);
     var hit = index[id];
 
@@ -8789,7 +8793,30 @@ function zjuMergeTodos(todos) {
       }
     }
 
+    /* 学在浙大改标题/换 id 时会看起来像“新待办”：同课程下若只剩一条未认领的旧 DDL，就认领它 */
+    if (!hit) {
+      var sameCourse = [];
+      Object.keys(index).forEach(function(k) {
+        var it = index[k];
+        if (!it || !it.ev) return;
+        var e = it.ev;
+        if (adoptedEvs.indexOf(e) >= 0) return;
+        if (e.zjuTodoId !== undefined && e.zjuTodoId !== null && seen[String(e.zjuTodoId)]) return;
+        if ((e.course || '') !== (t.course_name || '')) return;
+        sameCourse.push(it);
+      });
+      if (sameCourse.length === 1) {
+        var picked = sameCourse[0];
+        picked.ev.zjuTodoId = id;
+        picked.ev.zjuCourseId = (t.course_id === undefined ? null : t.course_id);
+        hit = picked;
+        index[id] = hit;
+        adopted++;
+      }
+    }
+
     if (hit) {
+      adoptedEvs.push(hit.ev);
       var ev = hit.ev;
       var changed = false;
       if (ev.content !== content) { ev.content = content; changed = true; }
@@ -8832,6 +8859,8 @@ function zjuMergeTodos(todos) {
   var missing = 0;
   Object.keys(index).forEach(function(id) {
     if (seen[id]) return;
+    /* 这条旧 id 对应的对象已被本次同步认领（换了新 id），不算“已消失” */
+    if (index[id] && index[id].ev && String(index[id].ev.zjuTodoId) !== String(id)) return;
     var ev = index[id].ev;
     if (!ev) return;
     missing++;
