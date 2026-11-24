@@ -347,6 +347,23 @@
   .legend-dot.study { background: var(--cat-study); }
   .legend-dot.social { background: var(--cat-social); }
   .legend-dot.course { background: var(--cat-course); }
+  /* 分类图例可点：悬停出下划线，末尾「＋」新建 */
+  .legend-item { cursor: pointer; }
+  .legend-item:hover .legend-name { text-decoration: underline; text-underline-offset: 3px; }
+  .legend-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    color: var(--sub);
+    font-size: var(--fs-13);
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .legend-add:hover { background: var(--tint); color: var(--text); }
 
   /* 周视图：左一列是时间刻度，右侧七列按时段摆放日程 */
   .calendar {
@@ -477,7 +494,21 @@
     word-break: break-word;
     text-overflow: clip;
   }
-  .event.flow .event-time { flex: 0 0 auto; font-size: var(--fs-10); color: var(--sub); align-self: flex-start; margin-top: 1px; }
+  /* 时间贴右下角，删除键仍在右上角，互不遮挡；有时间的卡片右侧留出删除键的宽度 */
+  /* 时间做成浮在右下角的角标：不再占一行/一格，正文可以一直写到它的上方 */
+  .event.flow .event-time {
+    position: absolute;
+    right: 7px;
+    bottom: 2px;
+    font-size: var(--fs-10);
+    line-height: 1.2;
+    color: var(--sub);
+    padding-left: 6px;
+    pointer-events: none;
+  }
+  /* 正文只给右上角的删除键让位，不再为时间留宽度 */
+  .event.flow.has-time .event-body { padding-right: 0; }
+  .event.flow .delete-btn { top: 1px; right: 3px; }
   .event.flow .tag { display: none; }
   /* 勾选框跟第一行文字对齐：多行卡片不会飘到中间（单行时 7px 与原居中一致） */
   .event.flow .complete-btn { left: 6px; top: 7px; transform: none; width: 13px; height: 13px; border-width: 1.5px; }
@@ -862,18 +893,18 @@
     margin-bottom: 6px;
   }
   .year-nav button {
-    padding: 3px 8px;
-    border-radius: 4px;
+    padding: 5px 12px;
+    border-radius: 6px;
     border: 1px solid var(--line);
     background: var(--card);
     color: var(--sub);
-    font-size: 10px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
   }
   .year-nav button:hover { background: var(--tint); }
   .year-nav span {
-    font-size: 12px;
+    font-size: 16px;
     font-weight: 600;
     color: var(--text);
   }
@@ -887,10 +918,10 @@
     flex-direction: column;
   }
   .year-month-title {
-    font-size: 10px;
+    font-size: 15px;
     font-weight: 600;
     color: var(--text);
-    margin-bottom: 2px;
+    margin-bottom: 6px;
     text-align: center;
   }
   .year-month-grid {
@@ -899,10 +930,10 @@
     gap: 1px;
   }
   .year-weekday {
-    font-size: 6px;
+    font-size: 10px;
     color: var(--muted);
     text-align: center;
-    padding: 1px 0;
+    padding: 2px 0;
   }
   .year-day {
     width: 100%;
@@ -914,7 +945,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 6px;
+    font-size: 11px;
     color: var(--sub);
   }
   .year-day:hover {
@@ -931,11 +962,11 @@
   }
   /* 完成热度：只跟主色（不跟类目）；level≥2 起用白字保证对比度 */
   .year-day.level-0 { background: var(--tint-soft); color: var(--text); }
-  .year-day.level-1, .year-legend-box.level-1 { background: color-mix(in srgb, var(--primary) 30%, var(--card)); color: var(--text); }
-  .year-day.level-2, .year-legend-box.level-2 { background: color-mix(in srgb, var(--primary) 80%, var(--text)); color: #fff; }
-  .year-day.level-3, .year-legend-box.level-3 { background: color-mix(in srgb, var(--primary) 60%, var(--text)); color: #fff; }
-  .year-day.level-4, .year-legend-box.level-4 { background: color-mix(in srgb, var(--primary) 40%, var(--text)); color: #fff; }
-  .year-day.level-5, .year-legend-box.level-5 { background: color-mix(in srgb, var(--primary) 20%, var(--text)); color: #fff; }
+  .year-day.level-1, .year-legend-box.level-1 { background: color-mix(in srgb, var(--primary) 20%, var(--card)); color: var(--text); }
+  .year-day.level-2, .year-legend-box.level-2 { background: color-mix(in srgb, var(--primary) 40%, var(--card)); color: var(--text); }
+  .year-day.level-3, .year-legend-box.level-3 { background: color-mix(in srgb, var(--primary) 60%, var(--card)); color: var(--text); }
+  .year-day.level-4, .year-legend-box.level-4 { background: color-mix(in srgb, var(--primary) 80%, var(--card)); color: #fff; }
+  .year-day.level-5, .year-legend-box.level-5 { background: var(--primary); color: #fff; }
   .year-legend-box.level-0 { background: var(--tint-soft); }
   .year-legend {
     display: flex;
@@ -1328,6 +1359,19 @@
     text-align: center;
     line-height: 11px;
   }
+  /* 日程标题里的课程名：只减淡颜色，字号与正文一致，内联在同一段文字里 */
+  .event-course-label {
+    color: var(--muted);
+    font-weight: 400;
+    margin-right: 4px;
+  }
+
+  /* 设置面板里的二级标题：挂在「DDL」这类分组下面 */
+  .setting-sub-label {
+    font-weight: 500;
+    color: var(--sub);
+  }
+
   /* DDL 折叠设置：勾选框 + 单一圆角步进器 */
   .ddl-collapse-row {
     display: flex;
@@ -1478,15 +1522,9 @@
   .ddl-bar .ddl-bar-label { overflow: hidden; text-overflow: ellipsis; }
   /* 今天截止 / 已过期 / 已完成：没有可画的区间，退化成小胶囊 */
   .ddl-bar.chip { width: auto !important; }
-  /* 条太短放不下天数文字：补到最小宽度，右端虚线提示比例被压缩 */
-  .ddl-bar.clamped {
-    border-right: 3px dashed color-mix(in srgb, var(--text) 60%, transparent);
-    box-shadow: inset -12px 0 9px -8px color-mix(in srgb, var(--text) 18%, transparent);
-  }
-  /* 截止日超出日期轴上限：条拉满，右端用虚线提示还有更多 */
-  .ddl-bar.beyond {
-    border-right: 2px dashed color-mix(in srgb, var(--text) 35%, transparent);
-  }
+  /* 说明：以前「条太短被补到最小宽度」和「超出轴上限」都会在右端画虚线，
+     看起来像是渲染瑕疵，已去掉。.clamped / .beyond 这两个类仍由 JS 加上，
+     但只保留宽度含义，不再有视觉样式。 */
 
   /* 分类 / 状态配色：名称条与天数条同色 */
   /* 名称条与天数条同色：类目走 --cat-X-strong，状态走 --ddl-* 的 40% 派生，文字统一 --text 保对比度 */
@@ -1499,6 +1537,8 @@
   .ddl-name-bar.color-today,     .ddl-bar.color-today     { background: var(--ddl-today-bg); border-left-color: var(--ddl-today); color: var(--text); }
   .ddl-name-bar.color-overdue,   .ddl-bar.color-overdue   { background: color-mix(in srgb, var(--ddl-overdue) 35%, var(--card)); border-left-color: var(--ddl-overdue); color: var(--text); }
   .ddl-name-bar.color-completed, .ddl-bar.color-completed { background: color-mix(in srgb, var(--ddl-done) 40%, var(--card)); border-left-color: var(--ddl-done); color: var(--text); }
+  /* 紧急：低饱和红（用主题里本就偏灰的 overdue 色再压低一档） */
+  .ddl-name-bar.color-urgent,    .ddl-bar.color-urgent    { background: color-mix(in srgb, var(--ddl-overdue) 20%, var(--card)); border-left-color: color-mix(in srgb, var(--ddl-overdue) 70%, var(--card)); color: var(--text); }
   .ddl-name-bar.color-completed .ddl-title { text-decoration: line-through; }
 
   /* 全部完成时的报喜提示 */
@@ -1760,6 +1800,39 @@
     transition: border 0.2s;
   }
   .modal input:focus, .modal select:focus, .modal textarea:focus { border-color: var(--primary); }
+
+  /* 「选择或新建项目」自绘下拉：原生 datalist 的字体由浏览器决定，改不了，所以自己画 */
+  .project-combo { position: relative; }
+  .project-suggest {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 3px);
+    z-index: 30;
+    padding: 4px 0;
+    max-height: 180px;
+    overflow-y: auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    box-shadow: 0 8px 20px color-mix(in srgb, var(--text) 16%, transparent);
+  }
+  .project-suggest-item {
+    padding: 6px 12px;
+    font-size: var(--fs-14);
+    font-weight: 400;
+    color: var(--text);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .project-suggest-item:hover { background: var(--tint); }
+  .project-suggest-empty {
+    padding: 6px 12px;
+    font-size: var(--fs-14);
+    color: var(--muted);
+  }
   .modal textarea { resize: vertical; min-height: 60px; }
   /* 原生下拉箭头贴边难看：换成自绘箭头，并内收 14px */
   .modal select {
@@ -1777,6 +1850,63 @@
   .modal .dt-row { display: flex; align-items: center; gap: 8px; }
   .modal .dt-row input[type="date"] { flex: 1 1 130px; min-width: 0; width: auto; }
   .modal .dt-row input[type="time"] { flex: 0 0 118px; width: 118px; }
+  /* 重复日期：点一次选中、再点取消，按住拖动可连续多选 */
+  .repeat-box { position: relative; }
+  #eventRepeat { cursor: pointer; }
+  .repeat-pop {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: calc(100% + 4px);
+    z-index: 40;
+    padding: 10px 10px 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--text) 18%, transparent);
+  }
+  .rp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: var(--fs-13);
+    color: var(--text);
+  }
+  .rp-head button {
+    border: none;
+    background: none;
+    color: var(--sub);
+    font-size: var(--fs-16);
+    line-height: 1;
+    padding: 2px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  .rp-head button:hover { background: var(--tint); }
+  .rp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; }
+  .rp-wd {
+    text-align: center;
+    font-size: var(--fs-10);
+    color: var(--muted);
+    padding: 2px 0;
+  }
+  .rp-day {
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--fs-12);
+    border-radius: 6px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    touch-action: none;
+  }
+  .rp-day:hover { background: var(--tint); }
+  .rp-day.other { visibility: hidden; cursor: default; }
+  .rp-day.sel { background: var(--primary); color: #fff; }
+  .rp-hint { margin-top: 6px; font-size: var(--fs-10); color: var(--muted); }
 
   .modal .btn-row { display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end; }
 
@@ -2175,6 +2305,37 @@
     transition: background 0.2s;
   }
   .habit-add-btn { background: var(--primary); color: var(--card); }
+  /* 习惯名前的色卡小方块 + 表头「＋」 */
+  .habit-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    border-radius: 2.5px;
+    margin-right: 7px;
+    vertical-align: middle;
+    flex: 0 0 auto;
+  }
+  .habit-table td.habit-name-cell { cursor: pointer; }
+  .habit-table td.habit-name-cell:hover .habit-name-text {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+  .habit-name-text { vertical-align: middle; }
+  .habit-add-plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    margin-left: 8px;
+    border-radius: 50%;
+    color: var(--sub);
+    font-size: var(--fs-13);
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .habit-add-plus:hover { background: var(--tint); color: var(--text); }
   .habit-add-btn:hover { background: var(--primary-dark); }
   /* 删除按钮沿用主题的逾期色做浅底 + 同色文字，切主题跟着走 */
   .habit-remove-btn { background: color-mix(in srgb, var(--ddl-overdue) 16%, var(--card)); color: var(--ddl-overdue); }
@@ -2277,6 +2438,70 @@
   .mood-legend-dot.sad { background: var(--cat-exercise); }
   .mood-legend-dot.tired { background: var(--muted); }
   .mood-legend-dot.angry { background: var(--ddl-overdue); }
+  /* 图例可点：悬停出现下划线，「＋」用来新建心情 */
+  .mood-legend-item { cursor: pointer; }
+  .mood-legend-item:hover .mood-legend-name { text-decoration: underline; text-underline-offset: 3px; }
+  .mood-legend-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    color: var(--sub);
+    font-size: var(--fs-15);
+    line-height: 1;
+    cursor: pointer;
+    transition: background .15s, color .15s;
+  }
+  .mood-legend-add:hover { background: var(--tint); color: var(--text); }
+  /* 心情设置弹窗 */
+  /* 心情/习惯/分类三个设置弹窗共用：收窄到刚好装下色卡（6 列 × 20px + 间距） */
+  .mood-editor {
+    width: min(92vw, 264px);
+    max-width: 264px;
+    padding: 22px 20px;
+  }
+  /* 底部三个按钮均匀分布：删除（红）、取消、保存 */
+  .mood-editor .btn-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 18px;
+  }
+  .mood-editor .btn-row button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 8px 0;
+  }
+  .mood-editor .btn-row .btn-delete {
+    margin-right: 0;
+    background: color-mix(in srgb, var(--ddl-overdue) 88%, var(--text));
+    color: #fff;
+  }
+  .mood-editor .btn-row .btn-delete:hover {
+    background: var(--ddl-overdue);
+  }
+  /* 参考 Word 的取色板：一列一个色系，由上到下越来越深 */
+  .mood-color-grid {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-rows: repeat(5, 20px);
+    grid-auto-columns: 20px;
+    gap: 6px;
+    margin-top: 6px;
+    justify-content: start;
+  }
+  .mood-color-swatch {
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    border: 2px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform .12s, border-color .12s;
+  }
+  .mood-color-swatch:hover { transform: scale(1.08); }
+  .mood-color-swatch.active { border-color: var(--text); box-shadow: 0 0 0 2px var(--card) inset; }
 
   .mood-grid-wrap {
     border-radius: 12px;
@@ -2563,6 +2788,21 @@
     align-items: center;
   }
 
+  /* 饼图（含图例）在左、柱状图在右，同一行；只按内容宽度占位 */
+  .chart-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .chart-col-pie { flex: 0 0 auto; }
+  .chart-bar-wrap {
+    flex: 1 1 auto;
+    min-width: 280px;
+    max-width: 640px;
+  }
+  .chart-bar-wrap canvas { display: block; width: 100%; height: 150px; }
   .chart-legend {
     display: flex;
     flex-wrap: wrap;
@@ -2897,6 +3137,16 @@
   .toast.show { opacity: 1; transform: translateY(0); }
   /* 失败气泡跟主题走；85% 混 --text 是为了在沙色主题下也保住白字 4.5 对比度 */
   .toast.err { background: color-mix(in srgb, var(--ddl-overdue) 85%, var(--text)); }
+  /* 胶囊里可点的动作文字：鹅黄 + 下划线 */
+  .toast-link {
+    color: #F0D07A;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+    margin: 0 1px;
+  }
+  .toast-link:hover { color: #F7E2A6; }
   /* ===== 删除后的撤销胶囊（底部居中） ===== */
   .undo-toast {
     pointer-events: auto;
@@ -2940,7 +3190,22 @@
     transition: padding-left 0.22s ease, padding-right 0.22s ease;
   }
   html.stats-hidden body { padding-right: 24px; }
-  .app-shell { max-width: 1100px; margin: 0 auto; }
+  .app-shell {
+    max-width: 1100px;
+    margin: 0 auto;
+    transition: max-width .22s ease;
+  }
+  /* 任一侧收起/隐藏后，中间内容跟着变宽，自适应可用空间 */
+  html.rail-collapsed .app-shell,
+  html.stats-collapsed .app-shell,
+  html.stats-hidden .app-shell {
+    max-width: min(1600px, 100%);
+  }
+  /* 两侧都收起：再多给一点 */
+  html.rail-collapsed.stats-collapsed .app-shell,
+  html.rail-collapsed.stats-hidden .app-shell {
+    max-width: min(1900px, 100%);
+  }
 
   .app-rail {
     position: fixed; inset: 0 auto 0 0; z-index: 40;
@@ -3604,14 +3869,7 @@
 </div><!-- /bar-row -->
 
 <div class="header">
-  <div class="legend">
-    <div class="legend-item"><span class="legend-dot work"></span> 工作</div>
-    <div class="legend-item"><span class="legend-dot exercise"></span> 运动</div>
-    <div class="legend-item"><span class="legend-dot life"></span> 生活</div>
-    <div class="legend-item"><span class="legend-dot study"></span> 学习</div>
-    <div class="legend-item"><span class="legend-dot social"></span> 社交</div>
-    <div class="legend-item"><span class="legend-dot course"></span> 课程</div>
-  </div>
+  <div class="legend" id="catLegend"></div>
   <div class="week-nav" id="weekNav">
     <button class="nav-icon" onclick="changeWeek(-1)" title="上一周" aria-label="上一周"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
     <span class="week-label" id="weekLabel"></span>
@@ -3633,6 +3891,7 @@
       </div>
     </span>
     <button onclick="goToday()">今天</button>
+    <button class="postpone-all-btn settings-btn" onclick="copyViewImage()" title="导出当前视图为图片（复制到剪贴板）" aria-label="导出"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg></button>
     <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
   </div>
   <div class="week-nav" id="monthNav" style="display:none;">
@@ -3640,6 +3899,15 @@
     <span class="week-label" id="monthLabel"></span>
     <button class="nav-icon" onclick="changeMonth(1)" title="下个月" aria-label="下个月"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
     <button onclick="goTodayMonth()" style="margin-left:8px;">本月</button>
+    <button class="postpone-all-btn settings-btn" onclick="copyViewImage()" title="导出当前视图为图片（复制到剪贴板）" aria-label="导出"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg></button>
+    <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
+  </div>
+  <div class="week-nav" id="yearNav" style="display:none;">
+    <button class="nav-icon" onclick="changeYear(-1)" title="上一年" aria-label="上一年"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg></button>
+    <span class="week-label" id="yearNavLabel"></span>
+    <button class="nav-icon" onclick="changeYear(1)" title="下一年" aria-label="下一年"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
+    <button onclick="goThisYear()" style="margin-left:8px;">本年</button>
+    <button class="postpone-all-btn settings-btn" onclick="copyViewImage()" title="导出当前视图为图片（复制到剪贴板）" aria-label="导出"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg></button>
     <button class="postpone-all-btn settings-btn" onclick="openSettings()" title="设置" aria-label="设置" style="padding:5px 9px;line-height:1"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg></button>
   </div>
 </div>
@@ -3767,22 +4035,12 @@
   <span class="month-label" id="habitMonthLabel"></span>
   <button onclick="changeHabitMonth(1)">下个月<svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></button>
 </div>
-<div class="habit-controls">
-  <input type="text" id="habitNameInput" placeholder="输入习惯名称，如：早起、阅读..." maxlength="20">
-  <button class="habit-add-btn" onclick="addHabit()">+ 添加习惯</button>
-  <button class="habit-remove-btn" onclick="removeLastHabit()">- 删除最后一个</button>
-</div>
 <span class="note-status" id="habitSyncStatus"></span>
 <div id="habitTableWrap"></div>
 
 <!-- 每日心情记录 -->
 <div class="section-title" id="secMood">每日心情</div>
-<div class="mood-legend">
-  <div class="mood-legend-item"><span class="mood-legend-dot happy"></span> 高兴</div>
-  <div class="mood-legend-item"><span class="mood-legend-dot sad"></span> 难过</div>
-  <div class="mood-legend-item"><span class="mood-legend-dot tired"></span> 劳累</div>
-  <div class="mood-legend-item"><span class="mood-legend-dot angry"></span> 生气</div>
-</div>
+<div class="mood-legend" id="moodLegend"></div>
 <div class="habit-month-nav">
   <button onclick="changeMoodMonth(-1)"><svg class="nav-arrow" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg>上个月</button>
   <span class="month-label" id="moodMonthLabel"></span>
@@ -3831,10 +4089,17 @@
     <button class="chart-view-btn" data-view="week" onclick="switchChartView('week')">周</button>
     <button class="chart-view-btn" data-view="month" onclick="switchChartView('month')">月</button>
   </div>
-  <div class="chart-canvas-wrap">
-    <canvas id="pieChart" width="200" height="200"></canvas>
+  <div class="chart-row">
+    <div class="chart-col-pie">
+      <div class="chart-canvas-wrap">
+        <canvas id="pieChart" width="200" height="200"></canvas>
+      </div>
+      <div class="chart-legend" id="chartLegend"></div>
+    </div>
+    <div class="chart-bar-wrap" id="chartBarWrap" style="display:none">
+      <canvas id="barChart" width="520" height="150"></canvas>
+    </div>
   </div>
-  <div class="chart-legend" id="chartLegend"></div>
 </div>
 
 <div class="footer">点击日期添加事项 · 可设置时间自动排序 · 无时间任务可拖拽排序 · 过往事项可顺延到今天 · 编辑先保存在本地 · 点击顶部保存按钮写入 Obsidian 库</div>
@@ -3871,17 +4136,17 @@
         <input type="time" id="eventEndTime">
       </div>
     </div>
+    <div id="rowRepeat">
+      <label>重复（时间可选）</label>
+      <div class="repeat-box">
+        <input type="text" id="eventRepeat" readonly placeholder="点击选择要重复的日期（可拖动连选）">
+        <div class="repeat-pop" id="repeatPop" style="display:none"></div>
+      </div>
+    </div>
     <label>内容</label>
     <textarea id="eventContent" placeholder="例如：跑步3公里"></textarea>
     <label>分类</label>
-    <select id="eventCategory" onchange="updateCourseRow()">
-      <option value="work">工作</option>
-      <option value="exercise">运动</option>
-      <option value="life">生活</option>
-      <option value="study">学习</option>
-      <option value="social">社交</option>
-      <option value="course">课程</option>
-    </select>
+    <select id="eventCategory" onchange="updateCourseRow()"></select>
     <div id="rowCourse">
       <label>课程</label>
       <select id="eventCourse"></select>
@@ -3894,8 +4159,10 @@
       </select>
       <div id="projectSelectWrap" style="display:none">
         <label>选择或新建项目</label>
-        <input type="text" id="eventProjectName" list="projectOptions" placeholder="输入项目名称，或从列表选择">
-        <datalist id="projectOptions"></datalist>
+        <div class="project-combo">
+          <input type="text" id="eventProjectName" placeholder="输入项目名称，或从列表选择" autocomplete="off">
+          <div class="project-suggest" id="projectSuggest" style="display:none"></div>
+        </div>
       </div>
     </div>
 
@@ -4049,7 +4316,8 @@
             <span id="optDdlCompValue" style="font-size:var(--fs-12);color:var(--muted);min-width:34px;text-align:right">40%</span>
           </div>
 
-          <label class="settings-label">DDL 折叠时显示</label>
+          <label class="settings-label">DDL</label>
+          <label class="setting-sub-label" style="margin-top:10px">DDL 折叠时显示</label>
           <div class="ddl-collapse-row" id="ddlCollapseRowCount">
             <button type="button" class="ddl-collapse-check" id="optDdlCollapseCountCheck" onclick="toggleDdlCollapseMode('count')" aria-label="按条数折叠"></button>
             <span>折叠状态下最多显示</span>
@@ -4071,6 +4339,17 @@
             <span>周内日程</span>
           </div>
           <div class="setting-hint" style="margin-top:6px">两个选项只能选一个；都不选就全部平铺</div>
+
+          <label class="setting-sub-label" style="margin-top:12px">紧急 DDL</label>
+          <div class="ddl-collapse-row">
+            <span>距 DDL</span>
+            <div class="ddl-stepper">
+              <button type="button" onclick="stepDdlUrgent(-1)" aria-label="减少">‹</button>
+              <input type="number" id="optDdlUrgentDays" min="0" max="60" step="1" value="3" onchange="setDdlUrgentDays(this.value)">
+              <button type="button" onclick="stepDdlUrgent(1)" aria-label="增加">›</button>
+            </div>
+            <span>天内视为紧急</span>
+          </div>
 
           <label class="settings-label">最近笔记</label>
           <div class="setting-row">
@@ -4156,6 +4435,186 @@ const DAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周�
 var zsFreshStore = false;
 try { zsFreshStore = localStorage.getItem('weeklyPlanEvents') === null; } catch (e0) {}
 const CATEGORY_NAMES = { work: '工作', exercise: '运动', life: '生活', study: '学习', course: '课程', social: '社交' };
+
+/* ===== 日程分类：内置 6 种 + 自定义（存在 settings.categories） ===== */
+const CATEGORY_DEFAULT_COLORS = {
+  work: 'var(--cat-work)', exercise: 'var(--cat-exercise)', life: 'var(--cat-life)',
+  study: 'var(--cat-study)', social: 'var(--cat-social)', course: 'var(--cat-course)'
+};
+function defaultCategories() {
+  return Object.keys(CATEGORY_NAMES).map(function (k) {
+    return { key: k, name: CATEGORY_NAMES[k], color: CATEGORY_DEFAULT_COLORS[k], builtin: true };
+  });
+}
+function getCategories() {
+  var s = loadSettings();
+  var list = (s && Array.isArray(s.categories) && s.categories.length) ? s.categories : defaultCategories();
+  return list.map(function (m) {
+    return { key: m.key, name: m.name, color: m.color || 'var(--muted)', builtin: !!m.builtin || !!CATEGORY_NAMES[m.key] };
+  });
+}
+function categoryByKey(key) {
+  var list = getCategories();
+  for (var i = 0; i < list.length; i++) if (list[i].key === key) return list[i];
+  return null;
+}
+function categoryNameOf(key) {
+  var m = categoryByKey(key);
+  return m ? m.name : (CATEGORY_NAMES[key] || key || '');
+}
+function categoryColorOf(key) {
+  var m = categoryByKey(key);
+  return m ? m.color : (CATEGORY_DEFAULT_COLORS[key] || '');
+}
+function saveCategories(list) {
+  var s = loadSettings();
+  s.categories = list;
+  saveSettings(s);
+}
+
+/* ===== 顶部图例：点名称进设置，末尾「＋」新建 ===== */
+function renderCategoryLegend() {
+  var box = document.getElementById('catLegend');
+  if (!box) return;
+  box.innerHTML = '';
+  getCategories().forEach(function (m) {
+    var item = document.createElement('div');
+    item.className = 'legend-item';
+    item.title = '点击设置「' + m.name + '」';
+    var dot = document.createElement('span');
+    dot.className = 'legend-dot';
+    dot.style.background = m.color;
+    var label = document.createElement('span');
+    label.className = 'legend-name';
+    label.textContent = m.name;
+    item.appendChild(dot);
+    item.appendChild(label);
+    item.addEventListener('click', function () { openCategoryEditor(m.key); });
+    box.appendChild(item);
+  });
+  var add = document.createElement('div');
+  add.className = 'legend-add';
+  add.textContent = '＋';
+  add.title = '新建日程分类';
+  add.addEventListener('click', function () { openCategoryEditor(null); });
+  box.appendChild(add);
+}
+
+/* 分类下拉也是动态的 */
+function renderCategoryOptions() {
+  var sel = document.getElementById('eventCategory');
+  if (!sel) return;
+  var cur = sel.value;
+  sel.innerHTML = '';
+  getCategories().forEach(function (m) {
+    var o = document.createElement('option');
+    o.value = m.key;
+    o.textContent = m.name;
+    sel.appendChild(o);
+  });
+  if (cur && categoryByKey(cur)) sel.value = cur;
+}
+
+/* ===== 分类设置弹窗 ===== */
+var catEditKey = null;
+
+function ensureCategoryEditor() {
+  var el = document.getElementById('catEditorOverlay');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'catEditorOverlay';
+  el.className = 'modal-overlay cat-editor-overlay';
+  el.innerHTML = ''
+    + '<div class="modal mood-editor">'
+    + '  <h3 id="catEditorTitle">分类设置</h3>'
+    + '  <label>名称</label>'
+    + '  <input type="text" id="catEditorName" maxlength="8" placeholder="例如：学习">'
+    + '  <label style="margin-top:14px">颜色</label>'
+    + '  <div class="mood-color-grid" id="catColorGrid"></div>'
+    + '  <div class="btn-row" style="margin-top:18px">'
+    + '    <button class="btn-delete" type="button" id="catEditorDelete" onclick="deleteCategoryEditor()">删除</button>'
+    + '    <button class="btn-cancel" type="button" onclick="closeCategoryEditor()">取消</button>'
+    + '    <button class="btn-save" type="button" onclick="saveCategoryEditor()">保存</button>'
+    + '  </div>'
+    + '</div>';
+  document.body.appendChild(el);
+  el.addEventListener('click', function (e) { if (e.target === el) closeCategoryEditor(); });
+  return el;
+}
+
+function openCategoryEditor(key) {
+  var el = ensureCategoryEditor();
+  catEditKey = key || null;
+  var cat = key ? categoryByKey(key) : null;
+  document.getElementById('catEditorTitle').textContent = cat ? '分类设置' : '新建分类';
+  document.getElementById('catEditorName').value = cat ? cat.name : '';
+  var del = document.getElementById('catEditorDelete');
+  if (del) del.style.display = (cat && cat.builtin) ? 'none' : '';
+
+  var grid = document.getElementById('catColorGrid');
+  grid.innerHTML = '';
+  var cur = cat ? cat.color : '';
+  moodPalette().forEach(function (p) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mood-color-swatch' + (p.color === cur ? ' active' : '');
+    b.style.background = p.color;
+    b.title = p.name + ' ' + p.color;
+    b.dataset.color = p.color;
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(grid.children, function (c) { c.classList.remove('active'); });
+      b.classList.add('active');
+    });
+    grid.appendChild(b);
+  });
+  el.classList.add('active');
+  setTimeout(function () { var inp = document.getElementById('catEditorName'); if (inp) inp.focus(); }, 30);
+}
+
+function closeCategoryEditor() {
+  var el = document.getElementById('catEditorOverlay');
+  if (el) el.classList.remove('active');
+  catEditKey = null;
+}
+
+function saveCategoryEditor() {
+  var name = document.getElementById('catEditorName').value.trim();
+  if (!name) { showToast('请先填分类名称', false); return; }
+  var grid = document.getElementById('catColorGrid');
+  var active = grid.querySelector('.mood-color-swatch.active');
+  var color = active ? active.dataset.color : '#9EB9C9';
+  var list = getCategories();
+  var dup = list.filter(function (m) { return m.name === name && m.key !== catEditKey; });
+  if (dup.length) { showToast('已经有同名分类了', false); return; }
+
+  if (catEditKey) {
+    list = list.map(function (m) {
+      return m.key === catEditKey ? { key: m.key, name: name, color: color, builtin: m.builtin } : m;
+    });
+  } else {
+    list = list.concat([{ key: 'c' + Date.now().toString(36), name: name, color: color }]);
+  }
+  saveCategories(list);
+  var wasEdit = !!catEditKey;
+  closeCategoryEditor();
+  renderCategoryLegend();
+  renderCategoryOptions();
+  try { render(); } catch (e) {}
+  showToast(wasEdit ? '分类「' + name + '」已更新' : '已新建分类「' + name + '」', true);
+}
+
+function deleteCategoryEditor() {
+  if (!catEditKey) return;
+  var cat = categoryByKey(catEditKey);
+  if (cat && cat.builtin) { showToast('内置分类不能删除', false); return; }
+  var list = getCategories().filter(function (m) { return m.key !== catEditKey; });
+  saveCategories(list);
+  closeCategoryEditor();
+  renderCategoryLegend();
+  renderCategoryOptions();
+  try { render(); } catch (e) {}
+  showToast('已删除该分类', true);
+}
 
 /* ===== 重大操作确认 =====
    删除、覆盖、切换数据源这类需要二次确认的操作统一走这里，默认按钮是「取消」 */
@@ -4490,6 +4949,18 @@ function cssColor(name) {
   return getComputedStyle(_cssProbeEl).color;
 }
 
+/* 直接给一个颜色串（hex / rgb / color-mix）求它的计算值，供 canvas 使用 */
+function cssColorValue(value) {
+  if (!_cssProbeEl) {
+    _cssProbeEl = document.createElement('span');
+    _cssProbeEl.style.cssText = 'position:absolute;left:-9999px;top:0;width:0;height:0;';
+    document.body.appendChild(_cssProbeEl);
+  }
+  _cssProbeEl.style.color = '';
+  _cssProbeEl.style.color = value || 'transparent';
+  return getComputedStyle(_cssProbeEl).color;
+}
+
 /* ===== 自定义背景：图片存 IndexedDB，固定层垫底 + 可调模糊 ===== */
 const BG_KEY = 'customBackground';
 var bgObjectUrl = null;
@@ -4654,6 +5125,25 @@ function setDdlCollapseWeeks(v) {
   if (input) input.value = String(n);
   paintDdlCollapseUi();
   renderDDLCountdown();
+}
+
+/* 紧急 DDL：距截止 N 天内（0 = 关闭） */
+function setDdlUrgentDays(v) {
+  var n = parseInt(v, 10);
+  if (isNaN(n)) n = 3;
+  n = Math.max(0, Math.min(60, n));
+  var s = loadSettings();
+  s.ddlUrgentDays = n;
+  saveSettings(s);
+  var input = document.getElementById('optDdlUrgentDays');
+  if (input) input.value = String(n);
+  renderDDLCountdown();
+}
+
+function stepDdlUrgent(delta) {
+  var s = loadSettings();
+  var cur = (s.ddlUrgentDays === undefined) ? 3 : s.ddlUrgentDays;
+  setDdlUrgentDays(cur + delta);
 }
 
 /* ‹ › 快捷调节：kind = 'count' | 'weeks' */
@@ -4885,19 +5375,60 @@ var GREETINGS = [
 ];
 var GREETING_SLOT_MS = 2 * 60 * 60 * 1000;
 
-function greetingIndex() {
+/* 今天记了心情，就换成对应心情的文案池；没记则回落到上面的通用池。
+   按 key 匹配（不是名字），所以内置心情改名后依然生效。 */
+var MOOD_GREETINGS = {
+  happy: [
+    '{name}，心情这么好，今天做什么都会顺的',
+    '{name}，看到你开心，我也跟着高兴',
+    '{name}，把这份好心情存起来，留着以后用',
+    '{name}，今天状态在线，Keep 住'
+  ],
+  sad: [
+    '{name}，难过也没关系，先让它待一会儿',
+    '{name}，先给自己倒杯热水吧，慢慢会好的',
+    '{name}，今天不用勉强自己，慢慢来就行',
+    '{name}，我在这儿陪你，想说什么都可以写下来'
+  ],
+  tired: [
+    '{name}，累了就先停一下，真的不差这一会儿',
+    '{name}，闭眼歇五分钟，比硬撑管用',
+    '{name}，今天已经做得够多了，剩下的明天再说',
+    '{name}，去看看窗外，让眼睛也休息一下'
+  ],
+  angry: [
+    '{name}，生气了就先别憋着，写下来会好受一点',
+    '{name}，先深呼吸三次，再决定要不要理它',
+    '{name}，这事确实让人上火，我站你这边',
+    '{name}，喝口水，把火气冲淡一点'
+  ]
+};
+
+function todayMoodKey() {
+  try {
+    var rec = loadMoodRecords();
+    return rec[formatDate(new Date())] || '';
+  } catch (e) { return ''; }
+}
+
+function greetingPool() {
+  var pool = MOOD_GREETINGS[todayMoodKey()];
+  return (pool && pool.length) ? pool : GREETINGS;
+}
+
+function greetingIndex(n) {
   var now = Date.now();
   var slot = Math.floor(now / GREETING_SLOT_MS);
   var dayIndex = Math.floor((now - new Date().getTimezoneOffset() * 60000) / 86400000);
-  var n = GREETINGS.length;
   return ((slot + dayIndex * 5) % n + n) % n;
 }
 
 function currentGreeting() {
   var name = String(loadSettings().userName || '').trim() || '你';
-  var n = GREETINGS.length;
-  var idx = ((greetingIndex() + greetingOffset()) % n + n) % n;
-  return GREETINGS[idx].replace('{name}', name);
+  var pool = greetingPool();
+  var n = pool.length;
+  var idx = ((greetingIndex(n) + greetingOffset()) % n + n) % n;
+  return pool[idx].replace('{name}', name);
 }
 
 /* 点击换一句：偏移量只在「当前 2 小时时段」有效，跨时段自动回落（sessionStorage，不进口令式设置） */
@@ -4911,14 +5442,14 @@ function greetingOffset() {
   try {
     var raw = JSON.parse(sessionStorage.getItem(GREETING_KEY) || 'null');
     if (!raw || raw.slot !== greetingSlotId()) return 0;
-    var n = GREETINGS.length;
+    var n = greetingPool().length;
     var off = Number(raw.offset) || 0;
     return ((off % n) + n) % n;
   } catch (e) { return 0; }
 }
 
 function cycleGreeting() {
-  var n = GREETINGS.length;
+  var n = greetingPool().length;
   if (n <= 1) return;
   var next = (greetingOffset() + 1) % n;
   try { sessionStorage.setItem(GREETING_KEY, JSON.stringify({ slot: greetingSlotId(), offset: next })); } catch (e) {}
@@ -5354,6 +5885,8 @@ if (c2b) c2b.checked = s.weekTimeline !== false;
   if (dccInput) dccInput.value = String(s.ddlCollapseCount || 5);
   var dcwInput = document.getElementById('optDdlCollapseWeeks');
   if (dcwInput) dcwInput.value = String(s.ddlCollapseWeeks || 1);
+  var urgentInput = document.getElementById('optDdlUrgentDays');
+  if (urgentInput) urgentInput.value = String(s.ddlUrgentDays === undefined ? 3 : s.ddlUrgentDays);
   try { paintDdlCollapseUi(); } catch (e) {}
   var st = document.getElementById('optShowStats');
   if (st) st.checked = s.showStats !== false;
@@ -5617,12 +6150,27 @@ function createEventEl(ev, dateStr, dayEvents) {
   const notesMark = ev.notes ? '…' : '';
 
   const chunks = splitEventContent(ev);
-  const locHtml = chunks.loc
+  /* 手动指定了课程的日程：课程名已经被拼进 content 开头，splitEventContent 会把它当标题、
+     把真正的内容当"地点"，而流式排布里地点是隐藏的 —— 结果只看得见课程名。
+     这里改成：淡色「课程」标签 + 真正的内容；课表生成的条目保持原样。 */
+  const hasManualCourse = !!(ev.course && ev.ttGen !== true);
+  /* 不写「课程」两个字：把课程名本身淡显放在前面，正文保持正常颜色 */
+  const courseLabelHtml = hasManualCourse
+    ? '<span class="event-course-label">' + escapeHtml(String(ev.course)) + '</span>'
+    : '';
+  const titleText = hasManualCourse ? (chunks.loc || '') : chunks.name;
+  const locHtml = (!hasManualCourse && chunks.loc)
     ? `<span class="event-loc">${PIN_SVG}${escapeHtml(chunks.loc)}</span>`
     : '';
   const checkBtn = isCourseEv ? '' : `<button class="complete-btn${checkedClass}" title="完成" data-idx="${idx}"></button>`;
-  const tagName = isCourseEv ? '课程' : CATEGORY_NAMES[ev.category];
-  el.innerHTML = `${checkBtn}<span class="tag">${tagName}</span><span class="event-body"><span class="event-content">${chunks.name}${notesMark}</span>${locHtml}</span><button class="delete-btn" title="删除" data-idx="${idx}">&times;</button>${postponeBtn}`;
+  const tagName = isCourseEv ? categoryNameOf('course') : categoryNameOf(ev.category);
+  /* 自定义分类（或改过色的内置分类）用行内配色，内置默认色继续走 CSS 变量 */
+  const catColor = categoryColorOf(ev.category);
+  if (catColor && catColor.indexOf('var(--cat-') !== 0) {
+    el.style.borderLeftColor = catColor;
+    el.style.background = 'color-mix(in srgb, ' + catColor + ' 12%, var(--card))';
+    el.style.color = 'color-mix(in srgb, ' + catColor + ' 32%, var(--text))';
+  }  el.innerHTML = `${checkBtn}<span class="tag">${tagName}</span><span class="event-body"><span class="event-content">${courseLabelHtml}${escapeHtml(titleText)}${notesMark}</span>${locHtml}</span><button class="delete-btn" title="删除" data-idx="${idx}">&times;</button>${postponeBtn}`;
   const completeBtnEl = el.querySelector('.complete-btn');
   if (completeBtnEl) {
     completeBtnEl.addEventListener('click', (e) => {
@@ -5892,9 +6440,33 @@ function renderWeekFlow(monday, events, cal) {
     cell.style.gridColumn = String(i + 1);
     cell.addEventListener('click', (e) => { if (e.target === cell) openAddModal(dateStr); });
 
-    /* 跨日拖放：拖到别的日期就挪过去 */
+    /* 跨日拖放：拖到别的日期就挪过去；同日拖动「无时间」事项可在当天上下重排 */
     cell.addEventListener('dragover', (e) => {
-      if (!dragCtx || dragCtx.date === dateStr) return;
+      if (!dragCtx) return;
+      if (dragCtx.date === dateStr) {
+        const draggingEl = cell.querySelector('.event.flow.dragging');
+        if (!draggingEl || !draggingEl.classList.contains('no-time')) return;
+        e.preventDefault();
+        const others = Array.prototype.filter.call(
+          cell.querySelectorAll('.event.flow.no-time:not(.dragging):not(.spanning-event)'),
+          (el) => el !== draggingEl
+        );
+        let afterEl = null;
+        for (let k = 0; k < others.length; k++) {
+          const r = others[k].getBoundingClientRect();
+          if (e.clientY < r.top + r.height / 2) { afterEl = others[k]; break; }
+        }
+        if (afterEl) {
+          cell.insertBefore(draggingEl, afterEl);
+        } else {
+          const last = others.length ? others[others.length - 1] : null;
+          if (last) {
+            if (last.nextSibling) cell.insertBefore(draggingEl, last.nextSibling);
+            else cell.appendChild(draggingEl);
+          }
+        }
+        return;
+      }
       e.preventDefault();
       cell.classList.add('drop-target');
     });
@@ -5903,7 +6475,40 @@ function renderWeekFlow(monday, events, cal) {
     });
     cell.addEventListener('drop', (e) => {
       cell.classList.remove('drop-target');
-      if (!dragCtx || dragCtx.date === dateStr) return;
+      if (!dragCtx) return;
+      if (dragCtx.date === dateStr) {
+        const draggedEl = cell.querySelector('.event.flow.dragging');
+        if (!draggedEl || !draggedEl.classList.contains('no-time')) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const domOrder = Array.prototype.map.call(
+          cell.querySelectorAll('.event.flow.no-time:not(.spanning-event)'),
+          (el) => {
+            const b = el.querySelector('.delete-btn');
+            return parseInt((b && b.dataset.idx) || '-1', 10);
+          }
+        ).filter((n) => n >= 0);
+        const all = loadEvents();
+        const list = all[dateStr] || [];
+        const slots = [];
+        list.forEach((ev, i) => { if (!ev.isDDL && !ev.time) slots.push(i); });
+        if (!domOrder.length || !slots.length) { dragCtx = null; return; }
+        const showDone = loadSettings().showCompleted !== false;
+        const newList = list.slice();
+        let vi = 0;
+        slots.forEach((slot) => {
+          const cur = list[slot];
+          if (cur && cur.done && !showDone) return;   /* 隐藏的已完成项保持原位 */
+          const srcIdx = domOrder[vi++];
+          if (srcIdx !== undefined && list[srcIdx]) newList[slot] = list[srcIdx];
+        });
+        all[dateStr] = newList;
+        saveEvents(all);
+        syncToFile();
+        dragCtx = null;
+        render();
+        return;
+      }
       e.preventDefault();
       const from = dragCtx;
       dragCtx = null;
@@ -5930,6 +6535,8 @@ function renderWeekFlow(monday, events, cal) {
     items.forEach((it) => {
       const el = createEventEl(it.ev, it.startDate, events[it.startDate] || []);
       el.classList.add('flow');
+      /* 无具体时间的事项可同日上下拖动重排 */
+      if (!it.ev.time) el.classList.add('no-time');
       if (it.ev.time) {
         const timeLabel = document.createElement('span');
         timeLabel.className = 'event-time';
@@ -5937,6 +6544,7 @@ function renderWeekFlow(monday, events, cal) {
         timeLabel.textContent = it.ev.time;
         const body0 = el.querySelector('.event-body') || el;
         body0.appendChild(timeLabel);
+        el.classList.add('has-time');
       }
       if (it.span) {
         el.classList.add('spanning-event');
@@ -5954,8 +6562,15 @@ function renderWeekFlow(monday, events, cal) {
 
     cal.appendChild(cell);
   }
+
+  /* 时间角标：取所在卡片的底色做背景，压住底下可能经过的文字 */
+  Array.prototype.forEach.call(cal.querySelectorAll('.event.flow.has-time .event-time'), function (tag) {
+    var card = tag.closest('.event');
+    if (card) tag.style.background = getComputedStyle(card).backgroundColor;
+  });
 }
 function render() {
+  try { renderCategoryLegend(); } catch (e) { console.warn('[分类] 图例渲染失败', e); }
   const monday = getMonday(weekOffset);
   const events = loadEvents();
   const cal = document.getElementById('calendar');
@@ -6265,12 +6880,9 @@ function renderYearView() {
   }
   var WEEKDAYS = ['一', '二', '三', '四', '五', '六', '日'];
   var MONTH_NAMES = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月'];
-  var html = '<div class="year-nav">';
-  html += '<button onclick="changeYear(-1)">← 上一年</button>';
-  html += '<span>' + year + ' 年</span>';
-  html += '<button onclick="changeYear(1)">下一年 →</button>';
-  html += '</div>';
-  html += '<div class="year-months">';
+  var yearLabelEl = document.getElementById('yearNavLabel');
+  if (yearLabelEl) yearLabelEl.textContent = year + ' 年';
+  var html = '<div class="year-months">';
   for (var m = 0; m < 12; m++) {
     html += '<div class="year-month">';
     html += '<div class="year-month-title">' + MONTH_NAMES[m] + '</div>';
@@ -6327,6 +6939,162 @@ function renderYearView() {
 function changeYear(dir) {
   yearOffset += dir;
   renderYearView();
+}
+
+/* 回到今年 */
+function goThisYear() {
+  yearOffset = 0;
+  renderYearView();
+}
+
+/* ===== 导出当前视图为图片（复制到剪贴板） ===== */
+function currentExportElement() {
+  var map = { week: 'calendar', month: 'monthCalendar', year: 'yearCalendar', tt: 'ttView' };
+  return document.getElementById(map[currentViewName] || 'calendar');
+}
+
+/* 把计算后的样式一条条写到克隆节点上，否则 foreignObject 里没有页面 CSS */
+function inlineExportStyles(src, dst) {
+  var cs = getComputedStyle(src);
+  for (var i = 0; i < cs.length; i++) {
+    var prop = cs[i];
+    dst.style.setProperty(prop, cs.getPropertyValue(prop), cs.getPropertyPriority(prop));
+  }
+  var sChain = src.children, dChain = dst.children;
+  for (var j = 0; j < sChain.length && j < dChain.length; j++) inlineExportStyles(sChain[j], dChain[j]);
+}
+
+/* 伪元素不会被 cloneNode 复制：把 ::before / ::after 的 content 变成真实 <span>，
+   否则导出的图里「勾选对勾」会变成一块实心方块 */
+function materializePseudoElements(srcRoot, dstRoot) {
+  var sList = [srcRoot].concat(Array.prototype.slice.call(srcRoot.querySelectorAll('*')));
+  var dList = [dstRoot].concat(Array.prototype.slice.call(dstRoot.querySelectorAll('*')));
+  var props = ['position', 'left', 'top', 'right', 'bottom', 'transform', 'display',
+    'fontSize', 'fontWeight', 'lineHeight', 'color', 'textAlign', 'marginLeft',
+    'marginRight', 'width', 'height'];
+  for (var i = 0; i < sList.length; i++) {
+    var s = sList[i], d = dList[i];
+    if (!s || !d) continue;
+    ['::before', '::after'].forEach(function (pseudo) {
+      var cs;
+      try { cs = getComputedStyle(s, pseudo); } catch (e) { return; }
+      var content = cs.getPropertyValue('content');
+      if (!content || content === 'none' || content === 'normal') return;
+      var text = content.replace(/^["']|["']$/g, '');
+      if (!text) return;
+      var span = document.createElement('span');
+      span.textContent = text;
+      /* 勾选框的对勾：用背景图绘制，避免文字基线在 foreignObject 里被裁掉 */
+      if (d.classList && d.classList.contains('complete-btn')) {
+        var checkSvg = "<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'>"
+          + "<path d='M20 6.5L9.2 17.3 4 12.1' fill='none' stroke='%23ffffff' stroke-width='3.4' stroke-linecap='round' stroke-linejoin='round'/></svg>";
+        d.style.backgroundImage = 'url("data:image/svg+xml;utf8,' + checkSvg + '")';
+        d.style.backgroundSize = '82% 82%';
+        d.style.backgroundPosition = 'center';
+        d.style.backgroundRepeat = 'no-repeat';
+        d.style.overflow = 'visible';
+        return;
+      } else {
+        props.forEach(function (p) { span.style.setProperty(p, cs.getPropertyValue(p)); });
+      }
+      if (d.firstChild && pseudo === '::before') d.insertBefore(span, d.firstChild);
+      else d.appendChild(span);
+    });
+  }
+}
+
+function elementToPngBlob(el, scale) {
+  return new Promise(function (resolve, reject) {
+    try {
+      var rect = el.getBoundingClientRect();
+      var w = Math.max(1, Math.ceil(rect.width));
+      var h = Math.max(1, Math.ceil(rect.height));
+      var clone = el.cloneNode(true);
+
+      /* <button> 在 foreignObject 里是原生控件，内部内容不绘制：换成等价的 div */
+      Array.prototype.forEach.call(Array.prototype.slice.call(clone.querySelectorAll('button')), function (b) {
+        var d = document.createElement('div');
+        d.className = b.className;
+        d.innerHTML = b.innerHTML;
+        b.parentNode.replaceChild(d, b);
+      });
+
+      /* canvas 在 foreignObject 里画不出来，先换成图片 */
+      var srcCanvas = el.querySelectorAll('canvas');
+      var dstCanvas = clone.querySelectorAll('canvas');
+      Array.prototype.forEach.call(dstCanvas, function (c, i) {
+        var src = srcCanvas[i];
+        if (!src) return;
+        var img = document.createElement('img');
+        try { img.src = src.toDataURL('image/png'); } catch (e) { return; }
+        img.style.width = Math.round(c.getBoundingClientRect().width) + 'px';
+        img.style.height = Math.round(c.getBoundingClientRect().height) + 'px';
+        c.parentNode.replaceChild(img, c);
+      });
+
+      inlineExportStyles(el, clone);
+      materializePseudoElements(el, clone);
+      clone.style.margin = '0';
+
+      var holder = document.createElement('div');
+      holder.setAttribute('xmlns', 'http://www.w3.org/1999/xhtml');
+      holder.style.width = w + 'px';
+      holder.style.height = h + 'px';
+      holder.style.background = '#ffffff';
+      holder.appendChild(clone);
+
+      var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + w + '" height="' + h + '">'
+        + '<foreignObject x="0" y="0" width="100%" height="100%">'
+        + new XMLSerializer().serializeToString(holder)
+        + '</foreignObject></svg>';
+
+      var img2 = new Image();
+      img2.onload = function () {
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img2, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob); else reject(new Error('生成图片失败'));
+        }, 'image/png');
+      };
+      img2.onerror = function () { reject(new Error('矢量转位图失败')); };
+      img2.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+    } catch (e) { reject(e); }
+  });
+}
+
+var VIEW_NAMES_CN = { week: '周视图', month: '月视图', year: '年视图', tt: '课程表' };
+
+async function copyViewImage() {
+  var el = currentExportElement();
+  if (!el) { showToast('当前视图没有可导出的内容', false); return; }
+  setSyncStatus('正在生成图片…', true, 3000);
+  var blob = null;
+  try {
+    blob = await elementToPngBlob(el, 2);
+  } catch (e) {
+    showToast('生成图片失败：' + (e && e.message ? e.message : e), false, 5000);
+    return;
+  }
+  /* 优先写剪贴板；file:// 下若被拒，退化成下载 */
+  if (navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+      showToast('当前视图已复制到剪贴板', true, 2600);
+      return;
+    } catch (e) { /* 落到下载 */ }
+  }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '猪事顺利-' + (VIEW_NAMES_CN[currentViewName] || '视图') + '-' + formatDate(new Date()) + '.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
 }
 
 // ========== Bento Grid 交互 ==========
@@ -6559,6 +7327,7 @@ function switchView(view) {
   const ttView = document.getElementById('ttView');
   const weekNav = document.getElementById('weekNav');
   const monthNav = document.getElementById('monthNav');
+  const yearNav = document.getElementById('yearNav');
   const viewBtns = document.querySelectorAll('.view-btn');
 
   viewBtns.forEach(btn => btn.classList.remove('active'));
@@ -6570,6 +7339,7 @@ function switchView(view) {
   if (ttView) ttView.style.display = 'none';
   weekNav.style.display = 'none';
   monthNav.style.display = 'none';
+  if (yearNav) yearNav.style.display = 'none';
 
   if (view === 'week') {
     calendar.style.display = '';
@@ -6581,6 +7351,7 @@ function switchView(view) {
     renderMonthCalendar();
   } else if (view === 'year') {
     yearViewContainer.style.display = '';
+    if (yearNav) yearNav.style.display = 'flex';
     renderYearView();
     loadBentoData();
   } else if (view === 'tt') {
@@ -6594,11 +7365,20 @@ function switchView(view) {
 }
 
 /* 当前视图是哪一种就重绘哪一种：删改事项后月/年/课程表都要跟着更新 */
+/* 不属于任何单一视图的区块（统计图、项目追踪、DDL 倒计时、右栏统计）：
+   任何视图下改动数据都要刷新它们，否则会出现「项目时间线不跟着日程更新」 */
+function refreshGlobalBlocks() {
+  try { renderPieChart(); } catch (e) {}
+  try { renderProjectFlow(); } catch (e) {}
+  try { renderDDLCountdown(); } catch (e) {}
+  try { renderSideStats(); } catch (e) {}
+}
+
 function refreshCurrentView() {
-  if (currentViewName === 'month') { renderMonthCalendar(); return; }
-  if (currentViewName === 'year') { renderYearView(); loadBentoData(); return; }
-  if (currentViewName === 'tt') { renderTimetable(); return; }
-  render();
+  if (currentViewName === 'month') { renderMonthCalendar(); refreshGlobalBlocks(); return; }
+  if (currentViewName === 'year') { renderYearView(); loadBentoData(); refreshGlobalBlocks(); return; }
+  if (currentViewName === 'tt') { renderTimetable(); refreshGlobalBlocks(); return; }
+  render();   /* 周视图 render() 内部已经刷新了上面这些区块 */
 }
 
 // 渲染月视图
@@ -6842,6 +7622,9 @@ function switchModalTab(tab, keepValues) {
   /* DDL 只有「截止日期 + 截止时刻」：隐藏结束日期与长期项目 */
   document.getElementById('rowEndDate').style.display = isDDL ? 'none' : '';
   document.getElementById('rowProject').style.display = isDDL ? 'none' : '';
+  /* 重复只用于新建：DDL 和编辑已有事项都不显示 */
+  var repeatRow = document.getElementById('rowRepeat');
+  if (repeatRow) repeatRow.style.display = isDDL ? 'none' : '';
   document.getElementById('lblDate').textContent = isDDL ? '截止日期与时间（时间可选）' : '开始日期与时间（时间可选）';
   document.getElementById('eventContent').placeholder = isDDL ? '找到对象(bushi)' : '例如：跑步3公里';
   /* 「课程」只属于事项：切到 DDL 时隐藏该选项；新填的 DDL 若正选着它，回落为工作 */
@@ -6861,6 +7644,7 @@ function switchModalTab(tab, keepValues) {
   }
 }
 function openAddModal(dateStr) {
+  try { renderCategoryOptions(); } catch (e) {}
   editingId = null;
   document.getElementById('modalTitle').textContent = '添加事项';
   document.getElementById('eventDate').value = dateStr || formatDate(new Date());
@@ -6880,6 +7664,7 @@ function openAddModal(dateStr) {
   loadCourseOptions('');
   updateCourseRow();
   switchModalTab('event');
+  try { resetRepeatPicker(document.getElementById('eventDate').value); } catch (e) {}
   document.getElementById('modalOverlay').classList.add('active');
 }
 
@@ -6899,6 +7684,7 @@ function openAddModalAt(dateStr, minutes) {
 }
 
 function openEditModal(dateStr, idx) {
+  try { renderCategoryOptions(); } catch (e) {}
   const ev = (loadEvents()[dateStr] || [])[idx];
   if (!ev) return;
   editingId = { date: dateStr, index: idx };
@@ -6920,6 +7706,14 @@ function openEditModal(dateStr, idx) {
   loadCourseOptions(ev.course || '');
   updateCourseRow();
   switchModalTab(ev.isDDL ? 'ddl' : 'event', true);
+  try {
+    resetRepeatPicker(dateStr);
+    /* 这条属于某个重复组：把组里的日期全部回填，方便直接看到和修改 */
+    if (ev && Array.isArray(ev.repeatDates) && ev.repeatDates.length > 1) {
+      repeatSelected = ev.repeatDates.slice();
+      renderRepeatInput();
+    }
+  } catch (e) {}
   document.getElementById('modalOverlay').classList.add('active');
 }
 
@@ -6929,20 +7723,202 @@ function toggleProjectSelect() {
   if (isProject === 'yes') updateProjectOptions();
 }
 
+/* 渲染候选项（同名函数给「聚焦/输入」和「打开弹窗」共用） */
+function renderProjectSuggest(list) {
+  const box = document.getElementById('projectSuggest');
+  if (!box) return;
+  box.innerHTML = '';
+  if (!list.length) {
+    const empty = document.createElement('div');
+    empty.className = 'project-suggest-empty';
+    empty.textContent = '没有匹配的项目，回车直接新建';
+    box.appendChild(empty);
+    box.style.display = 'block';
+    return;
+  }
+  list.forEach(p => {
+    const item = document.createElement('div');
+    item.className = 'project-suggest-item';
+    item.textContent = p;
+    /* 用 mousedown 而不是 click：不然 input 先失焦，下拉已经收起来了 */
+    item.addEventListener('mousedown', (e) => {
+      e.preventDefault();
+      const input = document.getElementById('eventProjectName');
+      if (input) input.value = p;
+      hideProjectSuggest();
+    });
+    box.appendChild(item);
+  });
+  box.style.display = 'block';
+}
+
+function filterProjectSuggest() {
+  const box = document.getElementById('projectSuggest');
+  const input = document.getElementById('eventProjectName');
+  if (!box || !input) return;
+  let all = [];
+  try { all = JSON.parse(box.dataset.all || '[]'); } catch (e) { all = []; }
+  const q = input.value.trim();
+  renderProjectSuggest(q ? all.filter(p => p.indexOf(q) !== -1) : all);
+}
+
+function hideProjectSuggest() {
+  const box = document.getElementById('projectSuggest');
+  if (box) box.style.display = 'none';
+}
+
 function updateProjectOptions() {
   const projects = loadProjects();
-  const datalist = document.getElementById('projectOptions');
-  datalist.innerHTML = '';
-  projects.forEach(p => {
-    const option = document.createElement('option');
-    option.value = p;
-    datalist.appendChild(option);
+  const input = document.getElementById('eventProjectName');
+  const box = document.getElementById('projectSuggest');
+  if (!input || !box) return;
+  box.dataset.all = JSON.stringify(projects);
+  if (!input.dataset.comboWired) {
+    input.dataset.comboWired = '1';
+    input.addEventListener('focus', filterProjectSuggest);
+    input.addEventListener('input', filterProjectSuggest);
+    input.addEventListener('blur', function () { setTimeout(hideProjectSuggest, 120); });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Escape') hideProjectSuggest(); });
+  }
+  renderProjectSuggest(projects);
+}
+
+/* ===== 重复日期多选器：点选 / 再点取消 / 按住拖动连选 ===== */
+var repeatSelected = [];
+var repeatMonth = null;
+var repeatDrag = null;
+
+function repeatPopEl() { return document.getElementById('repeatPop'); }
+
+function hideRepeatPop() {
+  var pop = repeatPopEl();
+  if (pop) pop.style.display = 'none';
+  repeatDrag = null;
+}
+
+function renderRepeatInput() {
+  var input = document.getElementById('eventRepeat');
+  if (!input) return;
+  var sorted = repeatSelected.slice().sort();
+  if (!sorted.length) { input.value = ''; return; }
+  var fmt = function (d) { return d.slice(5).replace('-', '/'); };
+  input.value = sorted.length <= 4
+    ? sorted.map(fmt).join('、')
+    : sorted.slice(0, 3).map(fmt).join('、') + ' 等 ' + sorted.length + ' 天';
+}
+
+function paintRepeatDays() {
+  var pop = repeatPopEl();
+  if (!pop) return;
+  Array.prototype.forEach.call(pop.querySelectorAll('.rp-day'), function (cell) {
+    if (!cell.dataset.date) return;
+    cell.classList.toggle('sel', repeatSelected.indexOf(cell.dataset.date) >= 0);
   });
+}
+
+function applyRepeatDrag(toDate) {
+  if (!repeatDrag || !toDate) return;
+  var a = repeatDrag.anchor, b = toDate;
+  var lo = a <= b ? a : b, hi = a <= b ? b : a;
+  var cur = new Date(lo + 'T00:00:00');
+  var end = new Date(hi + 'T00:00:00');
+  while (cur <= end) {
+    var ds = formatDate(cur);
+    var i = repeatSelected.indexOf(ds);
+    if (repeatDrag.mode === 'add') { if (i < 0) repeatSelected.push(ds); }
+    else if (i >= 0) repeatSelected.splice(i, 1);
+    cur.setDate(cur.getDate() + 1);
+  }
+  paintRepeatDays();
+  renderRepeatInput();
+}
+
+function renderRepeatPop() {
+  var pop = repeatPopEl();
+  if (!pop || !repeatMonth) return;
+  var y = repeatMonth.getFullYear(), m = repeatMonth.getMonth();
+  var first = new Date(y, m, 1);
+  var startDow = first.getDay();
+  var lead = startDow === 0 ? 6 : startDow - 1;   /* 周一开头 */
+  var days = new Date(y, m + 1, 0).getDate();
+  var html = '<div class="rp-head"><button type="button" data-nav="-1">‹</button>'
+    + '<span>' + y + ' 年 ' + (m + 1) + ' 月</span>'
+    + '<button type="button" data-nav="1">›</button></div><div class="rp-grid">';
+  ['一', '二', '三', '四', '五', '六', '日'].forEach(function (w) {
+    html += '<div class="rp-wd">' + w + '</div>';
+  });
+  for (var i = 0; i < lead; i++) html += '<div class="rp-day other"></div>';
+  for (var d = 1; d <= days; d++) {
+    var ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    html += '<div class="rp-day" data-date="' + ds + '">' + d + '</div>';
+  }
+  html += '</div><div class="rp-hint">点一次选中，再点取消；按住拖动可连续选</div>';
+  pop.innerHTML = html;
+  paintRepeatDays();
+}
+
+function bindRepeatPicker() {
+  var pop = repeatPopEl();
+  var input = document.getElementById('eventRepeat');
+  if (!pop || !input || pop.dataset.bound) return;
+  pop.dataset.bound = '1';
+
+  pop.addEventListener('click', function (e) {
+    var nav = e.target.closest('[data-nav]');
+    if (!nav) return;
+    /* 翻月会重建 DOM，此时 document 上的「点外面就关」处理器会误判为点在外面 */
+    e.stopPropagation();
+    repeatMonth = new Date(repeatMonth.getFullYear(), repeatMonth.getMonth() + Number(nav.dataset.nav), 1);
+    renderRepeatPop();
+  });
+
+  pop.addEventListener('pointerdown', function (e) {
+    var cell = e.target.closest('.rp-day');
+    if (!cell || !cell.dataset.date) return;
+    e.preventDefault();
+    var ds = cell.dataset.date;
+    repeatDrag = { mode: repeatSelected.indexOf(ds) >= 0 ? 'remove' : 'add', anchor: ds };
+    applyRepeatDrag(ds);
+  });
+  pop.addEventListener('pointerover', function (e) {
+    if (!repeatDrag) return;
+    var cell = e.target.closest('.rp-day');
+    if (!cell || !cell.dataset.date) return;
+    applyRepeatDrag(cell.dataset.date);
+  });
+  document.addEventListener('pointerup', function () { repeatDrag = null; });
+
+  input.addEventListener('click', function () {
+    var p = repeatPopEl();
+    if (!p) return;
+    if (p.style.display === 'block') { hideRepeatPop(); return; }
+    if (!repeatMonth) repeatMonth = new Date();
+    renderRepeatPop();
+    p.style.display = 'block';
+  });
+
+  document.addEventListener('click', function (e) {
+    var p = repeatPopEl();
+    if (!p || p.style.display !== 'block') return;
+    if (e.target === input || p.contains(e.target)) return;
+    hideRepeatPop();
+  });
+}
+
+function resetRepeatPicker(baseDateStr) {
+  repeatSelected = [];
+  var base = baseDateStr ? new Date(baseDateStr + 'T00:00:00') : new Date();
+  repeatMonth = isNaN(base.getTime()) ? new Date() : new Date(base.getFullYear(), base.getMonth(), 1);
+  repeatDrag = null;
+  bindRepeatPicker();
+  renderRepeatInput();
+  hideRepeatPop();
 }
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('active');
   editingId = null;
+  try { hideRepeatPop(); } catch (e) {}
 }
 
 
@@ -6978,6 +7954,68 @@ function hideNotesTooltip() {
   if (tip) tip.classList.remove('visible');
 }
 
+
+/* 这次要覆盖的日期集合：起始日 + 选择器里勾的日期 */
+function repeatTargetDates(baseDate) {
+  var set = {};
+  if (baseDate) set[baseDate] = true;
+  (repeatSelected || []).forEach(function (d) { if (d) set[d] = true; });
+  return Object.keys(set).sort();
+}
+
+/* 把重复组对齐到 targetDates：
+   删掉不再需要的日期、更新仍保留的、补上新增的（起始那条由 saveEvent 主流程写） */
+function syncRepeatGroup(events, baseDate, payload, oldEv, targetDates) {
+  var oldId = oldEv && oldEv.repeatId;
+  if (!oldId) {
+    /* 原来不是重复组：给新勾的日期各补一条副本 */
+    if (!payload.repeatId) return;
+    targetDates.forEach(function (d) {
+      if (d === baseDate) return;
+      if (!events[d]) events[d] = [];
+      var clone = Object.assign({}, payload);
+      delete clone.endDate;
+      delete clone.endTime;
+      events[d].push(clone);
+    });
+    return;
+  }
+  var want = {};
+  targetDates.forEach(function (d) { want[d] = true; });
+  var oldDates = Array.isArray(oldEv.repeatDates) ? oldEv.repeatDates.slice() : [oldEv.repeatBase || baseDate];
+
+  /* 1) 去掉不再需要的日期 */
+  oldDates.forEach(function (d) {
+    if (want[d]) return;
+    var list = events[d] || [];
+    for (var i = list.length - 1; i >= 0; i--) {
+      if (list[i] && list[i].repeatId === oldId) list.splice(i, 1);
+    }
+    if (list.length) events[d] = list; else delete events[d];
+  });
+
+  /* 2) 更新仍保留的、补上新增的 */
+  targetDates.forEach(function (d) {
+    if (d === baseDate) return;
+    var list = events[d] || [];
+    var hit = -1;
+    for (var i = 0; i < list.length; i++) {
+      if (list[i] && list[i].repeatId === oldId) { hit = i; break; }
+    }
+    var baseMeta = { repeatId: oldId, repeatDates: targetDates, repeatBase: oldEv.repeatBase || baseDate };
+    if (hit >= 0) {
+      var kept = Object.assign({}, payload, baseMeta);
+      kept.done = list[hit].done;
+      list[hit] = kept;
+    } else {
+      var clone = Object.assign({}, payload, baseMeta);
+      delete clone.endDate;
+      delete clone.endTime;
+      list.push(clone);
+    }
+    events[d] = list;
+  });
+}
 
 function saveEvent() {
   const isDDLTab = currentModalTab === 'ddl';
@@ -7042,6 +8080,12 @@ function saveEvent() {
       /* 学习/课程两类以弹窗下拉为准（可改可清）；其余分类沿用旧值，避免误删 */
       if (oldEv.course && category !== 'study' && category !== 'course') payload.course = oldEv.course;
     }
+    var targetEdit = repeatTargetDates(date);
+    if (targetEdit.length > 1) {
+      payload.repeatId = (oldEv && oldEv.repeatId) || ('r' + Date.now().toString(36));
+      payload.repeatDates = targetEdit;
+      payload.repeatBase = (oldEv && oldEv.repeatBase) || date;
+    }
     if (editingId.date === date) {
       events[date][editingId.index] = payload;
     } else {
@@ -7049,8 +8093,23 @@ function saveEvent() {
       if (events[editingId.date].length === 0) delete events[editingId.date];
       events[date].push(payload);
     }
+    syncRepeatGroup(events, date, payload, oldEv, targetEdit);
   } else {
+    var targetNew = repeatTargetDates(date);
+    if (targetNew.length > 1) {
+      payload.repeatId = 'r' + Date.now().toString(36);
+      payload.repeatDates = targetNew;
+      payload.repeatBase = date;
+    }
     events[date].push(payload);
+    targetNew.forEach(function (d) {
+      if (d === date) return;
+      if (!events[d]) events[d] = [];
+      var clone = Object.assign({}, payload);
+      delete clone.endDate;
+      delete clone.endTime;
+      events[d].push(clone);
+    });
   }
 
   /* closeModal() 会把 editingId 置 null，先记下这次是编辑还是新增，供提示语判断 */
@@ -7058,6 +8117,10 @@ function saveEvent() {
   saveEvents(events);
   closeModal();
   refreshCurrentView();
+  /* refreshCurrentView 只重画当前视图，DDL 倒计时区块不在它范围内：
+     不补这一下，新加的 DDL 要等下次别的操作触发刷新才出现 */
+  try { renderDDLCountdown(); } catch (eDDL) {}
+  try { renderSideStats(); } catch (eDDL) {}
   showToast(wasEditing ? '已保存修改' : '已添加事项', true);
 
   if (isProject === 'yes' && projectName) autoSaveProjectEvent(date, content, projectName);
@@ -7366,6 +8429,35 @@ async function removeLastHabit() {
   showToast('已删除习惯「' + removed + '」', true);
 }
 
+/* 习惯颜色：存在 settings.habitColors（名字→颜色），没设过就按调色板顺序取 */
+function habitColorMap() {
+  var s = loadSettings();
+  return (s && s.habitColors) || {};
+}
+function saveHabitColorMap(map) {
+  var s = loadSettings();
+  s.habitColors = map;
+  saveSettings(s);
+}
+function habitColorOf(name, index) {
+  var map = habitColorMap();
+  if (map[name]) return map[name];
+  var pal = habitColorPalette();
+  return pal[index % pal.length];
+}
+/* 改名时把打卡记录的 key 一起搬过去：旧key = 习惯名_日期 */
+function renameHabitRecords(oldName, newName) {
+  if (!oldName || !newName || oldName === newName) return;
+  var rec = loadHabitRecords();
+  var out = {};
+  var prefix = oldName + '_';
+  Object.keys(rec).forEach(function (k) {
+    if (k.indexOf(prefix) === 0) out[newName + '_' + k.slice(prefix.length)] = rec[k];
+    else out[k] = rec[k];
+  });
+  saveHabitRecords(out);
+}
+
 function renderHabitTracker() {
   const monthDate = getHabitMonthDate(habitMonthOffset);
   const year = monthDate.getFullYear();
@@ -7382,12 +8474,14 @@ function renderHabitTracker() {
   const palette = habitColorPalette();
 
   if (habits.length === 0) {
-    wrap.innerHTML = '<div class="habit-empty">还没有添加习惯，在上方输入习惯名称后点击"添加习惯"</div>';
+    wrap.innerHTML = '<div class="habit-empty">还没有添加习惯，点这里 <span class="habit-add-plus" title="新建习惯">＋</span> 新建一个</div>';
+    const plus0 = wrap.querySelector('.habit-add-plus');
+    if (plus0) plus0.addEventListener('click', function () { openHabitEditor(null); });
     return;
   }
 
   let html = '<div class="habit-table-wrap"><table class="habit-table"><thead><tr>';
-  html += '<th class="habit-name-col">习惯</th>';
+  html += '<th class="habit-name-col">习惯<span class="habit-add-plus" title="新建习惯">＋</span></th>';
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const isToday = dateStr === todayStr;
@@ -7396,8 +8490,10 @@ function renderHabitTracker() {
   html += '</tr></thead><tbody>';
 
   habits.forEach((habit, hi) => {
-    const color = palette[hi % palette.length];
-    html += `<tr><td class="habit-name-cell">${habit}</td>`;
+    const color = habitColorOf(habit, hi);
+    html += `<tr><td class="habit-name-cell" data-habit="${escapeHtml(habit)}" title="点击设置这个习惯">`
+      + `<span class="habit-dot" style="background:${color}"></span>`
+      + `<span class="habit-name-text">${escapeHtml(habit)}</span></td>`;
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
       const key = `${habit}_${dateStr}`;
@@ -7411,6 +8507,130 @@ function renderHabitTracker() {
 
   html += '</tbody></table></div>';
   wrap.innerHTML = html;
+
+  /* 点习惯名 → 设置弹窗 */
+  Array.prototype.forEach.call(wrap.querySelectorAll('.habit-name-cell'), function (cell) {
+    cell.addEventListener('click', function () { openHabitEditor(cell.dataset.habit); });
+  });
+  const plus = wrap.querySelector('.habit-add-plus');
+  if (plus) plus.addEventListener('click', function (e) { e.stopPropagation(); openHabitEditor(null); });
+}
+
+/* ===== 习惯设置弹窗：改名 / 换色 / 删除 ===== */
+var habitEditName = null;
+
+function ensureHabitEditor() {
+  let el = document.getElementById('habitEditorOverlay');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'habitEditorOverlay';
+  el.className = 'modal-overlay habit-editor-overlay';
+  el.innerHTML = ''
+    + '<div class="modal mood-editor">'
+    + '  <h3 id="habitEditorTitle">习惯设置</h3>'
+    + '  <label>名称</label>'
+    + '  <input type="text" id="habitEditorName" maxlength="20" placeholder="例如：早起、阅读">'
+    + '  <label style="margin-top:14px">颜色</label>'
+    + '  <div class="mood-color-grid" id="habitColorGrid"></div>'
+    + '  <div class="btn-row" style="margin-top:18px">'
+    + '    <button class="btn-delete" type="button" id="habitEditorDelete" onclick="deleteHabitEditor()">删除</button>'
+    + '    <button class="btn-cancel" type="button" onclick="closeHabitEditor()">取消</button>'
+    + '    <button class="btn-save" type="button" onclick="saveHabitEditor()">保存</button>'
+    + '  </div>'
+    + '</div>';
+  document.body.appendChild(el);
+  el.addEventListener('click', function (e) { if (e.target === el) closeHabitEditor(); });
+  return el;
+}
+
+function openHabitEditor(name) {
+  const el = ensureHabitEditor();
+  habitEditName = name || null;
+  const habits = loadHabits();
+  const idx = name ? habits.indexOf(name) : -1;
+  document.getElementById('habitEditorTitle').textContent = name ? '习惯设置' : '新建习惯';
+  const nameInput = document.getElementById('habitEditorName');
+  nameInput.value = name || '';
+  const del = document.getElementById('habitEditorDelete');
+  if (del) del.style.display = name ? '' : 'none';
+
+  const grid = document.getElementById('habitColorGrid');
+  grid.innerHTML = '';
+  const cur = name ? habitColorOf(name, idx < 0 ? 0 : idx) : '';
+  moodPalette().forEach(function (p) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mood-color-swatch' + (p.color === cur ? ' active' : '');
+    b.style.background = p.color;
+    b.title = p.name + ' ' + p.color;
+    b.dataset.color = p.color;
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(grid.children, function (c) { c.classList.remove('active'); });
+      b.classList.add('active');
+    });
+    grid.appendChild(b);
+  });
+  el.classList.add('active');
+  setTimeout(function () { nameInput.focus(); }, 30);
+}
+
+function closeHabitEditor() {
+  const el = document.getElementById('habitEditorOverlay');
+  if (el) el.classList.remove('active');
+  habitEditName = null;
+}
+
+function saveHabitEditor() {
+  const name = document.getElementById('habitEditorName').value.trim();
+  if (!name) { showToast('请先填习惯名称', false); return; }
+  const grid = document.getElementById('habitColorGrid');
+  const active = grid.querySelector('.mood-color-swatch.active');
+  const color = active ? active.dataset.color : '#9EB9C9';
+
+  const habits = loadHabits();
+  const colors = habitColorMap();
+  const wasEdit = !!habitEditName;
+
+  if (wasEdit) {
+    const old = habitEditName;
+    if (old !== name) {
+      if (habits.indexOf(name) >= 0) { showToast('已经有同名习惯了', false); return; }
+      const i = habits.indexOf(old);
+      if (i >= 0) habits[i] = name;
+      renameHabitRecords(old, name);
+      delete colors[old];
+    }
+    colors[name] = color;
+  } else {
+    if (habits.indexOf(name) >= 0) { showToast('已经有同名习惯了', false); return; }
+    habits.push(name);
+    colors[name] = color;
+  }
+  saveHabits(habits);
+  saveHabitColorMap(colors);
+  closeHabitEditor();
+  renderHabitTracker();
+  renderSideStats();
+  showToast(wasEdit ? '习惯「' + name + '」已更新' : '已新建习惯「' + name + '」', true);
+}
+
+function deleteHabitEditor() {
+  if (!habitEditName) return;
+  const name = habitEditName;
+  const habits = loadHabits().filter(function (h) { return h !== name; });
+  saveHabits(habits);
+  const colors = habitColorMap();
+  delete colors[name];
+  saveHabitColorMap(colors);
+  const rec = loadHabitRecords();
+  const out = {};
+  const prefix = name + '_';
+  Object.keys(rec).forEach(function (k) { if (k.indexOf(prefix) !== 0) out[k] = rec[k]; });
+  saveHabitRecords(out);
+  closeHabitEditor();
+  renderHabitTracker();
+  renderSideStats();
+  showToast('已删除习惯「' + name + '」', true);
 }
 
 function toggleHabit(habit, dateStr) {
@@ -7430,11 +8650,47 @@ const MOOD_COLORS = { happy: 'var(--primary)', sad: 'var(--cat-exercise)', tired
 
 /* 格子底色：心情色 35% 混卡片色（原来直接铺满整块原色，偏重） */
 function moodCellBg(mood) {
-  const base = MOOD_COLORS[mood];
-  return base ? 'color-mix(in srgb, ' + base + ' 35%, var(--card))' : '';
+  /* 直接用选中/内置的颜色，不再混白 —— 格子颜色要和图例、选择器完全一致 */
+  return moodColorOf(mood) || '';
 }
 
 const MOOD_NAMES = { happy: '高兴', sad: '难过', tired: '劳累', angry: '生气' };
+
+/* ===== 心情清单：内置 4 种 + 用户自定义（存在 settings.moods） =====
+   内置项颜色用主题变量，自定义项是用户选的具体颜色。 */
+function defaultMoods() {
+  return [
+    { key: 'happy', name: '高兴', color: 'var(--primary)', builtin: true },
+    { key: 'sad',   name: '难过', color: 'var(--cat-exercise)', builtin: true },
+    { key: 'tired', name: '劳累', color: 'var(--muted)', builtin: true },
+    { key: 'angry', name: '生气', color: 'var(--ddl-overdue)', builtin: true }
+  ];
+}
+function getMoods() {
+  var s = loadSettings();
+  var list = (s && Array.isArray(s.moods) && s.moods.length) ? s.moods : defaultMoods();
+  return list.map(function (m) {
+    return { key: m.key, name: m.name, color: m.color || 'var(--muted)', builtin: !!m.builtin };
+  });
+}
+function moodByKey(key) {
+  var list = getMoods();
+  for (var i = 0; i < list.length; i++) if (list[i].key === key) return list[i];
+  return null;
+}
+function moodColorOf(key) {
+  var m = moodByKey(key);
+  return m ? m.color : (MOOD_COLORS[key] || '');
+}
+function moodLabelOf(key) {
+  var m = moodByKey(key);
+  return m ? m.name : (MOOD_NAMES[key] || key);
+}
+function saveMoods(list) {
+  var s = loadSettings();
+  s.moods = list;
+  saveSettings(s);
+}
 
 let moodMonthOffset = 0;
 let moodPickerDate = null;
@@ -7456,6 +8712,7 @@ function changeMoodMonth(dir) {
 }
 
 function renderMoodTracker() {
+  try { renderMoodLegend(); } catch (e) { console.warn('[心情] 图例渲染失败', e); }
   const monthDate = getMoodMonthDate(moodMonthOffset);
   const year = monthDate.getFullYear();
   const month = monthDate.getMonth();
@@ -7484,9 +8741,8 @@ function renderMoodTracker() {
        底色是 35% 浅色，四种心情在暖色主题里会靠得很近，所以再加一圈同心情的全色描边
        （描边用满色，四色色差 ≥13，一眼能分；底色保持浅，不抢卡片。） */
     const bg = moodCellBg(mood);
-    const bgStyle = bg
-      ? ` style="background:${bg};box-shadow:inset 0 0 0 2px ${MOOD_COLORS[mood]}"`
-      : '';
+    /* 去掉原来的深色描边，只留纯色块 */
+    const bgStyle = bg ? ` style="background:${bg}"` : '';
     html += `<div class="mood-cell"${bgStyle} onclick="openMoodPicker(event,'${dateStr}')"></div>`;
   }
 
@@ -7502,15 +8758,26 @@ function openMoodPicker(e, dateStr) {
     picker = document.createElement('div');
     picker.id = 'moodPicker';
     picker.className = 'mood-picker';
-    picker.innerHTML = `
-      <button class="mood-opt happy" onclick="selectMood('happy')" title="高兴">😊</button>
-      <button class="mood-opt sad" onclick="selectMood('sad')" title="难过">😢</button>
-      <button class="mood-opt tired" onclick="selectMood('tired')" title="劳累">😩</button>
-      <button class="mood-opt angry" onclick="selectMood('angry')" title="生气">😠</button>
-      <button class="mood-cancel" onclick="closeMoodPicker()">取消</button>
-    `;
     document.body.appendChild(picker);
   }
+  /* 每次打开都按当前心情清单重建，自定义心情也能选 */
+  picker.innerHTML = '';
+  getMoods().forEach(function (m) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mood-opt';
+    b.title = m.name;   /* 只留悬停提示，按钮里不再显示文字 */
+    b.style.background = m.color;
+    b.style.color = '#fff';
+    b.addEventListener('click', function () { selectMood(m.key); });
+    picker.appendChild(b);
+  });
+  const cancel = document.createElement('button');
+  cancel.type = 'button';
+  cancel.className = 'mood-cancel';
+  cancel.textContent = '取消';
+  cancel.addEventListener('click', closeMoodPicker);
+  picker.appendChild(cancel);
   picker.style.left = Math.min(e.clientX, window.innerWidth - 220) + 'px';
   picker.style.top = (e.clientY - 50) + 'px';
   picker.classList.add('active');
@@ -7523,12 +8790,172 @@ function selectMood(mood) {
   saveMoodRecords(records);
   closeMoodPicker();
   renderMoodTracker();
+  /* 顶部问候语跟着今天的心情走 */
+  try { renderGreeting(); } catch (e) {}
 }
 
 function closeMoodPicker() {
   const picker = document.getElementById('moodPicker');
   if (picker) picker.classList.remove('active');
   moodPickerDate = null;
+}
+
+/* ===== 图例：点名称进设置，末尾「＋」新建 ===== */
+function renderMoodLegend() {
+  const box = document.getElementById('moodLegend');
+  if (!box) return;
+  box.innerHTML = '';
+  getMoods().forEach(function (m) {
+    const item = document.createElement('div');
+    item.className = 'mood-legend-item';
+    item.title = '点击设置「' + m.name + '」';
+    const dot = document.createElement('span');
+    dot.className = 'mood-legend-dot';
+    dot.style.background = m.color;
+    const label = document.createElement('span');
+    label.className = 'mood-legend-name';
+    label.textContent = m.name;
+    item.appendChild(dot);
+    item.appendChild(label);
+    item.addEventListener('click', function () { openMoodEditor(m.key); });
+    box.appendChild(item);
+  });
+  const add = document.createElement('div');
+  add.className = 'mood-legend-add';
+  add.textContent = '＋';
+  add.title = '新建心情';
+  add.addEventListener('click', function () { openMoodEditor(null); });
+  box.appendChild(add);
+}
+
+/* ===== 心情设置弹窗：改名 + 选色 ===== */
+var moodEditKey = null;
+
+function hslToHex(h, s, l) {
+  s = s / 100; l = l / 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = l - c / 2;
+  let r = 0, g = 0, b = 0;
+  if (h < 60) { r = c; g = x; }
+  else if (h < 120) { r = x; g = c; }
+  else if (h < 180) { g = c; b = x; }
+  else if (h < 240) { g = x; b = c; }
+  else if (h < 300) { r = x; b = c; }
+  else { r = c; b = x; }
+  const f = function (v) { return Math.round((v + m) * 255).toString(16).padStart(2, '0'); };
+  return '#' + f(r) + f(g) + f(b);
+}
+
+/* 盐系色卡：每个色系一行 5 档（由浅到深），共 6 行 30 色。
+   色值直接取自色卡，黑白灰也按卡面明度递减。 */
+function moodPalette() {
+  const rows = [
+    { n: '豆沙粉', colors: ['#F9F0F0', '#EBD5D5', '#D9B8B8', '#C29595', '#9E7373'] },
+    { n: '燕麦棕', colors: ['#F8F2E9', '#EBDFCF', '#D9C7AE', '#BFA687', '#9A8265'] },
+    { n: '抹茶绿', colors: ['#EEF5EA', '#CFE0C3', '#A9C19D', '#829E77', '#5E7A56'] },
+    { n: '雾蓝',   colors: ['#EEF4F8', '#C8DCE6', '#9EB9C9', '#738FA3', '#4F6475'] },
+    { n: '灰紫',   colors: ['#F3EEF7', '#DDD2E8', '#C3B2D6', '#A691BF', '#84709C'] },
+    { n: '黑白灰', colors: ['#F2F2F2', '#D8D8D8', '#B3B3B3', '#808080', '#5C5C5C'] }
+  ];
+  const out = [];
+  rows.forEach(function (row) {
+    row.colors.forEach(function (c) { out.push({ name: row.n, color: c }); });
+  });
+  return out;
+}
+
+function ensureMoodEditor() {
+  let el = document.getElementById('moodEditorOverlay');
+  if (el) return el;
+  el = document.createElement('div');
+  el.id = 'moodEditorOverlay';
+  el.className = 'modal-overlay mood-editor-overlay';
+  el.innerHTML = ''
+    + '<div class="modal mood-editor">'
+    + '  <h3 id="moodEditorTitle">心情设置</h3>'
+    + '  <label>名称</label>'
+    + '  <input type="text" id="moodEditorName" maxlength="8" placeholder="例如：平静">'
+    + '  <label style="margin-top:14px">颜色</label>'
+    + '  <div class="mood-color-grid" id="moodColorGrid"></div>'
+    + '  <div class="btn-row" style="margin-top:18px">'
+    + '    <button class="btn-delete" type="button" id="moodEditorDelete" onclick="deleteMoodEditor()">删除</button>'
+    + '    <button class="btn-cancel" type="button" onclick="closeMoodEditor()">取消</button>'
+    + '    <button class="btn-save" type="button" onclick="saveMoodEditor()">保存</button>'
+    + '  </div>'
+    + '</div>';
+  document.body.appendChild(el);
+  el.addEventListener('click', function (e) { if (e.target === el) closeMoodEditor(); });
+  return el;
+}
+
+function openMoodEditor(key) {
+  const el = ensureMoodEditor();
+  moodEditKey = key || null;
+  const mood = key ? moodByKey(key) : null;
+  document.getElementById('moodEditorTitle').textContent = mood ? '心情设置' : '新建心情';
+  document.getElementById('moodEditorName').value = mood ? mood.name : '';
+  const del = document.getElementById('moodEditorDelete');
+  if (del) del.style.display = (mood && mood.builtin) ? 'none' : '';
+
+  const grid = document.getElementById('moodColorGrid');
+  grid.innerHTML = '';
+  const cur = mood ? mood.color : '';
+  moodPalette().forEach(function (p) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mood-color-swatch' + (p.color === cur ? ' active' : '');
+    b.style.background = p.color;
+    b.title = p.name + ' ' + p.color;
+    b.dataset.color = p.color;
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(grid.children, function (c) { c.classList.remove('active'); });
+      b.classList.add('active');
+    });
+    grid.appendChild(b);
+  });
+  el.classList.add('active');
+  setTimeout(function () { const inp = document.getElementById('moodEditorName'); if (inp) inp.focus(); }, 30);
+}
+
+function closeMoodEditor() {
+  const el = document.getElementById('moodEditorOverlay');
+  if (el) el.classList.remove('active');
+  moodEditKey = null;
+}
+
+function saveMoodEditor() {
+  const name = document.getElementById('moodEditorName').value.trim();
+  if (!name) { showToast('请先填心情名称', false); return; }
+  const grid = document.getElementById('moodColorGrid');
+  const active = grid.querySelector('.mood-color-swatch.active');
+  const color = active ? active.dataset.color : '#9EB9C9';
+  let list = getMoods();
+  if (moodEditKey) {
+    list = list.map(function (m) {
+      return m.key === moodEditKey ? { key: m.key, name: name, color: color, builtin: m.builtin } : m;
+    });
+  } else {
+    list = list.concat([{ key: 'm' + Date.now().toString(36), name: name, color: color }]);
+  }
+  saveMoods(list);
+  const wasEdit = !!moodEditKey;
+  closeMoodEditor();
+  renderMoodLegend();
+  renderMoodTracker();
+  showToast(wasEdit ? '心情「' + name + '」已更新' : '已新建心情「' + name + '」', true);
+}
+
+function deleteMoodEditor() {
+  if (!moodEditKey) return;
+  const m = moodByKey(moodEditKey);
+  if (m && m.builtin) { showToast('内置心情不能删除', false); return; }
+  const list = getMoods().filter(function (x) { return x.key !== moodEditKey; });
+  saveMoods(list);
+  closeMoodEditor();
+  renderMoodLegend();
+  renderMoodTracker();
+  showToast('已删除该心情', true);
 }
 
 document.addEventListener('click', (e) => {
@@ -7719,7 +9146,107 @@ function getChartEvents(view) {
   return result.filter(ev => ev && ev.category !== 'course');
 }
 
+/* 每周/每月每天完成了多少（课程不计入完成统计） */
+function dailyDoneCounts(view) {
+  const events = loadEvents();
+  const todayStr = formatDate(new Date());
+  const out = [];
+  const doneOf = function (ds) {
+    return (events[ds] || []).filter(function (ev) {
+      return ev && ev.done && ev.category !== 'course';
+    }).length;
+  };
+  if (view === 'week') {
+    const WD = ['一', '二', '三', '四', '五', '六', '日'];
+    const monday = getMonday(weekOffset);
+    for (let i = 0; i < 7; i++) {
+      const ds = formatDate(new Date(monday.getTime() + i * 86400000));
+      out.push({ label: WD[i], count: doneOf(ds), today: ds === todayStr });
+    }
+  } else if (view === 'month') {
+    const today = new Date();
+    const y = today.getFullYear(), m = today.getMonth();
+    const days = new Date(y, m + 1, 0).getDate();
+    for (let d = 1; d <= days; d++) {
+      const ds = y + '-' + String(m + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+      out.push({ label: String(d), count: doneOf(ds), today: ds === todayStr });
+    }
+  }
+  return out;
+}
+
+/* 把 "rgb(r, g, b)" 解析成数组 */
+function parseRgbColor(str) {
+  const m = /rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/.exec(String(str || ''));
+  return m ? [+m[1], +m[2], +m[3]] : [0, 0, 0];
+}
+/* 两个颜色按比例混合，t=0 取 a，t=1 取 b */
+function mixRgbColor(a, b, t) {
+  const ca = parseRgbColor(a), cb = parseRgbColor(b);
+  const c = [0, 1, 2].map(function (i) { return Math.round(ca[i] + (cb[i] - ca[i]) * t); });
+  return 'rgb(' + c[0] + ', ' + c[1] + ', ' + c[2] + ')';
+}
+
+/* 每周/每月「每日完成数」柱状图：完成越多颜色越深 */
+function renderBarChart() {
+  const wrap = document.getElementById('chartBarWrap');
+  const canvas = document.getElementById('barChart');
+  if (!wrap || !canvas) return;
+  if (chartView === 'day') { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+
+  const data = dailyDoneCounts(chartView);
+  const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+  const cssW = Math.max(300, wrap.clientWidth || 560);
+  const cssH = 150;
+  canvas.width = Math.round(cssW * dpr);
+  canvas.height = Math.round(cssH * dpr);
+  canvas.style.width = cssW + 'px';
+  canvas.style.height = cssH + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, cssW, cssH);
+
+  const padL = 8, padR = 8, padT = 20, padB = 20;
+  const plotW = cssW - padL - padR;
+  const plotH = cssH - padT - padB;
+  const max = Math.max(1, Math.max.apply(null, data.map(function (d) { return d.count; })));
+  const slot = plotW / Math.max(1, data.length);
+  const barW = Math.min(26, Math.max(4, slot * 0.55));
+  const base = cssColor('--primary');
+  const card = cssColor('--card');
+
+  data.forEach(function (d, i) {
+    const x = padL + slot * i + (slot - barW) / 2;
+    const ratio = d.count ? 0.25 + 0.75 * (d.count / max) : 0.1;
+    const h = d.count ? Math.max(4, (d.count / max) * plotH) : 2;
+    const y = padT + plotH - h;
+    ctx.fillStyle = mixRgbColor(card, base, ratio);
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, barW, h, Math.min(3, barW / 2));
+    else ctx.rect(x, y, barW, h);
+    ctx.fill();
+
+    if (d.count > 0 && data.length <= 12) {
+      ctx.fillStyle = cssColor('--text');
+      ctx.font = '600 10px system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(String(d.count), x + barW / 2, y - 4);
+    }
+
+    if (data.length <= 12 || i % 2 === 0) {
+      ctx.fillStyle = d.today ? cssColor('--text') : cssColor('--muted');
+      ctx.font = '10px system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'alphabetic';
+      ctx.fillText(d.label, x + barW / 2, cssH - 6);
+    }
+  });
+}
+
 function renderPieChart() {
+  try { renderBarChart(); } catch (e) { console.warn('[统计] 柱状图渲染失败', e); }
   const canvas = document.getElementById('pieChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
@@ -7736,9 +9263,14 @@ function renderPieChart() {
   /* 现读 CSS 变量：cssColor() 会把 hex / color-mix() 解析成 rgb() 供 canvas 使用。
      「课程」不进完成统计：它出现在 CATEGORY_NAMES 里也只用来给事项打标签，
      这里先剔掉，饼图切片、图例、总数三者口径一致。 */
-  const chartCats = Object.keys(CATEGORY_NAMES).filter(c => c !== 'course');
+  const chartCats = getCategories().map(m => m.key).filter(c => c !== 'course');
   const chartColors = {};
-  chartCats.forEach(c => { chartColors[c] = cssColor('--cat-' + c); });
+  chartCats.forEach(c => {
+    const raw = categoryColorOf(c) || '';
+    /* 内置分类是 var(--cat-x)，自定义分类是十六进制；两种都要能转成 canvas 认的颜色 */
+    if (/^var\(--/.test(raw)) chartColors[c] = cssColor(raw.slice(4, -1).trim());
+    else chartColors[c] = cssColorValue(raw);
+  });
 
   const doneEvents = getChartEvents(chartView);
   const counts = {};
@@ -7751,7 +9283,10 @@ function renderPieChart() {
     ctx.font = '500 14px system-ui, -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('暂无数据', size / 2, size / 2);
+    const emptyLabel = chartView === 'week' ? '本周还没有完成的日程'
+      : chartView === 'month' ? '本月还没有完成的日程'
+      : '今天还没有完成的日程';
+    ctx.fillText(emptyLabel, size / 2, size / 2);
     document.getElementById('chartLegend').innerHTML = '';
     return;
   }
@@ -7773,7 +9308,7 @@ function renderPieChart() {
   const legendEl = document.getElementById('chartLegend');
   legendEl.innerHTML = Object.keys(counts)
     .filter(c => counts[c] > 0)
-    .map(c => `<span class="chart-legend-item"><span class="chart-legend-dot cat-${c}"></span>${CATEGORY_NAMES[c]} ${counts[c]}</span>`)
+    .map(c => `<span class="chart-legend-item"><span class="chart-legend-dot" style="background:${categoryColorOf(c)}"></span>${categoryNameOf(c)} ${counts[c]}</span>`)
     .join('');
 }
 
@@ -8353,6 +9888,49 @@ function zjuLoginState() {
 }
 
 /* 请本地小服务弹出登录窗口；它没在跑就返回 false */
+/* 学在浙大助手没在跑：请本地小服务把它拉起来 */
+function zjuStartService() {
+  function probe() {
+    return fetch(zjuServiceOrigin() + '/health', { cache: 'no-store' })
+      .then(function (r) { return r.ok; })
+      .catch(function () { return false; });
+  }
+  return fetch(ZJU_LOGIN_SHIM + '/start', { cache: 'no-store' })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (d) { return !!(d && d.ok); })
+    .catch(function () { return false; })
+    .then(function (ok) {
+      if (!ok) return false;
+      var deadline = Date.now() + 12000;
+      return new Promise(function (resolve) {
+        (function tick() {
+          probe().then(function (alive) {
+            if (alive) return resolve(true);
+            if (Date.now() > deadline) return resolve(false);
+            setTimeout(tick, 500);
+          });
+        })();
+      });
+    });
+}
+
+/* 胶囊里点「学在浙大同步助手」：启动服务 → 自动重新同步 */
+async function startZjuHelperAndSync() {
+  setSyncStatus('正在启动学在浙大同步助手…', true, 3000);
+  var up = await zjuStartService();
+  if (!up) {
+    setSyncStatus('没能自动启动助手：请手动双击 D:\\zju-sync\\start-hidden.vbs', false, 9000);
+    return;
+  }
+  setSyncStatus('助手已启动，正在同步…', true, 3000);
+  try {
+    if (typeof syncZjuThenObsidian === 'function') await syncZjuThenObsidian();
+    else if (typeof syncZjuNow === 'function') await syncZjuNow();
+  } catch (e) {
+    setSyncStatus('同步失败：' + (e && e.message ? e.message : e), false, 6000);
+  }
+}
+
 function zjuRequestLogin() {
   return fetch(ZJU_LOGIN_SHIM + '/login', { cache: 'no-store' })
     .then(function (r) { return r.ok; })
@@ -8829,7 +10407,7 @@ async function syncMoodToObsidian() {
 }
 
 /* 全局轻提示：任何操作结果都弹一下，避免「点了没反应」 */
-function showToast(msg, ok, ms) {
+function showToast(msg, ok, ms, link) {
   if (!msg) return;
   var host = document.getElementById('toastHost');
   if (!host) {
@@ -8850,7 +10428,27 @@ function showToast(msg, ok, ms) {
   }
   var el = document.createElement('div');
   el.className = 'toast' + (ok === false ? ' err' : '');
-  el.textContent = String(msg);
+  var raw = String(msg);
+  if (link && link.text) {
+    var li = raw.indexOf(link.text);
+    if (li >= 0) {
+      var linkEl = document.createElement('span');
+      linkEl.className = 'toast-link';
+      linkEl.textContent = link.text;
+      linkEl.title = link.title || '点击执行';
+      linkEl.addEventListener('click', function (ev) {
+        ev.stopPropagation();
+        try { if (link.onClick) link.onClick(); } catch (e) { console.warn('[提示] 链接动作失败', e); }
+      });
+      el.appendChild(document.createTextNode(raw.slice(0, li)));
+      el.appendChild(linkEl);
+      el.appendChild(document.createTextNode(raw.slice(li + link.text.length)));
+    } else {
+      el.textContent = raw;
+    }
+  } else {
+    el.textContent = raw;
+  }
   host.appendChild(el);
   requestAnimationFrame(function() { el.classList.add('show'); });
   el._hide = setTimeout(function() {
@@ -8925,13 +10523,13 @@ function showUndoToast(msg, onUndo, ms) {
 /* 复合操作（如"同步学在浙大"）期间把内层提示静音，最后只弹一条 */
 var syncStatusSilent = false;
 
-function setSyncStatus(msg, ok, ms) {
+function setSyncStatus(msg, ok, ms, link) {
   if (syncStatusSilent) return;
   var el = document.getElementById('syncStatus');
-  if (!el) { if (msg) showToast(msg, ok); return; }
+  if (!el) { if (msg) showToast(msg, ok, ms, link); return; }
   el.textContent = msg;
   el.className = 'note-status sync-msg' + (ok ? ' ok' : ' err');
-  if (msg) showToast(msg, ok === false ? false : true, ms || 2600);
+  if (msg) showToast(msg, ok === false ? false : true, ms || 2600, link);
   setTimeout(function() { el.textContent = ''; }, ms || 5000);
 }
 
@@ -9047,7 +10645,7 @@ function zjuMergeTodos(todos) {
 
     var tTitle = String(t.title || '学在浙大待办');
     var tCourse = String(t.course_name || '');
-    /* 标题里已经带课程名（例如「《计算机网络》第五章作业」）时不再重复加前缀 */
+    /* 标题里已经带课程名（例如「《高等数学》第五章作业」）时不再重复加前缀 */
     var content = ZJU_PREFIX + (tCourse && tTitle.indexOf(tCourse) < 0 ? tCourse + ' ' : '') + tTitle;
     var notes = zjuBuildNotes(t, when);
     var hit = index[id];
@@ -10117,6 +11715,7 @@ async function syncZjuThenObsidian() {
   syncStatusSilent = true;
   const tips = [];        /* 只记录真正发生变化的部分 */
   let failMsg = '';
+  let failLink = null;
   let okFlag = true;
   let changed = false;
   let obsState = null;      /* true=库里已一致，false=还没写进去，null=没连库或读不到 */
@@ -10160,7 +11759,7 @@ async function syncZjuThenObsidian() {
     zjuPullBusy = false;
     syncStatusSilent = prevSilent;
     if (btn) { btn.disabled = false; btn.classList.remove('busy'); btn.title = '拉取学在浙大 DDL（仅更新本地）'; }
-    if (failMsg) setSyncStatus(failMsg, false, 10000);
+    if (failMsg) setSyncStatus(failMsg, false, 10000, failLink);
     else if (changed) {
       const tail = obsState === true ? '；Obsidian 已同步' : obsState === false ? '；Obsidian 未同步，需手动保存' : '';
       setSyncStatus((tips.length ? tips.join('；') : '学在浙大 DDL 已更新') + tail, okFlag, 8000);
@@ -10361,11 +11960,14 @@ function renderDDLCountdown() {
   body.appendChild(axis);
 
   // —— 每条 DDL：左边名称色条，右边天数条（左端贴「今天」，右端贴截止日）——
+  /* 距截止 N 天内算紧急；0 = 关闭 */
+  var urgentDays = Math.max(0, Math.min(60, loadSettings().ddlUrgentDays === undefined ? 3 : loadSettings().ddlUrgentDays));
   shown.forEach(function(d) {
     var ev = d.ev;
     var stateKey = ev.done ? 'completed'
       : d.days < 0 ? 'overdue'
       : d.days === 0 ? 'today'
+      : (urgentDays > 0 && d.days <= urgentDays) ? 'urgent'
       : (ev.category || 'work');
     var colorClass = 'color-' + stateKey;
 
@@ -10418,7 +12020,7 @@ function renderDDLCountdown() {
 
     var tag = document.createElement('span');
     tag.className = 'ddl-tag';
-    tag.textContent = CATEGORY_NAMES[ev.category] || '';
+    tag.textContent = categoryNameOf(ev.category) || '';
     if (tag.textContent) nameBar.appendChild(tag);
 
     var title = document.createElement('span');
@@ -10752,11 +12354,14 @@ const MDS = {
 };
 
 const MD_DAY_NAMES = ['日', '一', '二', '三', '四', '五', '六'];
-const MD_CAT_BY_LABEL = (function() {
+/* 分类名 → key：必须每次现算，否则运行期新建的分类读不回来 */
+function mdCategoryByLabel(label) {
+  if (!label) return '';
   const map = {};
   Object.keys(CATEGORY_NAMES).forEach(function(k) { map[CATEGORY_NAMES[k]] = k; });
-  return map;
-})();
+  getCategories().forEach(function(m) { map[m.name] = m.key; });
+  return map[label] || '';
+}
 
 /* 事件里无法用 md 正文表达的字段（跨天/项目/DDL/来源 ID），用一行隐藏注释随文件保存 */
 const MD_EXTRA_FIELDS = ['isDDL', 'endDate', 'isProject', 'projectName', 'course', 'zjuTodoId', 'zjuCourseId', 'zjuEnd', 'zjuAutoDone'];
@@ -10848,7 +12453,7 @@ function mdCanonicalEvent(ev) {
   const out = {
     /* 内容里的换行会破坏 md 的行结构，统一折成空格（两边一致，不会来回改） */
     content: String(ev && ev.content != null ? ev.content : '').replace(/\r?\n/g, ' '),
-    category: ev && ev.category && CATEGORY_NAMES[ev.category] ? ev.category : 'life',
+    category: ev && ev.category && (CATEGORY_NAMES[ev.category] || categoryByKey(ev.category)) ? ev.category : 'life',
     time: (ev && ev.time) || '',
     done: !!(ev && ev.done),
     isProject: (ev && ev.isProject) || 'no',
@@ -10896,7 +12501,7 @@ function mdBuildScheduleMarkdown(mk, monthEvents) {
       const ev = mdCanonicalEvent(raw);
       const check = ev.done ? '[x]' : '[ ]';
       const timeStr = ev.time ? mdTimeLabel(ev) + ' ' : '';
-      let line = '- ' + check + ' ' + timeStr + CATEGORY_NAMES[ev.category] + ' - ' + ev.content;
+      let line = '- ' + check + ' ' + timeStr + categoryNameOf(ev.category) + ' - ' + ev.content;
       if (ev.notes) {
         line += '\n' + ev.notes.split('\n').map(function(n) { return '  > ' + n; }).join('\n');
       }
@@ -10964,8 +12569,8 @@ function mdParseScheduleMarkdown(text, mk) {
 
       let category = '', content = body;
       const mCat = /^([^-\s]{1,10})\s*-\s+([\s\S]*)$/.exec(body);
-      if (mCat && MD_CAT_BY_LABEL[mCat[1]]) {
-        category = MD_CAT_BY_LABEL[mCat[1]];
+      if (mCat && mdCategoryByLabel(mCat[1])) {
+        category = mdCategoryByLabel(mCat[1]);
         content = mCat[2];
       }
 
@@ -11283,7 +12888,7 @@ function mdBuildMoodMarkdown(mk, monthRecords) {
     '| 日期 | 心情 |', '|------|------|'];
   dates.forEach(function(d) {
     const mood = monthRecords[d];
-    lines.push('| ' + d.slice(8) + ' | ' + (MOOD_NAMES[mood] || mood) + ' |');
+    lines.push('| ' + d.slice(8) + ' | ' + moodLabelOf(mood) + ' |');
   });
   lines.push('');
   return lines.join('\n');
@@ -11294,7 +12899,9 @@ function mdParseMoodMarkdown(text, mk) {
   if (!text) return out;
   const lines = String(text).replace(/\r\n/g, '\n').split('\n');
   const byLabel = {};
+  /* 先放内置，再放自定义（自定义同名时以自定义为准） */
   Object.keys(MOOD_NAMES).forEach(function(k) { byLabel[MOOD_NAMES[k]] = k; });
+  getMoods().forEach(function(m) { byLabel[m.name] = m.key; });
 
   for (let i = 0; i < lines.length; i++) {
     const m = /^\|\s*(\d{1,2})\s*\|\s*([^|]+?)\s*\|/.exec(lines[i]);
@@ -11966,6 +13573,7 @@ function refreshAllUI() {
   try { renderHabitTracker(); } catch (e) {}
   try { renderMoodTracker(); } catch (e) {}
   try { renderPieChart(); } catch (e) {}
+  try { renderProjectFlow(); } catch (e) {}
   try { renderDDLCountdown(); } catch (e) {}
   try { renderSideStats(); } catch (e) {}
   try { setRailActive(currentViewName); } catch (e) {}
