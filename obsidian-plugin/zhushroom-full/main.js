@@ -260,6 +260,7 @@ class ZhushiPet {
     this.svg.addEventListener("pointerdown", (e) => this.onDragStart(e));
     this.svg.addEventListener("dblclick", (e) => { e.preventDefault(); this.setMood("surprised", 700); });
     document.addEventListener("pointermove", this._onPointerMove, { passive: true });
+    window.addEventListener("pointermove", this._onPointerMove, { passive: true });
     document.addEventListener("pointerdown", this._onPointerDownDoc, { passive: true });
     window.addEventListener("resize", this._onResize);
     document.addEventListener("visibilitychange", this._onVisibility);
@@ -410,8 +411,11 @@ class ZhushiPet {
     const r = this.el.getBoundingClientRect();
     const dx = this.pointer.x - (r.left + r.width / 2);
     const dy = this.pointer.y - (r.top + r.height / 2);
-    this.eyeTX = Math.max(-1, Math.min(1, dx / 200)) * 6.0;
-    this.eyeTY = Math.max(-1, Math.min(1, dy / 200)) * 4.2;
+    /* 方向始终指向鼠标；幅度从近到远逐渐加大，约 300px 外到满幅 */
+    const dist = Math.hypot(dx, dy) || 1;
+    const amp = Math.min(1, dist / 300);
+    this.eyeTX = (dx / dist) * 6.0 * amp;
+    this.eyeTY = (dy / dist) * 4.2 * amp;
   }
 
   /* 头部整体微微朝向鼠标（与眼睛叠加成视差） */
@@ -645,6 +649,7 @@ class ZhushiPet {
     window.removeEventListener("pointercancel", this._onUpDrag);
     if (this.onMoveBound) {
       document.removeEventListener("pointermove", this._onPointerMove);
+    window.removeEventListener("pointermove", this._onPointerMove);
       document.removeEventListener("pointerdown", this._onPointerDownDoc);
       window.removeEventListener("resize", this._onResize);
       document.removeEventListener("visibilitychange", this._onVisibility);
