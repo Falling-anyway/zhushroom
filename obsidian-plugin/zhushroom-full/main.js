@@ -251,6 +251,13 @@ class ZhushiPet {
       '<g class="zspet-eyes"></g>' +
       "</g></g></svg>";
     document.body.appendChild(wrap);
+    this.attachFollow();
+    this._onPointerLeave = () => {
+      this.pointer = { x: -1, y: -1 };
+      this.eyeTX = 0;
+      this.eyeTY = 0;
+    };
+    document.addEventListener("pointerleave", this._onPointerLeave);
     this.el = wrap;
     this.svg = wrap.querySelector(".zspet-svg");
     this.faceLayer = wrap.querySelector(".zspet-eyes");
@@ -289,14 +296,14 @@ class ZhushiPet {
     const on = this.cfg.motion !== false && !matchMedia("(prefers-reduced-motion: reduce)").matches;
     document.documentElement.classList.toggle("zspet-no-motion", !on);
     this.el && this.el.classList.toggle("pet-breath", !!on);
+    /* 视线跟随是交互而不是装饰：不受“减弱动效”影响，只在设置里关掉动画时才停 */
+    this.attachFollow();
     if (!on) {
       this.stopBlink();
       this.stopIdle();
       this.stopEyeLoop();
-      this.detachFollow();
     } else {
       this.startBlink();
-      this.attachFollow();
       this.startIdle();
       this.startEyeLoop();
     }
@@ -382,6 +389,7 @@ class ZhushiPet {
   /* ---------- 眼睛跟随 ---------- */
   attachFollow() {
     if (this.followBound) return;
+    this.pointer = this.pointer || { x: -1, y: -1 };
     this.followBound = true;
   }
 
@@ -414,16 +422,16 @@ class ZhushiPet {
     /* 方向始终指向鼠标；幅度从近到远逐渐加大，约 300px 外到满幅 */
     const dist = Math.hypot(dx, dy) || 1;
     const amp = Math.min(1, dist / 300);
-    this.eyeTX = (dx / dist) * 6.0 * amp;
-    this.eyeTY = (dy / dist) * 4.2 * amp;
+    this.eyeTX = (dx / dist) * 8.0 * amp;
+    this.eyeTY = (dy / dist) * 5.6 * amp;
   }
 
   /* 头部整体微微朝向鼠标（与眼睛叠加成视差） */
   applyLook() {
     if (!this.el) return;
     const k = this.size() / 100;
-    this.el.style.setProperty("--lx", (this.eyeDX * k * 0.62).toFixed(2) + "px");
-    this.el.style.setProperty("--ly", (this.eyeDY * k * 0.62).toFixed(2) + "px");
+    this.el.style.setProperty("--lx", (this.eyeDX * k * 0.8).toFixed(2) + "px");
+    this.el.style.setProperty("--ly", (this.eyeDY * k * 0.8).toFixed(2) + "px");
   }
 
   /* ---------- 待机：环视、偶尔蹦一下 ---------- */
@@ -650,6 +658,7 @@ class ZhushiPet {
     if (this.onMoveBound) {
       document.removeEventListener("pointermove", this._onPointerMove);
     window.removeEventListener("pointermove", this._onPointerMove);
+    if (this._onPointerLeave) document.removeEventListener("pointerleave", this._onPointerLeave);
       document.removeEventListener("pointerdown", this._onPointerDownDoc);
       window.removeEventListener("resize", this._onResize);
       document.removeEventListener("visibilitychange", this._onVisibility);
