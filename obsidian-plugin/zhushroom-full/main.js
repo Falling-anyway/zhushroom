@@ -160,7 +160,7 @@ function petShiftPath(d, dx, dy, sy) {
 /* ==== PET_CSS_BEGIN ==== */
 const PET_CSS = [
   "#zhushroom-pet{position:fixed;z-index:100;pointer-events:none;left:0;top:0;will-change:transform}",
-  "#zhushroom-pet .zspet-look{transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .1s linear}",
+  "#zhushroom-pet .zspet-look{transform:translate(var(--lx,0px),var(--ly,0px))}",
   "#zhushroom-pet .zspet-svg{display:block;width:100%;height:100%;pointer-events:auto;cursor:grab;overflow:visible;",
   "  filter:drop-shadow(0 6px 10px " + PET_SHADOW + ");transition:transform .16s ease}",
   "#zhushroom-pet:hover .zspet-svg{transform:scale(1.04)}",
@@ -453,17 +453,22 @@ class ZhushiPet {
     setTimeout(() => this.el && this.el.classList.remove("pet-hop"), 700);
   }
 
-  /* 眼睛平滑跟随（每帧向目标插值） */
+  /* 眼睛平滑跟随（按时间插值，帧率无关） */
   startEyeLoop() {
     if (this.eyeLoop) return;
-    const step = () => {
+    let last = 0;
+    const step = (ts) => {
       this.eyeLoop = requestAnimationFrame(step);
       if (!this.el) return;
+      const dt = last ? Math.min(64, ts - last) : 16;
+      last = ts;
       const dx = this.eyeTX - this.eyeDX;
       const dy = this.eyeTY - this.eyeDY;
-      if (Math.abs(dx) < 0.02 && Math.abs(dy) < 0.02) return;
-      this.eyeDX += dx * 0.22;
-      this.eyeDY += dy * 0.22;
+      if (Math.abs(dx) < 0.01 && Math.abs(dy) < 0.01) return;
+      /* 时间常数 55ms：60fps 下每帧约 0.25，低帧率时自动补更大步长 */
+      const k = 1 - Math.exp(-dt / 55);
+      this.eyeDX += dx * k;
+      this.eyeDY += dy * k;
       this.applyEyes();
       this.applyLook();
     };
