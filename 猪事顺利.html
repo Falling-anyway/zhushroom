@@ -10892,19 +10892,44 @@ function zjuBuildNotes(t, when) {
 
 /* 作业说明不在 /todos 里，要按 activity id 逐条去详情接口取。
    页面跨域拿不到学在浙大，所以走 127.0.0.1:8766 的本地代理。 */
-/* 「作业说明」补全默认关闭：8766 的 /activity 目前单条要 20 秒以上不返回，
-   还会把单线程的 shim 整个卡死，导致连 /login 都失灵。
-   想再试可以执行 localStorage.setItem('zsEnrichNotes','1') 后刷新。 */
-var ZJU_ENRICH_NOTES = false;
-try { ZJU_ENRICH_NOTES = localStorage.getItem('zsEnrichNotes') === '1'; } catch (e) {}
+/* 「作业说明」补全：8766 的 /activity 已修好（HttpClient + 禁代理 + 8 秒超时），默认开启。
+   说明按 todo id 缓存在 localStorage，重复同步不再重复拉取。
+   想临时关掉：localStorage.setItem('zsEnrichNotes','0') */
+var ZJU_ENRICH_NOTES = true;
+try { ZJU_ENRICH_NOTES = localStorage.getItem('zsEnrichNotes') !== '0'; } catch (e) {}
+
+var ZJU_DESC_CACHE_KEY = 'zsZjuDescCache';
+var ZJU_DESC_MAX_PER_SYNC = 40;   /* 有缓存兜底，第一次多拉一点，之后基本不再请求 */
+
+function zjuDescCacheRead() {
+  try { return JSON.parse(localStorage.getItem(ZJU_DESC_CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
+}
+function zjuDescCacheSave(obj) {
+  try { localStorage.setItem(ZJU_DESC_CACHE_KEY, JSON.stringify(obj)); } catch (e) {}
+}
 
 async function zjuEnrichNotes(list) {
   if (!Array.isArray(list) || !list.length) return list;
   if (!ZJU_ENRICH_NOTES) return list;
+
+  /* 先用缓存把已知的说明补上；只对「作业」类型且没缓存过的去请求 */
+  var cached = zjuDescCacheRead();
+  var todo = [];
+  list.forEach(function (t) {
+    if (!t || t.id === undefined || t.id === null) return;
+    var key = String(t.id);
+    if (t.type && t.type !== 'homework') return;   /* 考试类没有这个接口（403），别浪费请求 */
+    if (Object.prototype.hasOwnProperty.call(cached, key)) {
+      if (cached[key]) t.zjuDesc = cached[key];
+      return;
+    }
+    todo.push(t);
+  });
+  if (!todo.length) return list;
+
   var shim = (typeof ZJU_LOGIN_SHIM === 'string' && ZJU_LOGIN_SHIM) ? ZJU_LOGIN_SHIM : 'http://127.0.0.1:8766';
 
-  /* 8766 上的 shim 有可能卡死（连接能建立但不回包）。这里先快速探活：
-     不通就整批跳过——补作业说明是可选的，绝不能把整个拉取拖死 */
+  /* shim 可能被别的请求卡住：先快速探活，不通就整批跳过，绝不拖死拉取 */
   var alive = false;
   try {
     var probeCtrl = (typeof AbortController === 'function') ? new AbortController() : null;
@@ -10918,28 +10943,39 @@ async function zjuEnrichNotes(list) {
     return list;
   }
 
-  /* 8766 是单线程的小服务：并发太高会把它压死，这里 4 路排队请求 */
-  var queue = list.filter(function (t) { return t && t.id !== undefined && t.id !== null; });
+  var queue = todo.slice(0, ZJU_DESC_MAX_PER_SYNC);
   var cursor = 0;
+  var dirty = false;
+  var startedAt = Date.now();
+  var BUDGET_MS = 12000;  /* 本次最多花 12 秒补说明（冷启动一次就能拉全），之后走缓存 */
+
+  /* 8766 是单线程的小服务，4 路排队就够，再高会把它压住 */
   async function worker() {
     while (cursor < queue.length) {
+      if (Date.now() - startedAt > BUDGET_MS) break;
       var t = queue[cursor++];
+      var key = String(t.id);
       var ctrl = (typeof AbortController === 'function') ? new AbortController() : null;
-      var timer = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 1500) : null;
+      var timer = ctrl ? setTimeout(function () { try { ctrl.abort(); } catch (e) {} }, 3000) : null;
       try {
         var r = await fetch(shim + '/activity?id=' + encodeURIComponent(t.id), { cache: 'no-store', signal: ctrl ? ctrl.signal : undefined });
         if (r && r.ok) {
           var d = await r.json();
-          if (d && d.ok && d.description) t.zjuDesc = d.description;
+          if (d && d.ok) {
+            cached[key] = d.description || '';
+            dirty = true;
+            if (d.description) t.zjuDesc = d.description;
+          }
         }
       } catch (e) {
-        /* 单条失败不影响整体 */
+        /* 单条失败不影响整体；不写缓存，下次再试 */
       } finally {
         if (timer) clearTimeout(timer);
       }
     }
   }
   await Promise.all([worker(), worker(), worker(), worker()]);
+  if (dirty) zjuDescCacheSave(cached);
   return list;
 }
 
