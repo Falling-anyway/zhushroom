@@ -160,6 +160,7 @@ function petShiftPath(d, dx, dy, sy) {
 /* ==== PET_CSS_BEGIN ==== */
 const PET_CSS = [
   "#zhushroom-pet{position:fixed;z-index:100;pointer-events:none;left:0;top:0;will-change:transform}",
+  "#zhushroom-pet .zspet-look{transform:translate(var(--lx,0px),var(--ly,0px));transition:transform .1s linear}",
   "#zhushroom-pet .zspet-svg{display:block;width:100%;height:100%;pointer-events:auto;cursor:grab;overflow:visible;",
   "  filter:drop-shadow(0 6px 10px " + PET_SHADOW + ");transition:transform .16s ease}",
   "#zhushroom-pet:hover .zspet-svg{transform:scale(1.04)}",
@@ -241,13 +242,14 @@ class ZhushiPet {
     wrap.innerHTML =
       '<div class="zspet-bubble" aria-hidden="true"></div>' +
       '<svg class="zspet-svg" viewBox="0 0 100 100" aria-hidden="true">' +
+      '<g class="zspet-look">' +
       '<g class="zspet-art">' +
       '<path class="zspet-body" d="' + PET_BODY_D + '" fill="' + PET_INK + '"/>' +
       '<path class="zspet-face" d="' + PET_FACE_D + '" fill="' + PET_FACE_COLOR + '"/>' +
       '<path class="zspet-dot" d="' + PET_DOT_D + '" fill="' + PET_FACE_COLOR + '"/>' +
       '<g class="zspet-extras"></g>' +
       '<g class="zspet-eyes"></g>' +
-      "</g></svg>";
+      "</g></g></svg>";
     document.body.appendChild(wrap);
     this.el = wrap;
     this.svg = wrap.querySelector(".zspet-svg");
@@ -408,8 +410,16 @@ class ZhushiPet {
     const r = this.el.getBoundingClientRect();
     const dx = this.pointer.x - (r.left + r.width / 2);
     const dy = this.pointer.y - (r.top + r.height / 2);
-    this.eyeTX = Math.max(-1, Math.min(1, dx / 220)) * 4.2;
-    this.eyeTY = Math.max(-1, Math.min(1, dy / 220)) * 3.0;
+    this.eyeTX = Math.max(-1, Math.min(1, dx / 200)) * 6.0;
+    this.eyeTY = Math.max(-1, Math.min(1, dy / 200)) * 4.2;
+  }
+
+  /* 头部整体微微朝向鼠标（与眼睛叠加成视差） */
+  applyLook() {
+    if (!this.el) return;
+    const k = this.size() / 100;
+    this.el.style.setProperty("--lx", (this.eyeDX * k * 0.62).toFixed(2) + "px");
+    this.el.style.setProperty("--ly", (this.eyeDY * k * 0.62).toFixed(2) + "px");
   }
 
   /* ---------- 待机：环视、偶尔蹦一下 ---------- */
@@ -455,6 +465,7 @@ class ZhushiPet {
       this.eyeDX += dx * 0.22;
       this.eyeDY += dy * 0.22;
       this.applyEyes();
+      this.applyLook();
     };
     this.eyeLoop = requestAnimationFrame(step);
   }
@@ -463,6 +474,7 @@ class ZhushiPet {
     if (this.eyeLoop) { cancelAnimationFrame(this.eyeLoop); this.eyeLoop = 0; }
     this.eyeDX = 0; this.eyeDY = 0; this.eyeTX = 0; this.eyeTY = 0;
     this.applyEyes();
+    this.applyLook();
   }
 
   /* ---------- 拖动 / 点击 ---------- */
