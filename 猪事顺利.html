@@ -3147,6 +3147,8 @@
     margin: 0 1px;
   }
   .toast-link:hover { color: #F7E2A6; }
+  /* 气泡默认不接收点击（toast-host 是 pointer-events:none），带链接时才放开 */
+  .toast.has-link { pointer-events: auto; }
   /* ===== 删除后的撤销胶囊（底部居中） ===== */
   .undo-toast {
     pointer-events: auto;
@@ -6136,11 +6138,28 @@ function splitEventContent(ev) {
   if (i > 0) return { name: text.slice(0, i), loc: text.slice(i + 3).trim() };
   return { name: text, loc: '' };
 }
+/* 课程事件：下课时间过了就当作「已结束」，配色同已完成日程 */
+function courseEndedNow(ev, dateStr) {
+  if (!ev || !(ev.ttGen === true || ev.category === 'course')) return false;
+  if (ev.done) return false;
+  var startMin = hmToMinutes(ev.time);
+  if (startMin === null) return false;
+  var endMin = hmToMinutes(ev.endTime);
+  /* 没记录下课时间时按 105 分钟（两节课 + 课间）估一下 */
+  if (endMin === null || endMin <= startMin) endMin = startMin + 105;
+  var todayStr = formatDate(new Date());
+  if (dateStr > todayStr) return false;
+  if (dateStr < todayStr) return true;
+  var now = new Date();
+  return (now.getHours() * 60 + now.getMinutes()) >= endMin;
+}
+
 function createEventEl(ev, dateStr, dayEvents) {
   const el = document.createElement('div');
   /* 课程事件（课表生成 或 分类=课程）不参与勾选：不渲染 complete-btn；左侧留白仍由 .event 的 padding 提供 */
   const isCourseEv = !!(ev.ttGen === true || ev.category === 'course');
-  el.className = `event ${isCourseEv ? 'course' : ev.category}` + (ev.done ? ' completed' : '');
+  const ended = isCourseEv && courseEndedNow(ev, dateStr);
+  el.className = `event ${isCourseEv ? 'course' : ev.category}` + ((ev.done || ended) ? ' completed' : '');
   const idx = dayEvents.indexOf(ev);
   const todayStr = formatDate(new Date());
   const isPast = dateStr < todayStr;
@@ -6388,9 +6407,28 @@ function paintNowLine() {
   }
 }
 
+/* 到点下课：当前这一分钟如果有课程刚结束，重画一次让配色立刻变灰 */
+var _lastEndedStamp = '';
+function maybeRefreshEndedCourses() {
+  try {
+    var now = new Date();
+    var hhmm = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+    if (hhmm === _lastEndedStamp) return;
+    _lastEndedStamp = hhmm;
+    var list = (loadEvents()[formatDate(now)] || []);
+    var hit = list.some(function (ev) {
+      return (ev.ttGen === true || ev.category === 'course') && ev.endTime === hhmm;
+    });
+    if (hit) refreshCurrentView();
+  } catch (e) {}
+}
+
 function startNowLineTimer() {
   if (nowLineTimer) return;
-  nowLineTimer = setInterval(paintNowLine, 30000);
+  nowLineTimer = setInterval(function () {
+    paintNowLine();
+    maybeRefreshEndedCourses();
+  }, 30000);
 }
 
 /* 让整周刚好装进屏幕：按可用高度反推每小时高度，必要时压缩到最小可读值 */
@@ -9919,7 +9957,7 @@ async function startZjuHelperAndSync() {
   setSyncStatus('正在启动学在浙大同步助手…', true, 3000);
   var up = await zjuStartService();
   if (!up) {
-    setSyncStatus('没能自动启动助手：请手动双击 D:\\zju-sync\\start-hidden.vbs', false, 9000);
+    setSyncStatus('助手没在运行：用桌面「猪事顺利」图标重开会自动启动它', false, 9000);
     return;
   }
   setSyncStatus('助手已启动，正在同步…', true, 3000);
@@ -10443,6 +10481,7 @@ function showToast(msg, ok, ms, link) {
       el.appendChild(document.createTextNode(raw.slice(0, li)));
       el.appendChild(linkEl);
       el.appendChild(document.createTextNode(raw.slice(li + link.text.length)));
+      el.classList.add('has-link');
     } else {
       el.textContent = raw;
     }
@@ -12138,7 +12177,14 @@ function getProjectEvents(projectName) {
   for (var date in events) {
     events[date].forEach(function(ev) {
       if (ev.isProject === 'yes' && ev.projectName === projectName) {
-        result.push({ date: date, time: ev.time || '', endTime: ev.endTime || '', content: ev.content, category: ev.category });
+        result.push({
+          date: date,
+          time: ev.time || '',
+          endTime: ev.endTime || '',
+          content: ev.content,
+          category: ev.category,
+          done: !!ev.done
+        });
       }
     });
   }
@@ -12200,6 +12246,7 @@ function renderProjectFlow() {
       }
       var node = document.createElement('div');
       node.className = 'project-node';
+      if (!ev.done) node.classList.add('undone');
       if (ev.date === todayStr) node.classList.add('today');
       else if (ev.date < todayStr) node.classList.add('past');
       var dateEl = document.createElement('div');
@@ -12223,6 +12270,19 @@ function renderProjectFlow() {
     timelineWrap.appendChild(timeline);
     row.appendChild(timelineWrap);
     flow.appendChild(row);
+
+    /* 流程图太长时默认把「第一个未完成节点」滚到中间；全部完成则从头开始 */
+    try {
+      var firstUndone = timeline.querySelector('.project-node.undone');
+      if (firstUndone && timeline.scrollWidth > timelineWrap.clientWidth + 4) {
+        var wrapRect = timelineWrap.getBoundingClientRect();
+        var nodeRect = firstUndone.getBoundingClientRect();
+        var delta = (nodeRect.left + nodeRect.width / 2) - (wrapRect.left + wrapRect.width / 2);
+        timelineWrap.scrollLeft = Math.max(0, timelineWrap.scrollLeft + delta);
+      } else {
+        timelineWrap.scrollLeft = 0;
+      }
+    } catch (e) {}
   });
 
   var sel = document.getElementById('projectNoteSelect');
