@@ -1,6 +1,6 @@
 "use strict";
 
-const { addIcon, ItemView, Notice, Platform, Plugin, PluginSettingTab, Setting, setIcon, TFile } = require("obsidian");
+const { addIcon, ItemView, Menu, Notice, Platform, Plugin, PluginSettingTab, Setting, setIcon, TFile } = require("obsidian");
 
 const PAGE_PATH = "猪事顺利.html";
 const VIEW_TYPE = "zhushroom-page-view";
@@ -266,6 +266,7 @@ class ZhushiPet {
     this.paintMood("neutral");
     this.svg.addEventListener("pointerdown", (e) => this.onDragStart(e));
     this.svg.addEventListener("dblclick", (e) => { e.preventDefault(); this.setMood("surprised", 700); });
+    this.svg.addEventListener("contextmenu", (e) => { e.preventDefault(); e.stopPropagation(); this.showContextMenu(e); });
     document.addEventListener("pointermove", this._onPointerMove, { passive: true });
     window.addEventListener("pointermove", this._onPointerMove, { passive: true });
     document.addEventListener("pointerdown", this._onPointerDownDoc, { passive: true });
@@ -643,6 +644,38 @@ class ZhushiPet {
     this.cfg.y = PET_DEFAULT.y;
     this.applyPosition();
     this.scheduleSave();
+  }
+
+  hide() {
+    this.cfg.enabled = false;
+    this.scheduleSave();
+    this.destroy();
+    try {
+      if (this.plugin && this.plugin.petState) {
+        this.plugin.petState.enabled = false;
+        this.plugin.savePetState(this.plugin.petState);
+      }
+    } catch (e) {}
+    new Notice("桌宠已隐藏（命令面板「显示/隐藏桌宠」可再打开）");
+  }
+
+  showContextMenu(evt) {
+    try {
+      const menu = new Menu();
+      menu.addItem((it) => it.setTitle("隐藏桌宠").setIcon("eye-off").onClick(() => this.hide()));
+      menu.addItem((it) => it.setTitle("重置位置").setIcon("move").onClick(() => this.resetPosition()));
+      menu.addItem((it) => it.setTitle("换一个表情").setIcon("smile").onClick(() => {
+        try { if (this.plugin && this.plugin.cyclePetMood) this.plugin.cyclePetMood(); } catch (e) {}
+      }));
+      menu.addSeparator();
+      menu.addItem((it) => it.setTitle("猪事顺利设置").setIcon("settings").onClick(() => {
+        try {
+          this.plugin.app.setting.open();
+          this.plugin.app.setting.openTabById(this.plugin.manifest.id);
+        } catch (e) {}
+      }));
+      menu.showAtMouseEvent(evt);
+    } catch (e) {}
   }
 
   destroy() {
