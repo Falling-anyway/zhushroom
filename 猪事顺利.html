@@ -11015,9 +11015,20 @@ function zjuMergeTodos(todos) {
 
     var tTitle = String(t.title || '学在浙大待办');
     var tCourse = String(t.course_name || '');
+    /* 学在浙大常把作业要求直接拼进标题（例如「第十周作业: 习题五 B6,B7…」）：
+       内容只保留冒号前的部分，冒号后的要求并进备注，标题就不会被撑得老长 */
+    var tParts = tTitle.split(/[:：]/);
+    var tHead = tTitle, tTail = '';
+    if (tParts.length > 1) { tHead = tParts.shift().trim(); tTail = tParts.join('：').trim(); }
     /* 标题里已经带课程名（例如「《高等数学》第五章作业」）时不再重复加前缀 */
-    var content = ZJU_PREFIX + (tCourse && tTitle.indexOf(tCourse) < 0 ? tCourse + ' ' : '') + tTitle;
+    var content = ZJU_PREFIX + (tCourse && tHead.indexOf(tCourse) < 0 ? tCourse + ' ' : '') + tHead;
     var notes = zjuBuildNotes(t, when);
+    if (tTail) {
+      /* 标题尾巴和说明经常是同一段话（只差全角/半角冒号），归一化后比一次再决定加不加 */
+      var normTail = tTail.replace(/[:：]/g, ':').replace(/\s+/g, '');
+      var normNotes = String(notes || '').replace(/[:：]/g, ':').replace(/\s+/g, '');
+      if (normNotes.indexOf(normTail) < 0) notes = tTail + (notes ? '\n' + notes : '');
+    }
     var hit = index[id];
 
     if (!hit) {
